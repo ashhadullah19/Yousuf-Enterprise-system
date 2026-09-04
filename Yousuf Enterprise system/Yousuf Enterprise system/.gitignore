@@ -1,0 +1,6 @@
+App_Data/
+bin/
+obj/
+*.user
+wwwroot/uploads/**
+!wwwroot/uploads/.gitkeep

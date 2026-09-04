@@ -1,0 +1,43 @@
+@model IEnumerable<FinancialVoucher>
+@{
+    ViewData["Title"] = "Financial ledgers";
+}
+
+<form class="row g-2 mb-3" method="get">
+    <div class="col-md-4"><input class="form-control" name="q" value="@ViewBag.Query" placeholder="Voucher, party, reference..." /></div>
+    <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
+    <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add voucher</a></div>
+</form>
+
+<table class="table table-striped bg-white">
+    <thead><tr><th>Voucher</th><th>Date</th><th>Party</th><th>Type</th><th>Head</th><th>Amount</th><th>Status</th></tr></thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.VoucherNumber</td>
+            <td>@item.VoucherDate.ToString("dd-MMM-yyyy")</td>
+            <td>@item.Party?.FullName</td>
+            <td>@item.Type</td>
+            <td>@item.Head</td>
+            <td>@item.Amount.ToString("N2")</td>
+            <td>
+                @if (item.Type == VoucherType.ContraAdjustment && !item.ApprovedByAdmin)
+                {
+                    <span class="badge bg-warning text-dark">Pending approval</span>
+                    @if (User.IsInRole(AppRoles.SuperAdmin))
+                    {
+                        <form asp-action="Approve" asp-route-id="@item.Id" method="post" class="d-inline">
+                            <button class="btn btn-sm btn-success">Approve</button>
+                        </form>
+                    }
+                }
+                else
+                {
+                    <span class="badge bg-success">Posted</span>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

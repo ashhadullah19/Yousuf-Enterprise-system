@@ -1,0 +1,38 @@
+@model Yousuf_Enterprise_system.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Sign in";
+    Layout = "_Layout";
+}
+
+<div class="card shadow" style="width: 420px;">
+    <div class="card-body p-4">
+        <h1 class="h4 mb-1">Yousuf Enterprise</h1>
+        <p class="text-muted">Inventory, ledger & commission ERP</p>
+        <form asp-action="Login" method="post">
+            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" autocomplete="username" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" autocomplete="current-password" />
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="RememberMe" class="form-check-input" />
+                <label asp-for="RememberMe" class="form-check-label"></label>
+            </div>
+            <button class="btn btn-success w-100" type="submit">Sign in</button>
+        </form>
+        <hr />
+        <p class="small text-muted mb-0">
+            Super Admin: <code>admin@yousuf.local</code> / <code>Admin@12345</code><br />
+            Accountant: <code>accountant@yousuf.local</code> / <code>Accountant@123</code>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

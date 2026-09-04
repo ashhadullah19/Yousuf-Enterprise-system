@@ -1,0 +1,25 @@
+@model SalesInvoice
+@{
+    ViewData["Title"] = Model.InvoiceNumber;
+}
+
+<div class="card stat-card p-4" style="max-width:720px;">
+    <div class="d-flex justify-content-between">
+        <h2 class="h5">@Model.InvoiceNumber</h2>
+        <a class="btn btn-outline-primary" asp-action="Pdf" asp-route-id="@Model.Id">Download PDF</a>
+    </div>
+    <p>@(Model.ApplyGst ? "GST Invoice" : "Non-GST Invoice") · @Model.InvoiceDate.ToString("dd-MMM-yyyy")</p>
+    <p>Buyer: @Model.Buyer?.FullName</p>
+    <p>Product: @Model.Product?.Name · Qty @Model.QuantitySold.ToString("N4") at @Model.RatePerUnit.ToString("N2")</p>
+    <p>Subtotal: @Model.SubtotalAmount.ToString("N2")</p>
+    <p>GST (@Model.GstPercentage.ToString("N2")%): @Model.GstAmount.ToString("N2")</p>
+    <p class="fw-semibold">Grand total: @Model.GrandTotalAmount.ToString("N2")</p>
+    @if (Model.StockType == StockType.ConsignmentStock)
+    {
+        <hr />
+        <p>Commission revenue: @Model.CommissionRevenue.ToString("N2")</p>
+        <p>Stock owner payable: @Model.StockOwnerPayable.ToString("N2")</p>
+        <p>Owner: @Model.ConsignmentReceipt?.StockOwner?.FullName</p>
+    }
+    <a asp-action="Index">Back to invoices</a>
+</div>

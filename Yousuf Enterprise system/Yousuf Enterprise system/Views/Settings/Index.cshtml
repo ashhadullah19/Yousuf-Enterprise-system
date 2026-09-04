@@ -1,0 +1,33 @@
+@model SystemSetting
+@{
+    ViewData["Title"] = "System settings";
+}
+
+<form asp-action="Index" method="post" enctype="multipart/form-data" class="card stat-card p-4" style="max-width:720px;">
+    <input type="hidden" asp-for="Id" />
+    <div class="mb-3">
+        <label asp-for="CompanyName" class="form-label"></label>
+        <input asp-for="CompanyName" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Address" class="form-label"></label>
+        <textarea asp-for="Address" class="form-control"></textarea>
+    </div>
+    <div class="mb-3">
+        <label asp-for="ContactNumbers" class="form-label"></label>
+        <input asp-for="ContactNumbers" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="DefaultGstPercentage" class="form-label"></label>
+        <input asp-for="DefaultGstPercentage" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Logo</label>
+        <input type="file" name="logo" class="form-control" />
+        @if (!string.IsNullOrEmpty(Model.LogoPath))
+        {
+            <img src="~/@Model.LogoPath" alt="Logo" class="mt-2" style="max-height:80px;" />
+        }
+    </div>
+    <button class="btn btn-success">Save settings</button>
+</form>

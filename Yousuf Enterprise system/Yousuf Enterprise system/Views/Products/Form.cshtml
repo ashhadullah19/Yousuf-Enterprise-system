@@ -1,0 +1,40 @@
+@model Product
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Add product" : "Edit product";
+    var action = Model.Id == 0 ? "Create" : "Edit";
+}
+
+<form asp-action="@action" method="post" class="card stat-card p-4" style="max-width:720px;">
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label asp-for="Uom" class="form-label"></label>
+            <select asp-for="Uom" asp-items="Html.GetEnumSelectList<UnitOfMeasure>()" class="form-select"></select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="MinimumStockAlertQty" class="form-label"></label>
+            <input asp-for="MinimumStockAlertQty" class="form-control" />
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <div class="form-check">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+        </div>
+    </div>
+    <div class="mt-3">
+        <button class="btn btn-success" type="submit">Save</button>
+        <a class="btn btn-link" asp-action="Index">Cancel</a>
+    </div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

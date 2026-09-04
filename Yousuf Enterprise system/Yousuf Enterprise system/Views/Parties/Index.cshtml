@@ -1,0 +1,46 @@
+@model IEnumerable<Party>
+@{
+    ViewData["Title"] = "Party Master";
+}
+
+<form class="row g-2 mb-3" method="get">
+    <div class="col-md-4">
+        <input class="form-control" name="q" value="@ViewBag.Query" placeholder="Search name, CNIC, phone, NTN, bank..." />
+    </div>
+    <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
+    <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add party</a></div>
+</form>
+
+<table class="table table-striped bg-white">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>CNIC</th>
+            <th>Phone</th>
+            <th>NTN</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.FullName</td>
+            <td>@item.Type</td>
+            <td>@item.Cnic</td>
+            <td>@item.PrimaryContact</td>
+            <td>@item.Ntn</td>
+            <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                @if (User.IsInRole(AppRoles.SuperAdmin))
+                {
+                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
+                        <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Soft delete this party?');">Delete</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

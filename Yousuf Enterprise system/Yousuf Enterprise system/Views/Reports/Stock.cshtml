@@ -1,0 +1,19 @@
+@model List<(Product Product, decimal Owned, decimal Consignment)>
+@{
+    ViewData["Title"] = "Stock summary";
+}
+
+<table class="table table-striped bg-white">
+    <thead><tr><th>Product</th><th>UOM</th><th>Owned on hand</th><th>Consignment on hand</th></tr></thead>
+    <tbody>
+    @foreach (var row in Model)
+    {
+        <tr>
+            <td>@row.Product.Name</td>
+            <td>@row.Product.Uom</td>
+            <td>@row.Owned.ToString("N4")</td>
+            <td>@row.Consignment.ToString("N4")</td>
+        </tr>
+    }
+    </tbody>
+</table>

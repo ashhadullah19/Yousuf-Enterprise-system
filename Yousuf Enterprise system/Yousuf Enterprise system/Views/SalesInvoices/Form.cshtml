@@ -1,0 +1,69 @@
+@model SalesInvoice
+@{
+    ViewData["Title"] = "Create invoice";
+}
+
+<form asp-action="Create" method="post" class="card stat-card p-4">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label asp-for="InvoiceNumber" class="form-label"></label>
+            <input asp-for="InvoiceNumber" class="form-control" readonly />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="InvoiceDate" class="form-label"></label>
+            <input asp-for="InvoiceDate" type="date" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="BuyerId" class="form-label"></label>
+            <select asp-for="BuyerId" asp-items="ViewBag.Buyers" class="form-select"></select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="StockType" class="form-label"></label>
+            <select asp-for="StockType" asp-items="Html.GetEnumSelectList<StockType>()" class="form-select" id="stockType"></select>
+        </div>
+        <div class="col-md-4" id="receiptRow">
+            <label asp-for="ConsignmentReceiptId" class="form-label"></label>
+            <select asp-for="ConsignmentReceiptId" asp-items="ViewBag.Receipts" class="form-select">
+                <option value="">-- select receipt --</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="ProductId" class="form-label"></label>
+            <select asp-for="ProductId" asp-items="ViewBag.Products" class="form-select"></select>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="QuantitySold" class="form-label"></label>
+            <input asp-for="QuantitySold" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="RatePerUnit" class="form-label"></label>
+            <input asp-for="RatePerUnit" class="form-control" />
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <div class="form-check">
+                <input asp-for="ApplyGst" class="form-check-input" />
+                <label asp-for="ApplyGst" class="form-check-label"></label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="GstPercentage" class="form-label"></label>
+            <input asp-for="GstPercentage" class="form-control" />
+        </div>
+    </div>
+    <div class="mt-3">
+        <button class="btn btn-success">Issue invoice</button>
+        <a class="btn btn-link" asp-action="Index">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        function toggleReceipt() {
+            const type = document.getElementById('stockType').value;
+            document.getElementById('receiptRow').style.display = type === 'ConsignmentStock' ? '' : 'none';
+        }
+        document.getElementById('stockType').addEventListener('change', toggleReceipt);
+        toggleReceipt();
+    </script>
+}

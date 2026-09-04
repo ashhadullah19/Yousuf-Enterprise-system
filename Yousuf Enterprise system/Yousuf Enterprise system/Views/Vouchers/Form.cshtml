@@ -1,0 +1,53 @@
+@model FinancialVoucher
+@{
+    ViewData["Title"] = "Add voucher";
+}
+
+<form asp-action="Create" method="post" class="card stat-card p-4">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label asp-for="VoucherNumber" class="form-label"></label>
+            <input asp-for="VoucherNumber" class="form-control" readonly />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="VoucherDate" class="form-label"></label>
+            <input asp-for="VoucherDate" type="date" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="PartyId" class="form-label"></label>
+            <select asp-for="PartyId" asp-items="ViewBag.Parties" class="form-select"></select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Type" class="form-label"></label>
+            <select asp-for="Type" asp-items="Html.GetEnumSelectList<VoucherType>()" class="form-select"></select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Head" class="form-label"></label>
+            <select asp-for="Head" asp-items="Html.GetEnumSelectList<HeadType>()" class="form-select"></select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Mode" class="form-label"></label>
+            <select asp-for="Mode" asp-items="Html.GetEnumSelectList<PaymentMode>()" class="form-select"></select>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Amount" class="form-label"></label>
+            <input asp-for="Amount" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="ReferenceNumber" class="form-label"></label>
+            <input asp-for="ReferenceNumber" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="BankName" class="form-label"></label>
+            <input asp-for="BankName" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="Remarks" class="form-label"></label>
+            <textarea asp-for="Remarks" class="form-control"></textarea>
+        </div>
+    </div>
+    <p class="small text-muted mt-3">Contra adjustment posts only after Super Admin approval (unless you are Super Admin).</p>
+    <button class="btn btn-success">Save</button>
+    <a class="btn btn-link" asp-action="Index">Cancel</a>
+</form>

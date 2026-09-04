@@ -1,0 +1,47 @@
+@model IEnumerable<Yousuf_Enterprise_system.Services.PartyLedgerLine>
+@{
+    ViewData["Title"] = "Party ledger";
+    var parties = ViewBag.Parties as IEnumerable<Party> ?? Enumerable.Empty<Party>();
+    decimal running = 0;
+}
+
+<form class="row g-2 mb-3" method="get">
+    <div class="col-md-4">
+        <select name="partyId" class="form-select">
+            <option value="">Select party</option>
+            @foreach (var party in parties)
+            {
+                if ((int?)ViewBag.PartyId == party.Id)
+                {
+                    <option value="@party.Id" selected>@party.FullName</option>
+                }
+                else
+                {
+                    <option value="@party.Id">@party.FullName</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-md-2"><input type="date" name="from" class="form-control" value="@((ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"))" /></div>
+    <div class="col-md-2"><input type="date" name="to" class="form-control" value="@((ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"))" /></div>
+    <div class="col-auto"><button class="btn btn-outline-secondary">Load</button></div>
+</form>
+
+<table class="table table-striped bg-white">
+    <thead><tr><th>Date</th><th>Document</th><th>Description</th><th>Head</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead>
+    <tbody>
+    @foreach (var line in Model)
+    {
+        running += line.Debit - line.Credit;
+        <tr>
+            <td>@line.Date.ToString("dd-MMM-yyyy")</td>
+            <td>@line.Document</td>
+            <td>@line.Description</td>
+            <td>@line.Head</td>
+            <td>@line.Debit.ToString("N2")</td>
+            <td>@line.Credit.ToString("N2")</td>
+            <td>@running.ToString("N2")</td>
+        </tr>
+    }
+    </tbody>
+</table>

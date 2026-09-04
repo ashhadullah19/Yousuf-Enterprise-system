@@ -1,0 +1,36 @@
+@model Yousuf_Enterprise_system.ViewModels.UserFormViewModel
+@{
+    ViewData["Title"] = string.IsNullOrEmpty(Model.Id) ? "Add user" : "Edit user";
+    var action = string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit";
+}
+
+<form asp-action="@action" method="post" class="card stat-card p-4" style="max-width:640px;">
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="FullName" class="form-label"></label>
+        <input asp-for="FullName" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Role" class="form-label"></label>
+        <select asp-for="Role" class="form-select">
+            <option value="@AppRoles.SuperAdmin">Super Admin</option>
+            <option value="@AppRoles.Accountant">Accountant / Operator</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <input asp-for="Password" class="form-control" />
+        <div class="form-text">Leave blank on edit to keep the current password.</div>
+    </div>
+    <div class="form-check mb-3">
+        <input asp-for="IsActive" class="form-check-input" />
+        <label asp-for="IsActive" class="form-check-label"></label>
+    </div>
+    <button class="btn btn-success">Save</button>
+    <a class="btn btn-link" asp-action="Index">Cancel</a>
+</form>

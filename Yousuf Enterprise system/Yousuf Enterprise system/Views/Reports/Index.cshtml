@@ -1,0 +1,36 @@
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card stat-card p-3">
+            <h2 class="h6">Party ledger</h2>
+            <a asp-action="PartyLedger">Open statement</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card p-3">
+            <h2 class="h6">Stock summary</h2>
+            <a asp-action="Stock">Owned vs consignment</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card p-3">
+            <h2 class="h6">Excel export</h2>
+            <a asp-action="Export" asp-route-type="parties">Parties</a> ·
+            <a asp-action="Export" asp-route-type="products">Products</a> ·
+            <a asp-action="Export" asp-route-type="invoices">Invoices</a> ·
+            <a asp-action="Export" asp-route-type="stock">Stock</a>
+        </div>
+    </div>
+</div>
+
+<div class="card stat-card p-4 mt-3" style="max-width:640px;">
+    <h2 class="h6">Excel import (Parties / Products sheets)</h2>
+    <p class="small text-muted">Use columns: Parties — Name, Type, Phone, CNIC. Products — Name, UOM, Description.</p>
+    <form asp-action="Import" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" class="form-control mb-2" accept=".xlsx" />
+        <button class="btn btn-outline-success">Import masters</button>
+    </form>
+</div>

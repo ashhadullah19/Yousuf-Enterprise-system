@@ -1,0 +1,25 @@
+@model IEnumerable<BackupLog>
+@{
+    ViewData["Title"] = "Cloud / local backups";
+}
+
+<form asp-action="Run" method="post" class="mb-3">
+    <button class="btn btn-success">Run backup now</button>
+</form>
+<p class="text-muted">Daily local archives are created automatically. Google Drive upload can be added when credentials are available.</p>
+
+<table class="table table-striped bg-white">
+    <thead><tr><th>Time (UTC)</th><th>Size (bytes)</th><th>Status</th><th>Drive ID</th><th>Notes</th></tr></thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Timestamp.ToString("u")</td>
+            <td>@item.FileSizeBytes</td>
+            <td>@item.UploadStatus</td>
+            <td>@item.DriveFileId</td>
+            <td>@item.Notes</td>
+        </tr>
+    }
+    </tbody>
+</table>
