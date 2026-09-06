@@ -27,13 +27,15 @@ public class UsersController : Controller
                 || u.FullName.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
         }
 
-        var rows = new List<UserListItem>();
+        var rows = new List<UserFormViewModel>();
         foreach (var user in users)
         {
-            rows.Add(new UserListItem
+            rows.Add(new UserFormViewModel
             {
-                User = user,
-                Roles = await _userManager.GetRolesAsync(user)
+                Email = user.Email,
+                FullName = user.FullName,
+                Id = user.Id,
+                IsActive = user.IsActive
             });
         }
 

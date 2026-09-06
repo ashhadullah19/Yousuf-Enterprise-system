@@ -8,45 +8,40 @@
     <div class="col-md-2">
         <select name="gst" class="form-select" onchange="this.form.submit()">
             <option value="">All tax</option>
-            @if (ViewBag.Gst is true)
-            {
-                <option value="true" selected>GST</option>
-            }
-            else
-            {
-                <option value="true">GST</option>
-            }
-            @if (ViewBag.Gst is false)
-            {
-                <option value="false" selected>Non-GST</option>
-            }
-            else
-            {
-                <option value="false">Non-GST</option>
-            }
+            <option value="true" selected="@(ViewBag.Gst is true)">GST</option>
+            <option value="false" selected="@(ViewBag.Gst is false)">Non-GST</option>
         </select>
+    </div>
+    <div class="col-md-2 d-flex align-items-center">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="overdueOnly" value="true"
+            @(ViewBag.OverdueOnly == true ? "checked" : "") onchange="this.form.submit()" />
+            <label class="form-check-label">Overdue only</label>
+        </div>
     </div>
     <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
     <div class="col-auto"><a class="btn btn-success" asp-action="Create">Create invoice</a></div>
 </form>
 
 <table class="table table-striped bg-white">
-    <thead><tr><th>Invoice</th><th>Date</th><th>Buyer</th><th>Stock</th><th>GST</th><th>Total</th><th></th></tr></thead>
+    <thead><tr><th>Invoice</th><th>Date</th><th>Buyer</th><th>Payment</th><th>Due</th><th>GST</th><th>Profit</th><th>Total</th><th></th></tr></thead>
     <tbody>
-    @foreach (var item in Model)
-    {
-        <tr>
-            <td>@item.InvoiceNumber</td>
-            <td>@item.InvoiceDate.ToString("dd-MMM-yyyy")</td>
-            <td>@item.Buyer?.FullName</td>
-            <td>@item.StockType</td>
-            <td>@(item.ApplyGst ? "Yes" : "No")</td>
-            <td>@item.GrandTotalAmount.ToString("N2")</td>
-            <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@item.Id">View</a>
-                <a class="btn btn-sm btn-outline-primary" asp-action="Pdf" asp-route-id="@item.Id">PDF</a>
-            </td>
-        </tr>
-    }
+        @foreach (var item in Model)
+        {
+            <tr class="@(item.IsOverdue ? "table-danger" : "")">
+                <td>@item.InvoiceNumber</td>
+                <td>@item.InvoiceDate.ToString("dd-MMM-yyyy")</td>
+                <td>@item.Buyer?.FullName</td>
+                <td>@item.PaymentType</td>
+                <td>@(item.DueDate?.ToString("dd-MMM-yyyy") ?? "-")</td>
+                <td>@(item.ApplyGst ? "Yes" : "No")</td>
+                <td>@item.ProfitAmount.ToString("N2")</td>
+                <td>@item.GrandTotalAmount.ToString("N2")</td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@item.Id">View</a>
+                    <a class="btn btn-sm btn-outline-primary" asp-action="Pdf" asp-route-id="@item.Id">PDF</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

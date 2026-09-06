@@ -52,21 +52,25 @@ public class LedgerService : ILedgerService
         }
 
         var consignments = await _db.SalesInvoices.AsNoTracking()
-            .Include(i => i.ConsignmentReceipt)
-            .Where(i => i.StockType == StockType.ConsignmentStock
-                        && i.ConsignmentReceipt != null
-                        && i.ConsignmentReceipt.StockOwnerId == partyId)
-            .ToListAsync();
+    .Include(i => i.ConsignmentReceipt)
+    .Where(i => i.StockType == StockType.ConsignmentStock
+                && i.ConsignmentReceipt != null
+                && i.ConsignmentReceipt.StockOwnerId == partyId)
+    .ToListAsync();
 
         foreach (var invoice in consignments)
         {
+            var commissionPct = invoice.ConsignmentReceipt!.AgreedCommissionPercentage;
+            var commissionRevenue = Math.Round(invoice.SubtotalAmount * commissionPct / 100m, 2);
+            var stockOwnerPayable = invoice.SubtotalAmount - commissionRevenue;
+
             lines.Add(new PartyLedgerLine
             {
                 Date = invoice.InvoiceDate,
                 Document = invoice.InvoiceNumber,
                 Description = "Consignment net payable to stock owner",
                 Head = HeadType.DirectProductHead,
-                Credit = invoice.StockOwnerPayable
+                Credit = stockOwnerPayable
             });
             lines.Add(new PartyLedgerLine
             {
@@ -74,7 +78,7 @@ public class LedgerService : ILedgerService
                 Document = invoice.InvoiceNumber,
                 Description = "Commission income (company)",
                 Head = HeadType.CommissionHead,
-                Credit = invoice.CommissionRevenue
+                Credit = commissionRevenue
             });
         }
 

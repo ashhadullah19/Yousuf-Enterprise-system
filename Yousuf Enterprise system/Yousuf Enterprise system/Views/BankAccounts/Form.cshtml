@@ -1,0 +1,41 @@
+@model BankAccount
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Add Account" : "Edit Account";
+    var action = Model.Id == 0 ? "Create" : "Edit";
+}
+<form asp-action="@action" method="post" class="card stat-card p-4" style="max-width:720px;">
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="BankName" class="form-label"></label>
+        <input asp-for="BankName" class="form-control" />
+        <span asp-validation-for="BankName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="AccountTitle" class="form-label"></label>
+        <input asp-for="AccountTitle" class="form-control" />
+        <span asp-validation-for="AccountTitle" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="AccountNumber" class="form-label"></label>
+        <input asp-for="AccountNumber" class="form-control" />
+        <span asp-validation-for="AccountNumber" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Remarks" class="form-label"></label>
+        <textarea asp-for="Remarks" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Remarks" class="text-danger"></span>
+    </div>
+
+    <div class="mt-3">
+        <button class="btn btn-success" type="submit">Save</button>
+        <a class="btn btn-link" asp-action="Index">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+ }

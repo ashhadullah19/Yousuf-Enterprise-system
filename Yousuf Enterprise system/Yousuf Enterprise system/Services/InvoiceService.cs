@@ -10,8 +10,10 @@ public class InvoiceCalculationResult
     public decimal GstPercentage { get; set; }
     public decimal GstAmount { get; set; }
     public decimal GrandTotal { get; set; }
-    public decimal CommissionRevenue { get; set; }
-    public decimal StockOwnerPayable { get; set; }
+
+    public decimal AgentCommissionAmount { get; set; }
+    public decimal CostOfGoodsSold { get; set; }
+    public decimal ProfitAmount { get; set; }
 }
 
 public interface IInvoiceService
@@ -19,6 +21,7 @@ public interface IInvoiceService
     Task<InvoiceCalculationResult> CalculateAsync(SalesInvoice invoice);
     Task<decimal> OwnedStockOnHandAsync(int productId, int? excludeInvoiceId = null);
     Task<decimal> ConsignmentRemainingAsync(int receiptId, int? excludeInvoiceId = null);
+    Task<decimal> AverageCostAsync(int productId);
     Task ApplyAndValidateAsync(SalesInvoice invoice);
 }
 
@@ -29,6 +32,26 @@ public class InvoiceService : IInvoiceService
     public InvoiceService(ApplicationDbContext db)
     {
         _db = db;
+    }
+
+    // Weighted average purchase cost per unit, derived from Owned Purchases.
+    // Consignment stock has no cost basis to Yousuf Enterprise, so this only
+    // applies to Owned Stock sales.
+    public async Task<decimal> AverageCostAsync(int productId)
+    {
+        var purchases = await _db.OwnedPurchases
+            .Where(p => p.ProductId == productId)
+            .Select(p => new { p.Quantity, p.RatePerUnit })
+            .ToListAsync();
+
+        if (purchases.Count == 0 || purchases.Sum(p => p.Quantity) == 0)
+        {
+            return 0;
+        }
+
+        var totalQty = purchases.Sum(p => p.Quantity);
+        var totalCost = purchases.Sum(p => p.Quantity * p.RatePerUnit);
+        return Math.Round(totalCost / totalQty, 4);
     }
 
     public async Task<InvoiceCalculationResult> CalculateAsync(SalesInvoice invoice)
@@ -49,25 +72,34 @@ public class InvoiceService : IInvoiceService
 
             result.GstPercentage = gst;
             result.GstAmount = Math.Round(result.Subtotal * gst / 100m, 2);
-            result.GrandTotal = result.Subtotal + result.GstAmount;
         }
         else
         {
             result.GstPercentage = 0;
             result.GstAmount = 0;
-            result.GrandTotal = result.Subtotal;
         }
 
-        if (invoice.StockType == StockType.ConsignmentStock && invoice.ConsignmentReceiptId.HasValue)
+        // Extra charges are an internal cost (conveyance/labour) — they reduce
+        // profit but are NOT billed to the buyer, so they don't touch GrandTotal.
+        result.GrandTotal = result.Subtotal + result.GstAmount;
+
+        // Generic agent/sales commission — applies to ANY invoice, owned or consignment.
+        result.AgentCommissionAmount = Math.Round(result.Subtotal * invoice.AgentCommissionPercentage / 100m, 2);
+
+        // Cost of goods sold — only meaningful for Owned Stock (we don't own consignment stock).
+        if (invoice.StockType == StockType.OwnedStock)
         {
-            var receipt = await _db.ConsignmentReceipts.AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == invoice.ConsignmentReceiptId.Value);
-            if (receipt is not null)
-            {
-                result.CommissionRevenue = Math.Round(result.Subtotal * receipt.AgreedCommissionPercentage / 100m, 2);
-                result.StockOwnerPayable = result.Subtotal - result.CommissionRevenue;
-            }
+            var avgCost = await AverageCostAsync(invoice.ProductId);
+            result.CostOfGoodsSold = Math.Round(avgCost * invoice.QuantitySold, 2);
         }
+        else
+        {
+            result.CostOfGoodsSold = 0;
+        }
+
+        result.ProfitAmount = Math.Round(
+            result.Subtotal - result.CostOfGoodsSold - result.AgentCommissionAmount - invoice.ExtraChargesAmount,
+            2);
 
         return result;
     }
@@ -115,6 +147,11 @@ public class InvoiceService : IInvoiceService
             throw new InvalidOperationException("Quantity sold must be greater than zero.");
         }
 
+        if (invoice.AgentCommissionPercentage is < 0 or > 100)
+        {
+            throw new InvalidOperationException("Commission percentage must be between 0 and 100.");
+        }
+
         if (invoice.StockType == StockType.ConsignmentStock)
         {
             if (!invoice.ConsignmentReceiptId.HasValue)
@@ -147,7 +184,8 @@ public class InvoiceService : IInvoiceService
         invoice.GstPercentage = calc.GstPercentage;
         invoice.GstAmount = calc.GstAmount;
         invoice.GrandTotalAmount = calc.GrandTotal;
-        invoice.CommissionRevenue = calc.CommissionRevenue;
-        invoice.StockOwnerPayable = calc.StockOwnerPayable;
+        invoice.AgentCommissionAmount = calc.AgentCommissionAmount;
+        invoice.CostOfGoodsSold = calc.CostOfGoodsSold;
+        invoice.ProfitAmount = calc.ProfitAmount;
     }
 }

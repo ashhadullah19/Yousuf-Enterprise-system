@@ -1,25 +1,13 @@
-using System.ComponentModel.DataAnnotations;
-using Yousuf_Enterprise_system.Models;
-
 namespace Yousuf_Enterprise_system.ViewModels;
 
-public class UserFormViewModel
+public class PaymentReminder
 {
-    public string? Id { get; set; }
-
-    [Required, EmailAddress]
-    public string Email { get; set; } = string.Empty;
-
-    [Required, StringLength(200)]
-    public string FullName { get; set; } = string.Empty;
-
-    [DataType(DataType.Password)]
-    public string? Password { get; set; }
-
-    [Required]
-    public string Role { get; set; } = AppRoles.Accountant;
-
-    public bool IsActive { get; set; } = true;
+    public int InvoiceId { get; set; }
+    public string InvoiceNumber { get; set; } = string.Empty;
+    public string BuyerName { get; set; } = string.Empty;
+    public DateTime DueDate { get; set; }
+    public decimal AmountDue { get; set; }
+    public bool IsOverdue { get; set; }
 }
 
 public class DashboardViewModel
@@ -29,13 +17,10 @@ public class DashboardViewModel
     public decimal Payables { get; set; }
     public decimal TodayCashFlow { get; set; }
     public List<ProductStockAlert> LowStock { get; set; } = new();
-    public List<SalesInvoice> RecentInvoices { get; set; } = new();
-}
+    public List<Yousuf_Enterprise_system.Models.SalesInvoice> RecentInvoices { get; set; } = new();
 
-public class UserListItem
-{
-    public ApplicationUser User { get; set; } = null!;
-    public IList<string> Roles { get; set; } = new List<string>();
+    // NEW
+    public List<PaymentReminder> PaymentReminders { get; set; } = new();
 }
 
 public class ProductStockAlert

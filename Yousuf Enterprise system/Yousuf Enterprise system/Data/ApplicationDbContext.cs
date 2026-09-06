@@ -18,61 +18,52 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
     public DbSet<FinancialVoucher> FinancialVouchers => Set<FinancialVoucher>();
     public DbSet<BackupLog> BackupLogs => Set<BackupLog>();
-
+    public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
+    public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-
         builder.Entity<Party>().HasQueryFilter(p => !p.IsDeleted);
         builder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
-        builder.Entity<ConsignmentReceipt>().HasQueryFilter(c => !c.IsDeleted);
-
         builder.Entity<OwnedPurchase>()
             .HasOne(p => p.Vendor)
             .WithMany()
             .HasForeignKey(p => p.VendorId)
             .OnDelete(DeleteBehavior.Restrict);
-
         builder.Entity<OwnedPurchase>()
             .HasOne(p => p.Product)
             .WithMany()
             .HasForeignKey(p => p.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.Entity<ConsignmentReceipt>()
-            .HasOne(c => c.StockOwner)
-            .WithMany()
-            .HasForeignKey(c => c.StockOwnerId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.Entity<ConsignmentReceipt>()
-            .HasOne(c => c.Product)
-            .WithMany()
-            .HasForeignKey(c => c.ProductId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.Entity<SalesInvoice>()
             .HasOne(s => s.Buyer)
             .WithMany()
             .HasForeignKey(s => s.BuyerId)
             .OnDelete(DeleteBehavior.Restrict);
-
         builder.Entity<SalesInvoice>()
             .HasOne(s => s.Product)
             .WithMany()
             .HasForeignKey(s => s.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
-
         builder.Entity<SalesInvoice>()
-            .HasOne(s => s.ConsignmentReceipt)
+            .HasOne(s => s.BankAccount)
             .WithMany()
-            .HasForeignKey(s => s.ConsignmentReceiptId)
+            .HasForeignKey(s => s.BankAccountId)
             .OnDelete(DeleteBehavior.Restrict);
-
         builder.Entity<FinancialVoucher>()
             .HasOne(v => v.Party)
             .WithMany()
             .HasForeignKey(v => v.PartyId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<BankTransaction>()
+            .HasOne(t => t.BankAccount)
+            .WithMany()
+            .HasForeignKey(t => t.BankAccountId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<BankTransaction>()
+            .HasOne(t => t.SalesInvoice)
+            .WithMany()
+            .HasForeignKey(t => t.SalesInvoiceId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<OwnedPurchase>().Property(p => p.Quantity).HasPrecision(18, 4);

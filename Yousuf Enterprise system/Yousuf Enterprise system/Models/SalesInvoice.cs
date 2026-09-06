@@ -37,6 +37,28 @@ public class SalesInvoice
     [Display(Name = "Subtotal"), Column(TypeName = "decimal(18,2)")]
     public decimal SubtotalAmount { get; set; }
 
+    // --- Agent / Sales Commission (NEW — generic, replaces old consignment split) ---
+    [Display(Name = "Commission %"), Column(TypeName = "decimal(5,2)")]
+    public decimal AgentCommissionPercentage { get; set; }
+
+    [Display(Name = "Commission Amount"), Column(TypeName = "decimal(18,2)")]
+    public decimal AgentCommissionAmount { get; set; }
+
+    // --- Extra charges (conveyance, labour, etc.) ---
+    [Display(Name = "Extra Charges Description"), StringLength(200)]
+    public string? ExtraChargesDescription { get; set; }
+
+    [Display(Name = "Extra Charges Amount"), Column(TypeName = "decimal(18,2)")]
+    public decimal ExtraChargesAmount { get; set; }
+
+    // --- Cost & Profit (auto, from Product's cost basis) ---
+    [Display(Name = "Cost of Goods Sold"), Column(TypeName = "decimal(18,2)")]
+    public decimal CostOfGoodsSold { get; set; }
+
+    [Display(Name = "Profit"), Column(TypeName = "decimal(18,2)")]
+    public decimal ProfitAmount { get; set; }
+
+    // --- GST ---
     [Display(Name = "Apply GST")]
     public bool ApplyGst { get; set; }
 
@@ -49,9 +71,21 @@ public class SalesInvoice
     [Display(Name = "Grand Total"), Column(TypeName = "decimal(18,2)")]
     public decimal GrandTotalAmount { get; set; }
 
-    [Display(Name = "Commission Revenue"), Column(TypeName = "decimal(18,2)")]
-    public decimal CommissionRevenue { get; set; }
+    // --- Payment ---
+    [Display(Name = "Payment Type")]
+    public PaymentType PaymentType { get; set; } = PaymentType.Cash;
 
-    [Display(Name = "Stock Owner Payable"), Column(TypeName = "decimal(18,2)")]
-    public decimal StockOwnerPayable { get; set; }
+    [Display(Name = "Bank Account")]
+    public int? BankAccountId { get; set; }
+    public BankAccount? BankAccount { get; set; }
+
+    [Display(Name = "Due Date"), DataType(DataType.Date)]
+    public DateTime? DueDate { get; set; }
+
+    // Convenience flag used by dashboard/index — computed in the controller/service,
+    // NOT persisted, so it can't drift out of sync with actual payments.
+    [NotMapped]
+    public bool IsOverdue => PaymentType == PaymentType.Credit
+        && DueDate.HasValue
+        && DueDate.Value.Date < DateTime.Today;
 }

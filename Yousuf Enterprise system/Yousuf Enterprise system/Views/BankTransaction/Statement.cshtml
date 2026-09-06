@@ -1,0 +1,70 @@
+@using Yousuf_Enterprise_system.ViewModels
+@model IEnumerable<StatementRow>
+@{
+    var account = (BankAccount)ViewBag.Account;
+    ViewData["Title"] = $"Statement - {account.AccountTitle}";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="mb-0">@account.BankName - @account.AccountTitle</h4>
+        <small class="text-muted">A/C: @account.AccountNumber</small>
+    </div>
+    <div class="text-end">
+        <div class="text-muted">Closing Balance</div>
+        <h4 class="mb-0">@(((decimal)ViewBag.ClosingBalance).ToString("N2"))</h4>
+    </div>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+    <input type="hidden" name="bankAccountId" value="@account.Id" />
+    <div class="col-auto">
+        <label class="form-label">From</label>
+        <input type="date" class="form-control" name="from" value="@ViewBag.From" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label">To</label>
+        <input type="date" class="form-control" name="to" value="@ViewBag.To" />
+    </div>
+    <div class="col-auto align-self-end">
+        <button class="btn btn-outline-secondary">Filter</button>
+    </div>
+    <div class="col-auto align-self-end ms-auto">
+        <a class="btn btn-outline-danger"
+           asp-action="StatementPdf"
+           asp-route-bankAccountId="@account.Id"
+           asp-route-from="@ViewBag.From"
+           asp-route-to="@ViewBag.To">
+            Download PDF
+        </a>
+    </div>
+</form>
+
+<table class="table table-striped bg-white">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Reference</th>
+            <th>Remarks</th>
+            <th class="text-end">Deposit</th>
+            <th class="text-end">Withdrawal</th>
+            <th class="text-end">Balance</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in Model)
+        {
+            var t = row.Transaction;
+            <tr>
+                <td>@t.TransactionDate.ToString("dd-MMM-yyyy")</td>
+                <td>@t.Type</td>
+                <td>@t.ReferenceNumber</td>
+                <td>@t.Remarks</td>
+                <td class="text-end">@(t.Type == TransactionType.Deposit ? t.Amount.ToString("N2") : "")</td>
+                <td class="text-end">@(t.Type == TransactionType.Withdrawal ? t.Amount.ToString("N2") : "")</td>
+                <td class="text-end">@row.RunningBalance.ToString("N2")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+<a class="btn btn-link" asp-action="Index">Back to transactions</a>

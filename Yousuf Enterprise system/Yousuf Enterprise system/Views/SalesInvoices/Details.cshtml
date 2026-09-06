@@ -12,13 +12,35 @@
     <p>Buyer: @Model.Buyer?.FullName</p>
     <p>Product: @Model.Product?.Name · Qty @Model.QuantitySold.ToString("N4") at @Model.RatePerUnit.ToString("N2")</p>
     <p>Subtotal: @Model.SubtotalAmount.ToString("N2")</p>
+    @if (!string.IsNullOrWhiteSpace(Model.ExtraChargesDescription) || Model.ExtraChargesAmount > 0)
+    {
+        <p>@(Model.ExtraChargesDescription ?? "Extra charges"): @Model.ExtraChargesAmount.ToString("N2")</p>
+    }
     <p>GST (@Model.GstPercentage.ToString("N2")%): @Model.GstAmount.ToString("N2")</p>
     <p class="fw-semibold">Grand total: @Model.GrandTotalAmount.ToString("N2")</p>
+
+    <hr />
+    <p>Cost of goods sold: @Model.CostOfGoodsSold.ToString("N2")</p>
+    <p>Agent commission (@Model.AgentCommissionPercentage.ToString("N2")%): @Model.AgentCommissionAmount.ToString("N2")</p>
+    <p class="fw-semibold">Profit: @Model.ProfitAmount.ToString("N2")</p>
+
+    <hr />
+    <p>Payment type: @Model.PaymentType</p>
+    @if (Model.PaymentType == PaymentType.Online)
+    {
+        <p>Bank account: @Model.BankAccount?.AccountTitle (@Model.BankAccount?.BankName)</p>
+    }
+    @if (Model.PaymentType == PaymentType.Credit)
+    {
+        <p class="@(Model.IsOverdue ? "text-danger fw-semibold" : "")">
+            Due date: @Model.DueDate?.ToString("dd-MMM-yyyy") @(Model.IsOverdue ? "(OVERDUE)" : "")
+        </p>
+        <p>Paid so far: @(((decimal)ViewBag.AmountPaid).ToString("N2")) / @Model.GrandTotalAmount.ToString("N2")</p>
+    }
+
     @if (Model.StockType == StockType.ConsignmentStock)
     {
         <hr />
-        <p>Commission revenue: @Model.CommissionRevenue.ToString("N2")</p>
-        <p>Stock owner payable: @Model.StockOwnerPayable.ToString("N2")</p>
         <p>Owner: @Model.ConsignmentReceipt?.StockOwner?.FullName</p>
     }
     <a asp-action="Index">Back to invoices</a>

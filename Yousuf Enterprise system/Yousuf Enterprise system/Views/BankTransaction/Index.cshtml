@@ -1,0 +1,44 @@
+@model IEnumerable<BankTransaction>
+@{
+    ViewData["Title"] = "Bank Transactions";
+}
+<form class="row g-2 mb-3" method="get">
+    <div class="col-md-4"><input class="form-control" name="q" value="@ViewBag.Query" placeholder="Search transaction..." /></div>
+    <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
+    <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add transaction</a></div>
+</form>
+<table class="table table-striped bg-white">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Bank Account</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Reference</th>
+            <th>Remarks</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.TransactionDate.ToString("dd-MMM-yyyy")</td>
+                <td>@item.BankAccount?.AccountTitle (@item.BankAccount?.BankName)</td>
+                <td>@item.Type</td>
+                <td>@item.Amount.ToString("N2")</td>
+                <td>@item.ReferenceNumber</td>
+                <td>@item.Remarks</td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    @if (User.IsInRole(AppRoles.SuperAdmin))
+                    {
+                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
+                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this transaction?');">Delete</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

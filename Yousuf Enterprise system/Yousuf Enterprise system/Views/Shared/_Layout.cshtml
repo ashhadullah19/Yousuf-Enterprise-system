@@ -18,15 +18,16 @@
                 <a class="nav-link" asp-controller="Parties" asp-action="Index">Parties</a>
                 <a class="nav-link" asp-controller="Products" asp-action="Index">Products</a>
                 <a class="nav-link" asp-controller="OwnedPurchases" asp-action="Index">Owned Stock</a>
-                <a class="nav-link" asp-controller="ConsignmentReceipts" asp-action="Index">Consignment</a>
                 <a class="nav-link" asp-controller="SalesInvoices" asp-action="Index">Sales & GST</a>
                 <a class="nav-link" asp-controller="Vouchers" asp-action="Index">Ledgers</a>
                 <a class="nav-link" asp-controller="Reports" asp-action="Index">Reports</a>
+                <a class="nav-link" asp-controller="BankAccounts" asp-action="Index">Bank Accounts</a>
                 @if (User.IsInRole(AppRoles.SuperAdmin))
                 {
                     <a class="nav-link" asp-controller="Users" asp-action="Index">Users</a>
                     <a class="nav-link" asp-controller="Settings" asp-action="Index">Settings</a>
                     <a class="nav-link" asp-controller="Backups" asp-action="Index">Backups</a>
+                    <a class="nav-link" asp-controller="BankTransaction" asp-action="Index">Transaction</a>
                 }
             </nav>
         </aside>

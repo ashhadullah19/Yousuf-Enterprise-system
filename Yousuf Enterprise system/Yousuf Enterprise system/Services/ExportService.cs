@@ -34,7 +34,6 @@ public class ExportService : IExportService
             p.FullName,
             Type = p.Type.ToString(),
             p.FatherName,
-            p.Cnic,
             p.PrimaryContact,
             p.Ntn,
             p.BankName,
@@ -141,7 +140,6 @@ public class ExportService : IExportService
                         FullName = name,
                         Type = type,
                         PrimaryContact = row.Cell(3).GetString(),
-                        Cnic = row.Cell(4).GetString()
                     });
                     partiesAdded++;
                 }

@@ -3,8 +3,152 @@
   "WorkspaceRootPath": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Data\\Migrations\\20260906110604_AddSalesLogic.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Yousuf Enterprise system\\Data\\Migrations\\20260906110604_AddSalesLogic.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\viewmodels\\userformviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\viewmodels\\userformviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\services\\ledgerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\services\\ledgerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\models\\salesinvoice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\models\\salesinvoice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\viewmodels\\statementrow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\viewmodels\\statementrow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\views\\users\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\views\\users\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\viewmodels\\loginviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\viewmodels\\loginviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\viewmodels\\dashboardviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\viewmodels\\dashboardviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\services\\invoicepdfservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\services\\invoicepdfservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\services\\invoiceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\services\\invoiceservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\views\\banktransaction\\form.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\views\\banktransaction\\form.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\views\\salesinvoices\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\views\\salesinvoices\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\views\\salesinvoices\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\views\\salesinvoices\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\views\\salesinvoices\\form.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\views\\salesinvoices\\form.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\controllers\\salesinvoicescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\controllers\\salesinvoicescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\models\\banktransaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\models\\banktransaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\models\\enums.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\models\\enums.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Data\\Migrations\\20260906102629_AddBankTransactions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Yousuf Enterprise system\\Data\\Migrations\\20260906102629_AddBankTransactions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\controllers\\banktransactioncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\controllers\\banktransactioncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\views\\banktransaction\\statement.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\views\\banktransaction\\statement.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\views\\bankaccounts\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\views\\bankaccounts\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\views\\banktransaction\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\views\\banktransaction\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\views\\bankaccounts\\form.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\views\\bankaccounts\\form.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\controllers\\bankaccountscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\controllers\\bankaccountscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\models\\bankaccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\models\\bankaccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\controllers\\productscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\controllers\\productscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Data\\Migrations\\20260906092211_AddBankAccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Yousuf Enterprise system\\Data\\Migrations\\20260906092211_AddBankAccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\pages\\_validationscriptspartial.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\pages\\_validationscriptspartial.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\controllers\\partiescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\controllers\\partiescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\services\\exportservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\services\\exportservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\views\\parties\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\views\\parties\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\models\\party.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|solutionrelative:yousuf enterprise system\\models\\party.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{00BD31D3-3A84-437E-900B-C129D716644F}|Yousuf Enterprise system\\Yousuf Enterprise system.csproj|e:\\git projects\\yousuf-enterprise-system\\yousuf enterprise system\\yousuf enterprise system\\services\\documentnumberservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -27,19 +171,487 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "20260906110604_AddSalesLogic.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Data\\Migrations\\20260906110604_AddSalesLogic.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Data\\Migrations\\20260906110604_AddSalesLogic.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Data\\Migrations\\20260906110604_AddSalesLogic.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Data\\Migrations\\20260906110604_AddSalesLogic.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T11:06:05.112Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "LedgerService.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Services\\LedgerService.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Services\\LedgerService.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Services\\LedgerService.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Services\\LedgerService.cs",
+              "ViewState": "AgIAAD0AAAAAAAAAAAAYwFIAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T11:00:02.961Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ApplicationDbContext.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Data\\ApplicationDbContext.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Data\\ApplicationDbContext.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Data\\ApplicationDbContext.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Data\\ApplicationDbContext.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAASwBEAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T09:11:25.506Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "_Layout.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\Shared\\_Layout.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Views\\Shared\\_Layout.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\Shared\\_Layout.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Views\\Shared\\_Layout.cshtml",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAABUAAABcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T09:24:36.423Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "SalesInvoice.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Models\\SalesInvoice.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Models\\SalesInvoice.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Models\\SalesInvoice.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Models\\SalesInvoice.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAIA9wBIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:38:38.928Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "UsersController.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\UsersController.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Controllers\\UsersController.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\UsersController.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Controllers\\UsersController.cs",
+              "ViewState": "AgIAABcAAAAAAAAAAAAIwB8AAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:51:59.461Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "UserFormViewModel.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\ViewModels\\UserFormViewModel.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\ViewModels\\UserFormViewModel.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\ViewModels\\UserFormViewModel.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\ViewModels\\UserFormViewModel.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAIA9wBEAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:52:50.203Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "StatementRow.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\ViewModels\\StatementRow.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\ViewModels\\StatementRow.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\ViewModels\\StatementRow.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\ViewModels\\StatementRow.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwAYAAAAeAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:20:33.54Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\Users\\Index.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Views\\Users\\Index.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\Users\\Index.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Views\\Users\\Index.cshtml",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAAABUAAABvAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T10:49:46.327Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "LoginViewModel.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\ViewModels\\LoginViewModel.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\ViewModels\\LoginViewModel.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\ViewModels\\LoginViewModel.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\ViewModels\\LoginViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:52:32.017Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\Home\\Index.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Views\\Home\\Index.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\Home\\Index.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Views\\Home\\Index.cshtml",
+              "ViewState": "AgIAACYAAAAAAAAAAAAQwDsAAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T10:49:14.355Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "DashboardViewModel.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\ViewModels\\DashboardViewModel.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\ViewModels\\DashboardViewModel.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\ViewModels\\DashboardViewModel.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\ViewModels\\DashboardViewModel.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAzwB4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:48:19.601Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "InvoicePdfService.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Services\\InvoicePdfService.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Services\\InvoicePdfService.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Services\\InvoicePdfService.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Services\\InvoicePdfService.cs",
+              "ViewState": "AgIAADgAAAAAAAAAAAAYwE0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:47:59.95Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "InvoiceService.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Services\\InvoiceService.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Services\\InvoiceService.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Services\\InvoiceService.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Services\\InvoiceService.cs",
+              "ViewState": "AgIAAKkAAAAAAAAAAAAYwL4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:47:36.784Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "HomeController.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\HomeController.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Controllers\\HomeController.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\HomeController.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Controllers\\HomeController.cs",
+              "ViewState": "AgIAAEgAAAAAAAAAAAAYwF0AAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:42:03.425Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "Details.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\SalesInvoices\\Details.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Views\\SalesInvoices\\Details.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\SalesInvoices\\Details.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Views\\SalesInvoices\\Details.cshtml",
+              "ViewState": "AgIAABkAAAAAAAAAAAAQwC4AAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T10:41:07.244Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\SalesInvoices\\Index.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Views\\SalesInvoices\\Index.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\SalesInvoices\\Index.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Views\\SalesInvoices\\Index.cshtml",
+              "ViewState": "AgIAABkAAAAAAAAAAAAQwC4AAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T10:40:57.92Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "Form.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\SalesInvoices\\Form.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Views\\SalesInvoices\\Form.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\SalesInvoices\\Form.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Views\\SalesInvoices\\Form.cshtml",
+              "ViewState": "AgIAAFcAAAAAAAAAAAAQwGwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T10:40:42.273Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "Enums.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Models\\Enums.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Models\\Enums.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Models\\Enums.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Models\\Enums.cs",
+              "ViewState": "AgIAACoAAAAAAAAAAAAAADUAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:38:04.397Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "Form.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\BankTransaction\\Form.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Views\\BankTransaction\\Form.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\BankTransaction\\Form.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Views\\BankTransaction\\Form.cshtml",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABUAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T10:17:55.174Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "BankTransactionController.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\BankTransactionController.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Controllers\\BankTransactionController.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\BankTransactionController.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Controllers\\BankTransactionController.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAA0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:15:27.118Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\BankAccounts\\Index.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Views\\BankAccounts\\Index.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\BankAccounts\\Index.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Views\\BankAccounts\\Index.cshtml",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAQwBoAAACsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T09:39:20.414Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "BankTransaction.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Models\\BankTransaction.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Models\\BankTransaction.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Models\\BankTransaction.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Models\\BankTransaction.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAYwCgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:12:49.467Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
               "Title": "SalesInvoicesController.cs",
               "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\SalesInvoicesController.cs",
               "RelativeDocumentMoniker": "Yousuf Enterprise system\\Controllers\\SalesInvoicesController.cs",
               "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\SalesInvoicesController.cs",
               "RelativeToolTip": "Yousuf Enterprise system\\Controllers\\SalesInvoicesController.cs",
-              "ViewState": "AgIAAEcAAAAAAAAAAAAAAEkAAAAvAAAAAAAAAA==",
+              "ViewState": "AgIAAJoAAAAAAAAAAAAAAKkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-04T14:22:53.113Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 26,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\BankTransaction\\Index.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Views\\BankTransaction\\Index.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\BankTransaction\\Index.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Views\\BankTransaction\\Index.cshtml",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAswBYAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T10:18:02.792Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "20260906102629_AddBankTransactions.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Data\\Migrations\\20260906102629_AddBankTransactions.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Data\\Migrations\\20260906102629_AddBankTransactions.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Data\\Migrations\\20260906102629_AddBankTransactions.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Data\\Migrations\\20260906102629_AddBankTransactions.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T10:26:29.56Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "Statement.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\BankTransaction\\Statement.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Views\\BankTransaction\\Statement.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\BankTransaction\\Statement.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Views\\BankTransaction\\Statement.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T10:21:22.235Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "Form.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\BankAccounts\\Form.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Views\\BankAccounts\\Form.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\BankAccounts\\Form.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Views\\BankAccounts\\Form.cshtml",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAwwBgAAABCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T09:37:15.456Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "ProductsController.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\ProductsController.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Controllers\\ProductsController.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\ProductsController.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Controllers\\ProductsController.cs",
+              "ViewState": "AgIAAEYAAAAAAAAAAAAAwFYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T09:33:39.471Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "BankAccountsController.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\BankAccountsController.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Controllers\\BankAccountsController.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\BankAccountsController.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Controllers\\BankAccountsController.cs",
+              "ViewState": "AgIAAD0AAAAAAAAAAAAAAE4AAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T09:29:12.443Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "BankAccount.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Models\\BankAccount.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Models\\BankAccount.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Models\\BankAccount.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Models\\BankAccount.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T09:37:56.19Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "20260906092211_AddBankAccount.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Data\\Migrations\\20260906092211_AddBankAccount.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Data\\Migrations\\20260906092211_AddBankAccount.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Data\\Migrations\\20260906092211_AddBankAccount.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Data\\Migrations\\20260906092211_AddBankAccount.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T09:22:12.309Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "_ValidationScriptsPartial.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Pages\\_ValidationScriptsPartial.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Pages\\_ValidationScriptsPartial.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Pages\\_ValidationScriptsPartial.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Pages\\_ValidationScriptsPartial.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T09:17:54.717Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\Parties\\Index.cshtml",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Views\\Parties\\Index.cshtml",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Views\\Parties\\Index.cshtml",
+              "RelativeToolTip": "Yousuf Enterprise system\\Views\\Parties\\Index.cshtml",
+              "ViewState": "AgIAABUAAAAAAAAAAAD4vx0AAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-06T09:14:35.265Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "ExportService.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Services\\ExportService.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Services\\ExportService.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Services\\ExportService.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Services\\ExportService.cs",
+              "ViewState": "AgIAAIUAAAAAAAAAAAAIwI0AAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T09:14:25.693Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "PartiesController.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\PartiesController.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Controllers\\PartiesController.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Controllers\\PartiesController.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Controllers\\PartiesController.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAAAwwBsAAABFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T09:13:38.705Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 36,
+              "Title": "Party.cs",
+              "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Models\\Party.cs",
+              "RelativeDocumentMoniker": "Yousuf Enterprise system\\Models\\Party.cs",
+              "ToolTip": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Models\\Party.cs",
+              "RelativeToolTip": "Yousuf Enterprise system\\Models\\Party.cs",
+              "ViewState": "AgIAACoAAAAAAAAAAAAowDMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-06T09:12:10.58Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 37,
               "Title": "DocumentNumberService.cs",
               "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\Services\\DocumentNumberService.cs",
               "RelativeDocumentMoniker": "Yousuf Enterprise system\\Services\\DocumentNumberService.cs",
@@ -47,12 +659,11 @@
               "RelativeToolTip": "Yousuf Enterprise system\\Services\\DocumentNumberService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-04T11:30:52.052Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-04T11:30:52.052Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 38,
               "Title": "appsettings.json",
               "DocumentMoniker": "E:\\GIT PROJECTS\\Yousuf-Enterprise-system\\Yousuf Enterprise system\\Yousuf Enterprise system\\appsettings.json",
               "RelativeDocumentMoniker": "Yousuf Enterprise system\\appsettings.json",

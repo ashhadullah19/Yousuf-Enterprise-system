@@ -26,7 +26,6 @@ public class PartiesController : Controller
             query = query.Where(p =>
                 p.FullName.Contains(q)
                 || (p.FatherName != null && p.FatherName.Contains(q))
-                || (p.Cnic != null && p.Cnic.Contains(q))
                 || (p.PrimaryContact != null && p.PrimaryContact.Contains(q))
                 || (p.Ntn != null && p.Ntn.Contains(q))
                 || (p.AccountNumber != null && p.AccountNumber.Contains(q)));
@@ -106,10 +105,10 @@ public class PartiesController : Controller
         var dir = Path.Combine(_env.WebRootPath, "uploads", "parties", party.Id.ToString());
         Directory.CreateDirectory(dir);
 
-        party.CnicFrontPath = await SaveFileAsync(cnicFront, dir, "cnic-front") ?? party.CnicFrontPath;
-        party.CnicBackPath = await SaveFileAsync(cnicBack, dir, "cnic-back") ?? party.CnicBackPath;
-        party.CanceledChequePath = await SaveFileAsync(cheque, dir, "cheque") ?? party.CanceledChequePath;
-        party.TaxCertificatePath = await SaveFileAsync(taxCert, dir, "tax") ?? party.TaxCertificatePath;
+        //party.CnicFrontPath = await SaveFileAsync(cnicFront, dir, "cnic-front") ?? party.CnicFrontPath;
+        //party.CnicBackPath = await SaveFileAsync(cnicBack, dir, "cnic-back") ?? party.CnicBackPath;
+        //party.CanceledChequePath = await SaveFileAsync(cheque, dir, "cheque") ?? party.CanceledChequePath;
+        //party.TaxCertificatePath = await SaveFileAsync(taxCert, dir, "tax") ?? party.TaxCertificatePath;
     }
 
     private static async Task<string?> SaveFileAsync(IFormFile? file, string dir, string name)

@@ -30,6 +30,35 @@
     </div>
 </div>
 
+<div class="row g-3 mb-3">
+    <div class="col-12">
+        <div class="card stat-card">
+            <div class="card-header">Payment reminders</div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>Invoice</th><th>Buyer</th><th>Due date</th><th>Amount due</th><th></th></tr></thead>
+                    <tbody>
+                        @if (!Model.PaymentReminders.Any())
+                        {
+                            <tr><td colspan="5" class="text-muted">No upcoming or overdue payments.</td></tr>
+                        }
+                        @foreach (var r in Model.PaymentReminders)
+                        {
+                            <tr class="@(r.IsOverdue ? "table-danger" : "table-warning")">
+                                <td><a asp-controller="SalesInvoices" asp-action="Details" asp-route-id="@r.InvoiceId">@r.InvoiceNumber</a></td>
+                                <td>@r.BuyerName</td>
+                                <td>@r.DueDate.ToString("dd-MMM-yyyy")</td>
+                                <td>@r.AmountDue.ToString("N2")</td>
+                                <td>@(r.IsOverdue ? "Overdue" : "Due tomorrow")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-3">
     <div class="col-lg-5">
         <div class="card stat-card">

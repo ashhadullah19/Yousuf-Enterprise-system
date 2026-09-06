@@ -46,3 +46,9 @@ public enum PaymentMode
     Cheque = 2,
     OnlineBankTransfer = 3
 }
+public enum PaymentType
+{
+    Cash,
+    Online,
+    Credit // pay later — requires DueDate
+}

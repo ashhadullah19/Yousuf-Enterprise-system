@@ -28,7 +28,7 @@ public class SalesInvoicesController : Controller
         _pdf = pdf;
     }
 
-    public async Task<IActionResult> Index(string? q, bool? gst)
+    public async Task<IActionResult> Index(string? q, bool? gst, bool? overdueOnly)
     {
         var query = _db.SalesInvoices.AsNoTracking()
             .Include(i => i.Buyer)
@@ -48,8 +48,16 @@ public class SalesInvoicesController : Controller
             query = query.Where(i => i.ApplyGst == gst.Value);
         }
 
+        if (overdueOnly == true)
+        {
+            var today = DateTime.Today;
+            query = query.Where(i => i.PaymentType == PaymentType.Credit
+                && i.DueDate != null && i.DueDate.Value.Date < today);
+        }
+
         ViewBag.Query = q;
         ViewBag.Gst = gst;
+        ViewBag.OverdueOnly = overdueOnly;
         return View(await query.OrderByDescending(i => i.InvoiceDate).ThenByDescending(i => i.Id).ToListAsync());
     }
 
@@ -69,6 +77,24 @@ public class SalesInvoicesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(SalesInvoice invoice)
     {
+        // Conditional requirements based on PaymentType
+        if (invoice.PaymentType == PaymentType.Online && invoice.BankAccountId is null)
+        {
+            ModelState.AddModelError(nameof(invoice.BankAccountId), "Bank account is required for online payments.");
+        }
+        if (invoice.PaymentType == PaymentType.Credit && invoice.DueDate is null)
+        {
+            ModelState.AddModelError(nameof(invoice.DueDate), "Due date is required when payment is on credit.");
+        }
+        if (invoice.PaymentType != PaymentType.Online)
+        {
+            invoice.BankAccountId = null; // don't persist stale selection
+        }
+        if (invoice.PaymentType != PaymentType.Credit)
+        {
+            invoice.DueDate = null;
+        }
+
         try
         {
             await _invoices.ApplyAndValidateAsync(invoice);
@@ -94,10 +120,17 @@ public class SalesInvoicesController : Controller
         var invoice = await _db.SalesInvoices
             .Include(i => i.Buyer)
             .Include(i => i.Product)
+            .Include(i => i.BankAccount)
             .Include(i => i.ConsignmentReceipt)
             .ThenInclude(c => c!.StockOwner)
             .FirstOrDefaultAsync(i => i.Id == id);
-        return invoice is null ? NotFound() : View(invoice);
+        if (invoice is null) return NotFound();
+
+        ViewBag.AmountPaid = await _db.BankTransactions
+            .Where(t => t.SalesInvoiceId == id && t.Type == TransactionType.Deposit)
+            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+        return View(invoice);
     }
 
     public async Task<IActionResult> Pdf(int id)
@@ -130,5 +163,8 @@ public class SalesInvoicesController : Controller
                 .Select(c => new { c.Id, Label = "#" + c.Id + " " + c.StockOwner!.FullName + " / " + c.Product!.Name })
                 .ToListAsync(),
             "Id", "Label");
+        ViewBag.BankAccounts = new SelectList(
+            await _db.BankAccounts.OrderBy(b => b.BankName).ToListAsync(),
+            "Id", "AccountTitle");
     }
 }

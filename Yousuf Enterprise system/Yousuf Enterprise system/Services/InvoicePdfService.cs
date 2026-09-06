@@ -64,11 +64,13 @@ public class InvoicePdfService : IInvoicePdfService
                     col.Item().AlignRight().Text($"GST ({invoice.GstPercentage:N2}%): {invoice.GstAmount:N2}");
                     col.Item().AlignRight().Text($"Grand Total: {invoice.GrandTotalAmount:N2}").Bold();
 
-                    if (invoice.StockType == StockType.ConsignmentStock)
+                    col.Item().PaddingTop(16).Text($"Payment Type: {invoice.PaymentType}");
+                    if (invoice.PaymentType == PaymentType.Credit && invoice.DueDate.HasValue)
                     {
-                        col.Item().PaddingTop(12).Text($"Commission: {invoice.CommissionRevenue:N2}");
-                        col.Item().Text($"Stock owner payable: {invoice.StockOwnerPayable:N2}");
+                        col.Item().Text($"Payment Due: {invoice.DueDate.Value:dd-MMM-yyyy}").SemiBold();
                     }
+                    // Commission, cost, and profit are internal figures and are
+                    // intentionally not printed on the customer-facing invoice.
                 });
             });
         }).GeneratePdf();
