@@ -1,15 +1,4 @@
-App_Data/
+.vs/
 bin/
 obj/
 *.user
-wwwroot/uploads/**
-!wwwroot/uploads/.gitkeep
-.vs/
-[Bb]in/
-[Ob]bj/
-*.user
-*.userosscache
-*.vsidx
-*.db
-*.db-shm
-*.db-wal
