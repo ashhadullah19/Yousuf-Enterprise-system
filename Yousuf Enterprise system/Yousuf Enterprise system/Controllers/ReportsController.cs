@@ -7,7 +7,8 @@ using Yousuf_Enterprise_system.Services;
 
 namespace Yousuf_Enterprise_system.Controllers;
 
-[Authorize(Roles = AppRoles.Staff)]
+[Authorize]
+[ModulePermission(Modules.Reports)]
 public class ReportsController : Controller
 {
     private readonly ApplicationDbContext _db;
@@ -37,6 +38,11 @@ public class ReportsController : Controller
         }
 
         var lines = await _ledger.GetPartyLedgerAsync(partyId.Value, from, to);
+        ViewBag.DuesBalance = lines.Where(l => l.Head == HeadType.DirectProductHead).Sum(l => l.Debit - l.Credit);
+        var commissionLines = lines.Where(l => l.Head == HeadType.CommissionHead).ToList();
+        ViewBag.CommissionAccrued = commissionLines.Sum(l => l.Credit);
+        ViewBag.CommissionReceived = commissionLines.Sum(l => l.Debit);
+        ViewBag.CommissionReceivable = ViewBag.CommissionAccrued - ViewBag.CommissionReceived;
         return View(lines);
     }
 
@@ -67,6 +73,7 @@ public class ReportsController : Controller
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", name);
     }
 
+    [ModulePermission(Modules.Reports, edit: true)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Import(IFormFile file)

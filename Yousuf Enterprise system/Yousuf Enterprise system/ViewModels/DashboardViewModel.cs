@@ -16,6 +16,8 @@ public class DashboardViewModel
     public decimal Receivables { get; set; }
     public decimal Payables { get; set; }
     public decimal TodayCashFlow { get; set; }
+    public decimal TotalCommission { get; set; }
+    public decimal TotalProfit { get; set; }
     public List<ProductStockAlert> LowStock { get; set; } = new();
     public List<Yousuf_Enterprise_system.Models.SalesInvoice> RecentInvoices { get; set; } = new();
 

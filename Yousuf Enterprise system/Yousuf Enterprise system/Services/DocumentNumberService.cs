@@ -6,7 +6,7 @@ namespace Yousuf_Enterprise_system.Services;
 
 public interface IDocumentNumberService
 {
-    Task<string> NextAsync(string prefix, Func<ApplicationDbContext, IQueryable<string>> selector);
+    Task<string> NextAsync(string prefix, Func<ApplicationDbContext, IQueryable<string>> selector, int yearDigits = 4, int seqDigits = 5);
 }
 
 public class DocumentNumberService : IDocumentNumberService
@@ -18,10 +18,11 @@ public class DocumentNumberService : IDocumentNumberService
         _db = db;
     }
 
-    public async Task<string> NextAsync(string prefix, Func<ApplicationDbContext, IQueryable<string>> selector)
+    public async Task<string> NextAsync(string prefix, Func<ApplicationDbContext, IQueryable<string>> selector, int yearDigits = 4, int seqDigits = 5)
     {
         var year = DateTime.Today.Year;
-        var stamp = $"{prefix}-{year}-";
+        var yearPart = yearDigits == 2 ? (year % 100).ToString("D2") : year.ToString();
+        var stamp = $"{prefix}-{yearPart}-";
         var last = await selector(_db)
             .Where(n => n.StartsWith(stamp))
             .OrderByDescending(n => n)
@@ -37,6 +38,6 @@ public class DocumentNumberService : IDocumentNumberService
             }
         }
 
-        return $"{stamp}{next:D5}";
+        return $"{stamp}{next.ToString(new string('0', seqDigits))}";
     }
 }

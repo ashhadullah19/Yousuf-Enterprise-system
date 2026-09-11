@@ -13,19 +13,20 @@ public class OwnedPurchase
     [Display(Name = "Purchase Date"), DataType(DataType.Date)]
     public DateTime PurchaseDate { get; set; } = DateTime.Today;
 
-    [Display(Name = "Vendor")]
+    [Display(Name = "Vendor"), Range(1, int.MaxValue, ErrorMessage = "Vendor is required.")]
     public int VendorId { get; set; }
     public Party? Vendor { get; set; }
 
-    [Display(Name = "Product")]
+    [Display(Name = "Product"), Range(1, int.MaxValue, ErrorMessage = "Product is required.")]
     public int ProductId { get; set; }
     public Product? Product { get; set; }
 
+    [Range(0.0001, double.MaxValue, ErrorMessage = "Quantity must be greater than 0.")]
     public decimal Quantity { get; set; }
 
     public UnitOfMeasure Unit { get; set; } = UnitOfMeasure.KG;
 
-    [Display(Name = "Rate Per Unit"), Column(TypeName = "decimal(18,4)")]
+    [Display(Name = "Rate Per Unit"), Range(0.0001, double.MaxValue, ErrorMessage = "Rate must be greater than 0."), Column(TypeName = "decimal(18,4)")]
     public decimal RatePerUnit { get; set; }
 
     [Display(Name = "Total Product Cost"), Column(TypeName = "decimal(18,2)")]

@@ -25,7 +25,7 @@
             <tr>
                 <td>@item.TransactionDate.ToString("dd-MMM-yyyy")</td>
                 <td>@item.BankAccount?.AccountTitle (@item.BankAccount?.BankName)</td>
-                <td>@item.Type</td>
+                <td>@item.Type.GetDisplayName()</td>
                 <td>@item.Amount.ToString("N2")</td>
                 <td>@item.ReferenceNumber</td>
                 <td>@item.Remarks</td>

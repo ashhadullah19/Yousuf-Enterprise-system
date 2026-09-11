@@ -8,19 +8,19 @@
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="mb-3">
-        <label asp-for="BankName" class="form-label"></label>
+        <label asp-for="BankName" class="form-label required"></label>
         <input asp-for="BankName" class="form-control" />
         <span asp-validation-for="BankName" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="AccountTitle" class="form-label"></label>
+        <label asp-for="AccountTitle" class="form-label required"></label>
         <input asp-for="AccountTitle" class="form-control" />
         <span asp-validation-for="AccountTitle" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="AccountNumber" class="form-label"></label>
+        <label asp-for="AccountNumber" class="form-label required"></label>
         <input asp-for="AccountNumber" class="form-control" />
         <span asp-validation-for="AccountNumber" class="text-danger"></span>
     </div>

@@ -17,7 +17,7 @@
         <tr>
             <td>@row.FullName</td>
             <td>@row.Email</td>
-            <td>@string.Join(", ", row.Role)</td>
+            <td>@row.Role</td>
             <td>@(row.IsActive ? "Yes" : "No")</td>
             <td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@row.Id">Edit</a></td>
         </tr>

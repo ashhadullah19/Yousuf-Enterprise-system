@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Yousuf_Enterprise_system.Models;
 
-public class Party
+public class Party : IValidatableObject
 {
     public int Id { get; set; }
 
@@ -15,10 +15,10 @@ public class Party
     [StringLength(200), Display(Name = "Father Name")]
     public string? FatherName { get; set; }
 
-   
 
-    [StringLength(30), Display(Name = "Primary Contact")]
-    public string? PrimaryContact { get; set; }
+
+    [Required, StringLength(30), Display(Name = "Primary Contact")]
+    public string PrimaryContact { get; set; } = string.Empty;
 
     [StringLength(30), Display(Name = "Secondary Contact")]
     public string? SecondaryContact { get; set; }
@@ -31,6 +31,9 @@ public class Party
 
     [StringLength(50), Display(Name = "STRN / SBR")]
     public string? StrnSbr { get; set; }
+
+    [Display(Name = "Has Bank Details")]
+    public bool HasBankDetails { get; set; }
 
     [StringLength(100), Display(Name = "Bank Name")]
     public string? BankName { get; set; }
@@ -47,6 +50,25 @@ public class Party
     [StringLength(20), Display(Name = "Branch Code")]
     public string? BranchCode { get; set; }
 
-   
+
     public bool IsDeleted { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (HasBankDetails)
+        {
+            if (string.IsNullOrWhiteSpace(BankName))
+            {
+                yield return new ValidationResult("Bank name is required when bank details are on.", new[] { nameof(BankName) });
+            }
+            if (string.IsNullOrWhiteSpace(AccountTitle))
+            {
+                yield return new ValidationResult("Account title is required when bank details are on.", new[] { nameof(AccountTitle) });
+            }
+            if (string.IsNullOrWhiteSpace(AccountNumber))
+            {
+                yield return new ValidationResult("Account number is required when bank details are on.", new[] { nameof(AccountNumber) });
+            }
+        }
+    }
 }

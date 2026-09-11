@@ -318,9 +318,6 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<int?>("SalesInvoiceId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("TransactionDate")
                         .HasColumnType("datetime2");
 
@@ -330,8 +327,6 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BankAccountId");
-
-                    b.HasIndex("SalesInvoiceId");
 
                     b.ToTable("BankTransactions");
                 });
@@ -378,7 +373,7 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.ToTable("ConsignmentReceipts");
                 });
 
-            modelBuilder.Entity("Yousuf_Enterprise_system.Models.FinancialVoucher", b =>
+            modelBuilder.Entity("Yousuf_Enterprise_system.Models.LedgerEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -399,6 +394,14 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.Property<int>("Head")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("LedgerDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LedgerNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<int>("Mode")
                         .HasColumnType("int");
 
@@ -413,22 +416,19 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<int>("Type")
+                    b.Property<int?>("SalesInvoiceId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("VoucherDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("VoucherNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PartyId");
 
-                    b.ToTable("FinancialVouchers");
+                    b.HasIndex("SalesInvoiceId");
+
+                    b.ToTable("LedgerEntries");
                 });
 
             modelBuilder.Entity("Yousuf_Enterprise_system.Models.OwnedPurchase", b =>
@@ -522,6 +522,9 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<bool>("HasBankDetails")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Iban")
                         .HasMaxLength(34)
                         .HasColumnType("nvarchar(34)");
@@ -534,6 +537,7 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("PrimaryContact")
+                        .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
@@ -588,6 +592,37 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.ToTable("Products");
                 });
 
+            modelBuilder.Entity("Yousuf_Enterprise_system.Models.RolePermission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("CanEdit")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanView")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId", "Module")
+                        .IsUnique();
+
+                    b.ToTable("RolePermissions");
+                });
+
             modelBuilder.Entity("Yousuf_Enterprise_system.Models.SalesInvoice", b =>
                 {
                     b.Property<int>("Id")
@@ -601,6 +636,9 @@ namespace Yousuf_Enterprise_system.Data.Migrations
 
                     b.Property<decimal>("AgentCommissionPercentage")
                         .HasColumnType("decimal(5,2)");
+
+                    b.Property<int?>("AgentId")
+                        .HasColumnType("int");
 
                     b.Property<bool>("ApplyGst")
                         .HasColumnType("bit");
@@ -666,6 +704,8 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AgentId");
 
                     b.HasIndex("BankAccountId");
 
@@ -773,14 +813,7 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Yousuf_Enterprise_system.Models.SalesInvoice", "SalesInvoice")
-                        .WithMany()
-                        .HasForeignKey("SalesInvoiceId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("BankAccount");
-
-                    b.Navigation("SalesInvoice");
                 });
 
             modelBuilder.Entity("Yousuf_Enterprise_system.Models.ConsignmentReceipt", b =>
@@ -802,7 +835,7 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.Navigation("StockOwner");
                 });
 
-            modelBuilder.Entity("Yousuf_Enterprise_system.Models.FinancialVoucher", b =>
+            modelBuilder.Entity("Yousuf_Enterprise_system.Models.LedgerEntry", b =>
                 {
                     b.HasOne("Yousuf_Enterprise_system.Models.Party", "Party")
                         .WithMany()
@@ -810,7 +843,14 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Yousuf_Enterprise_system.Models.SalesInvoice", "SalesInvoice")
+                        .WithMany()
+                        .HasForeignKey("SalesInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Party");
+
+                    b.Navigation("SalesInvoice");
                 });
 
             modelBuilder.Entity("Yousuf_Enterprise_system.Models.OwnedPurchase", b =>
@@ -832,8 +872,22 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.Navigation("Vendor");
                 });
 
+            modelBuilder.Entity("Yousuf_Enterprise_system.Models.RolePermission", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Yousuf_Enterprise_system.Models.SalesInvoice", b =>
                 {
+                    b.HasOne("Yousuf_Enterprise_system.Models.Party", "Agent")
+                        .WithMany()
+                        .HasForeignKey("AgentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Yousuf_Enterprise_system.Models.BankAccount", "BankAccount")
                         .WithMany()
                         .HasForeignKey("BankAccountId")
@@ -854,6 +908,8 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Agent");
 
                     b.Navigation("BankAccount");
 

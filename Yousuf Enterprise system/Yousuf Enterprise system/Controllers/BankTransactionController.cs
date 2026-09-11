@@ -5,11 +5,13 @@ using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using Yousuf_Enterprise_system.Data;
 using Yousuf_Enterprise_system.Models;
+using Yousuf_Enterprise_system.Services;
 using Yousuf_Enterprise_system.ViewModels;
 
 namespace Yousuf_Enterprise_system.Controllers;
 
-[Authorize(Roles = AppRoles.Staff)]
+[Authorize]
+[ModulePermission(Modules.BankTransactions)]
 public class BankTransactionController : Controller
 {
     private readonly ApplicationDbContext _db;
@@ -51,6 +53,7 @@ public class BankTransactionController : Controller
         return View("Form", new BankTransaction());
     }
 
+    [ModulePermission(Modules.BankTransactions, edit: true)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(BankTransaction transaction)
@@ -76,6 +79,7 @@ public class BankTransactionController : Controller
         return View("Form", transaction);
     }
 
+    [ModulePermission(Modules.BankTransactions, edit: true)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, BankTransaction transaction)

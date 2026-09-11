@@ -20,6 +20,7 @@ public interface IInvoiceService
 {
     Task<InvoiceCalculationResult> CalculateAsync(SalesInvoice invoice);
     Task<decimal> OwnedStockOnHandAsync(int productId, int? excludeInvoiceId = null);
+    Task<List<(string VendorName, decimal RemainingQty)>> OwnedStockByVendorAsync(int productId);
     Task<decimal> ConsignmentRemainingAsync(int receiptId, int? excludeInvoiceId = null);
     Task<decimal> AverageCostAsync(int productId);
     Task ApplyAndValidateAsync(SalesInvoice invoice);
@@ -79,27 +80,40 @@ public class InvoiceService : IInvoiceService
             result.GstAmount = 0;
         }
 
-        // Extra charges are an internal cost (conveyance/labour) — they reduce
+        // Extra charges are an internal cost (conveyance/labour) ï¿½ they reduce
         // profit but are NOT billed to the buyer, so they don't touch GrandTotal.
         result.GrandTotal = result.Subtotal + result.GstAmount;
 
-        // Generic agent/sales commission — applies to ANY invoice, owned or consignment.
+        // Generic agent/sales commission ï¿½ applies to ANY invoice, owned or consignment.
         result.AgentCommissionAmount = Math.Round(result.Subtotal * invoice.AgentCommissionPercentage / 100m, 2);
 
-        // Cost of goods sold — only meaningful for Owned Stock (we don't own consignment stock).
         if (invoice.StockType == StockType.OwnedStock)
         {
             var avgCost = await AverageCostAsync(invoice.ProductId);
             result.CostOfGoodsSold = Math.Round(avgCost * invoice.QuantitySold, 2);
+            result.ProfitAmount = Math.Round(
+                result.Subtotal - result.CostOfGoodsSold - result.AgentCommissionAmount - invoice.ExtraChargesAmount,
+                2);
         }
         else
         {
+            // Consignment: we never owned this stock, so the full subtotal isn't ours -- most of
+            // it is owed straight back to the stock owner. Only our agreed commission cut is
+            // actual revenue, so that (not the subtotal) is the profit basis here.
             result.CostOfGoodsSold = 0;
-        }
+            var consignmentCommissionPct = 0m;
+            if (invoice.ConsignmentReceiptId.HasValue)
+            {
+                var receipt = await _db.ConsignmentReceipts.AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.Id == invoice.ConsignmentReceiptId.Value);
+                consignmentCommissionPct = receipt?.AgreedCommissionPercentage ?? 0;
+            }
 
-        result.ProfitAmount = Math.Round(
-            result.Subtotal - result.CostOfGoodsSold - result.AgentCommissionAmount - invoice.ExtraChargesAmount,
-            2);
+            var consignmentCommissionRevenue = Math.Round(result.Subtotal * consignmentCommissionPct / 100m, 2);
+            result.ProfitAmount = Math.Round(
+                consignmentCommissionRevenue - result.AgentCommissionAmount - invoice.ExtraChargesAmount,
+                2);
+        }
 
         return result;
     }
@@ -119,6 +133,42 @@ public class InvoiceService : IInvoiceService
 
         var sold = await soldQuery.SumAsync(s => (decimal?)s.QuantitySold) ?? 0;
         return purchased - sold;
+    }
+
+    // Owned stock isn't lot-tracked (sales only record a Product, not which purchase it
+    // came from), so this derives a per-vendor "remaining" breakdown by depleting purchases
+    // oldest-first (FIFO) against total units sold. It's a display aid for choosing a vendor
+    // at sale time, not a real allocation â€” the sale itself still only records Product+Qty.
+    public async Task<List<(string VendorName, decimal RemainingQty)>> OwnedStockByVendorAsync(int productId)
+    {
+        var purchases = await _db.OwnedPurchases.AsNoTracking()
+            .Where(p => p.ProductId == productId)
+            .OrderBy(p => p.PurchaseDate).ThenBy(p => p.Id)
+            .Select(p => new { p.Quantity, VendorName = p.Vendor!.FullName })
+            .ToListAsync();
+
+        var soldQty = await _db.SalesInvoices
+            .Where(s => s.ProductId == productId && s.StockType == StockType.OwnedStock)
+            .SumAsync(s => (decimal?)s.QuantitySold) ?? 0;
+
+        var remainingByVendor = new List<(string VendorName, decimal Qty)>();
+        var toConsume = soldQty;
+        foreach (var purchase in purchases)
+        {
+            var consumed = Math.Min(purchase.Quantity, toConsume);
+            var left = purchase.Quantity - consumed;
+            toConsume -= consumed;
+            if (left > 0)
+            {
+                remainingByVendor.Add((purchase.VendorName, left));
+            }
+        }
+
+        return remainingByVendor
+            .GroupBy(r => r.VendorName)
+            .Select(g => (VendorName: g.Key, RemainingQty: Math.Round(g.Sum(x => x.Qty), 4)))
+            .Where(x => x.RemainingQty > 0)
+            .ToList();
     }
 
     public async Task<decimal> ConsignmentRemainingAsync(int receiptId, int? excludeInvoiceId = null)

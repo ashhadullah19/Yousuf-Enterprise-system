@@ -14,12 +14,24 @@ public class PartyLedgerLine
     public decimal Credit { get; set; }
 }
 
+public class PartyCommissionBalance
+{
+    public decimal Dues { get; set; }
+    public decimal CommissionAccrued { get; set; }
+    public decimal CommissionReceived { get; set; }
+    public decimal CommissionReceivable => CommissionAccrued - CommissionReceived;
+}
+
 public interface ILedgerService
 {
     Task<IReadOnlyList<PartyLedgerLine>> GetPartyLedgerAsync(int partyId, DateTime? from = null, DateTime? to = null);
     Task<(decimal Receivables, decimal Payables)> GetCompanyTotalsAsync();
     Task<decimal> TodayCashFlowAsync();
     Task<decimal> OwnedStockValueAsync();
+    Task<Dictionary<int, PartyCommissionBalance>> GetAllPartyBalancesAsync();
+    Task<decimal> GetTotalCommissionAsync();
+    Task<decimal> GetConsignmentCommissionRevenueAsync();
+    Task<decimal> GetTotalProfitAsync();
 }
 
 public class LedgerService : ILedgerService
@@ -64,6 +76,9 @@ public class LedgerService : ILedgerService
             var commissionRevenue = Math.Round(invoice.SubtotalAmount * commissionPct / 100m, 2);
             var stockOwnerPayable = invoice.SubtotalAmount - commissionRevenue;
 
+            // Only the net payable belongs on the stock owner's own ledger — the commission
+            // itself is company revenue (not money owed to/from this party), so it is tracked
+            // company-wide via GetConsignmentCommissionRevenueAsync instead, not on this line.
             lines.Add(new PartyLedgerLine
             {
                 Date = invoice.InvoiceDate,
@@ -72,13 +87,23 @@ public class LedgerService : ILedgerService
                 Head = HeadType.DirectProductHead,
                 Credit = stockOwnerPayable
             });
+        }
+
+        // Agent commission: accrues on this party's ledger (Commission head) whenever they're
+        // set as the earning agent on an invoice — separate from the invoice's own buyer/dues.
+        var agentInvoices = await _db.SalesInvoices.AsNoTracking()
+            .Where(i => i.AgentId == partyId && i.AgentCommissionAmount > 0)
+            .ToListAsync();
+
+        foreach (var invoice in agentInvoices)
+        {
             lines.Add(new PartyLedgerLine
             {
                 Date = invoice.InvoiceDate,
                 Document = invoice.InvoiceNumber,
-                Description = "Commission income (company)",
+                Description = $"Commission accrued on invoice {invoice.InvoiceNumber}",
                 Head = HeadType.CommissionHead,
-                Credit = commissionRevenue
+                Credit = invoice.AgentCommissionAmount
             });
         }
 
@@ -98,31 +123,31 @@ public class LedgerService : ILedgerService
             });
         }
 
-        var vouchers = await _db.FinancialVouchers.AsNoTracking()
-            .Where(v => v.PartyId == partyId && (v.Type != VoucherType.ContraAdjustment || v.ApprovedByAdmin))
+        var ledgerEntries = await _db.LedgerEntries.AsNoTracking()
+            .Where(v => v.PartyId == partyId && (v.Type != LedgerEntryType.ContraAdjustment || v.ApprovedByAdmin))
             .ToListAsync();
 
-        foreach (var voucher in vouchers)
+        foreach (var entry in ledgerEntries)
         {
             var line = new PartyLedgerLine
             {
-                Date = voucher.VoucherDate,
-                Document = voucher.VoucherNumber,
-                Description = $"{voucher.Type} via {voucher.Mode}",
-                Head = voucher.Head
+                Date = entry.LedgerDate,
+                Document = entry.LedgerNumber,
+                Description = $"{entry.Type.GetDisplayName()} via {entry.Mode.GetDisplayName()}",
+                Head = entry.Head
             };
 
-            switch (voucher.Type)
+            switch (entry.Type)
             {
-                case VoucherType.PaymentReceived:
-                    line.Credit = voucher.Amount;
+                case LedgerEntryType.PaymentReceived:
+                    line.Credit = entry.Amount;
                     break;
-                case VoucherType.PaymentPaid:
-                    line.Debit = voucher.Amount;
+                case LedgerEntryType.PaymentPaid:
+                    line.Debit = entry.Amount;
                     break;
-                case VoucherType.ContraAdjustment:
-                    line.Debit = voucher.Amount;
-                    line.Credit = voucher.Amount;
+                case LedgerEntryType.ContraAdjustment:
+                    line.Debit = entry.Amount;
+                    line.Credit = entry.Amount;
                     line.Description = "Contra netting (mutual settlement)";
                     break;
             }
@@ -171,11 +196,11 @@ public class LedgerService : ILedgerService
     public async Task<decimal> TodayCashFlowAsync()
     {
         var today = DateTime.Today;
-        var received = await _db.FinancialVouchers
-            .Where(v => v.VoucherDate == today && v.Type == VoucherType.PaymentReceived)
+        var received = await _db.LedgerEntries
+            .Where(v => v.LedgerDate == today && v.Type == LedgerEntryType.PaymentReceived)
             .SumAsync(v => (decimal?)v.Amount) ?? 0;
-        var paid = await _db.FinancialVouchers
-            .Where(v => v.VoucherDate == today && v.Type == VoucherType.PaymentPaid)
+        var paid = await _db.LedgerEntries
+            .Where(v => v.LedgerDate == today && v.Type == LedgerEntryType.PaymentPaid)
             .SumAsync(v => (decimal?)v.Amount) ?? 0;
         return received - paid;
     }
@@ -200,5 +225,56 @@ public class LedgerService : ILedgerService
         }
 
         return Math.Round(value, 2);
+    }
+
+    // Splits each party's ledger balance by Head: Dues (DirectProductHead, net) and Commission,
+    // with commission further split into Accrued (total ever earned) and Received (total ever
+    // paid out to them) so "receivable" (Accrued - Received) is visible, not just a blended net.
+    public async Task<Dictionary<int, PartyCommissionBalance>> GetAllPartyBalancesAsync()
+    {
+        var parties = await _db.Parties.AsNoTracking().Select(p => p.Id).ToListAsync();
+        var result = new Dictionary<int, PartyCommissionBalance>();
+
+        foreach (var partyId in parties)
+        {
+            var ledger = await GetPartyLedgerAsync(partyId);
+            var dues = ledger.Where(l => l.Head == HeadType.DirectProductHead).Sum(l => l.Debit - l.Credit);
+            var commissionLines = ledger.Where(l => l.Head == HeadType.CommissionHead).ToList();
+            result[partyId] = new PartyCommissionBalance
+            {
+                Dues = Math.Round(dues, 2),
+                CommissionAccrued = Math.Round(commissionLines.Sum(l => l.Credit), 2),
+                CommissionReceived = Math.Round(commissionLines.Sum(l => l.Debit), 2)
+            };
+        }
+
+        return result;
+    }
+
+    // Sum of every party's CommissionAccrued, so this always reconciles with the per-party
+    // Receivable+Received figures shown on the Parties page — one source of truth, not a
+    // separate calculation that can drift out of sync with what the parties add up to.
+    public async Task<decimal> GetTotalCommissionAsync()
+    {
+        var balances = await GetAllPartyBalancesAsync();
+        return Math.Round(balances.Values.Sum(b => b.CommissionAccrued), 2);
+    }
+
+    // Company's own revenue from reselling consignment stock (the cut kept before paying the
+    // stock owner their net). Not attributed to any party's ledger — nobody owes/is owed this.
+    public async Task<decimal> GetConsignmentCommissionRevenueAsync()
+    {
+        var consignments = await _db.SalesInvoices.AsNoTracking()
+            .Include(i => i.ConsignmentReceipt)
+            .Where(i => i.StockType == StockType.ConsignmentStock && i.ConsignmentReceipt != null)
+            .ToListAsync();
+
+        var total = consignments.Sum(i => Math.Round(i.SubtotalAmount * i.ConsignmentReceipt!.AgreedCommissionPercentage / 100m, 2));
+        return Math.Round(total, 2);
+    }
+
+    public async Task<decimal> GetTotalProfitAsync()
+    {
+        return Math.Round(await _db.SalesInvoices.AsNoTracking().SumAsync(i => (decimal?)i.ProfitAmount) ?? 0, 2);
     }
 }

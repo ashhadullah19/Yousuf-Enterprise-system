@@ -16,10 +16,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<OwnedPurchase> OwnedPurchases => Set<OwnedPurchase>();
     public DbSet<ConsignmentReceipt> ConsignmentReceipts => Set<ConsignmentReceipt>();
     public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
-    public DbSet<FinancialVoucher> FinancialVouchers => Set<FinancialVoucher>();
+    public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
     public DbSet<BackupLog> BackupLogs => Set<BackupLog>();
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
     public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -50,21 +51,35 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(s => s.BankAccountId)
             .OnDelete(DeleteBehavior.Restrict);
-        builder.Entity<FinancialVoucher>()
+        builder.Entity<SalesInvoice>()
+            .HasOne(s => s.Agent)
+            .WithMany()
+            .HasForeignKey(s => s.AgentId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<LedgerEntry>()
             .HasOne(v => v.Party)
             .WithMany()
             .HasForeignKey(v => v.PartyId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<LedgerEntry>()
+            .HasOne(v => v.SalesInvoice)
+            .WithMany()
+            .HasForeignKey(v => v.SalesInvoiceId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.Entity<BankTransaction>()
             .HasOne(t => t.BankAccount)
             .WithMany()
             .HasForeignKey(t => t.BankAccountId)
             .OnDelete(DeleteBehavior.Restrict);
-        builder.Entity<BankTransaction>()
-            .HasOne(t => t.SalesInvoice)
+
+        builder.Entity<RolePermission>()
+            .HasIndex(p => new { p.RoleId, p.Module })
+            .IsUnique();
+        builder.Entity<RolePermission>()
+            .HasOne<Microsoft.AspNetCore.Identity.IdentityRole>()
             .WithMany()
-            .HasForeignKey(t => t.SalesInvoiceId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasForeignKey(p => p.RoleId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<OwnedPurchase>().Property(p => p.Quantity).HasPrecision(18, 4);
         builder.Entity<Product>().Property(p => p.MinimumStockAlertQty).HasPrecision(18, 4);

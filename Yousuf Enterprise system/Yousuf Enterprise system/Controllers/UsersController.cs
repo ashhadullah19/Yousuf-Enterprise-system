@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.ViewModels;
@@ -11,10 +12,17 @@ namespace Yousuf_Enterprise_system.Controllers;
 public class UsersController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
-    public UsersController(UserManager<ApplicationUser> userManager)
+    public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
     {
         _userManager = userManager;
+        _roleManager = roleManager;
+    }
+
+    private async Task PopulateRolesAsync()
+    {
+        ViewBag.Roles = new SelectList(await _roleManager.Roles.OrderBy(r => r.Name).ToListAsync(), "Name", "Name");
     }
 
     public async Task<IActionResult> Index(string? q)
@@ -30,12 +38,14 @@ public class UsersController : Controller
         var rows = new List<UserFormViewModel>();
         foreach (var user in users)
         {
+            var roles = await _userManager.GetRolesAsync(user);
             rows.Add(new UserFormViewModel
             {
                 Email = user.Email,
                 FullName = user.FullName,
                 Id = user.Id,
-                IsActive = user.IsActive
+                IsActive = user.IsActive,
+                Role = roles.FirstOrDefault() ?? string.Empty
             });
         }
 
@@ -43,7 +53,11 @@ public class UsersController : Controller
         return View(rows);
     }
 
-    public IActionResult Create() => View("Form", new UserFormViewModel());
+    public async Task<IActionResult> Create()
+    {
+        await PopulateRolesAsync();
+        return View("Form", new UserFormViewModel());
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -56,6 +70,7 @@ public class UsersController : Controller
 
         if (!ModelState.IsValid)
         {
+            await PopulateRolesAsync();
             return View("Form", model);
         }
 
@@ -75,6 +90,7 @@ public class UsersController : Controller
                 ModelState.AddModelError(string.Empty, error.Description);
             }
 
+            await PopulateRolesAsync();
             return View("Form", model);
         }
 
@@ -90,6 +106,7 @@ public class UsersController : Controller
             return NotFound();
         }
 
+        await PopulateRolesAsync();
         var roles = await _userManager.GetRolesAsync(user);
         return View("Form", new UserFormViewModel
         {
@@ -112,6 +129,7 @@ public class UsersController : Controller
 
         if (!ModelState.IsValid)
         {
+            await PopulateRolesAsync();
             return View("Form", model);
         }
 

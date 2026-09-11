@@ -1,22 +1,35 @@
 @model IEnumerable<Product>
 @{
     ViewData["Title"] = "Product Master";
+    var onHand = ViewBag.OnHand as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
+}
+
+@if (TempData["Message"] is not null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
 }
 
 <form class="row g-2 mb-3" method="get">
     <div class="col-md-4"><input class="form-control" name="q" value="@ViewBag.Query" placeholder="Search product..." /></div>
     <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
     <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add product</a></div>
+    <div class="col-auto"><a class="btn btn-outline-secondary" asp-action="DownloadTemplate">Download template</a></div>
+</form>
+
+<form asp-action="Import" method="post" enctype="multipart/form-data" class="row g-2 mb-3">
+    <div class="col-md-4"><input type="file" name="file" class="form-control" accept=".xlsx" required /></div>
+    <div class="col-auto"><button class="btn btn-outline-success">Import from Excel</button></div>
 </form>
 
 <table class="table table-striped bg-white">
-    <thead><tr><th>Name</th><th>UOM</th><th>Min alert</th><th>Status</th><th></th></tr></thead>
+    <thead><tr><th>Name</th><th>UOM</th><th>On hand</th><th>Min alert</th><th>Status</th><th></th></tr></thead>
     <tbody>
     @foreach (var item in Model)
     {
         <tr>
             <td>@item.Name</td>
             <td>@item.Uom</td>
+            <td>@(onHand.TryGetValue(item.Id, out var qty) ? qty.ToString("N4") : "-")</td>
             <td>@item.MinimumStockAlertQty.ToString("N4")</td>
             <td>@(item.IsActive ? "Active" : "Inactive")</td>
             <td class="text-end">

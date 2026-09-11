@@ -8,7 +8,8 @@ using Yousuf_Enterprise_system.Services;
 
 namespace Yousuf_Enterprise_system.Controllers;
 
-[Authorize(Roles = AppRoles.Staff)]
+[Authorize]
+[ModulePermission(Modules.Sales)]
 public class SalesInvoicesController : Controller
 {
     private readonly ApplicationDbContext _db;
@@ -58,7 +59,16 @@ public class SalesInvoicesController : Controller
         ViewBag.Query = q;
         ViewBag.Gst = gst;
         ViewBag.OverdueOnly = overdueOnly;
-        return View(await query.OrderByDescending(i => i.InvoiceDate).ThenByDescending(i => i.Id).ToListAsync());
+        var invoices = await query.OrderByDescending(i => i.InvoiceDate).ThenByDescending(i => i.Id).ToListAsync();
+
+        var invoiceIds = invoices.Select(i => i.Id).ToList();
+        ViewBag.AmountPaid = await _db.LedgerEntries.AsNoTracking()
+            .Where(v => v.SalesInvoiceId != null && invoiceIds.Contains(v.SalesInvoiceId.Value) && v.Type == LedgerEntryType.PaymentReceived)
+            .GroupBy(v => v.SalesInvoiceId!.Value)
+            .Select(g => new { InvoiceId = g.Key, Paid = g.Sum(x => x.Amount) })
+            .ToDictionaryAsync(x => x.InvoiceId, x => x.Paid);
+
+        return View(invoices);
     }
 
     public async Task<IActionResult> Create()
@@ -67,12 +77,13 @@ public class SalesInvoicesController : Controller
         var settings = await _db.SystemSettings.AsNoTracking().FirstAsync();
         return View("Form", new SalesInvoice
         {
-            InvoiceNumber = await _numbers.NextAsync("INV", db => db.SalesInvoices.Select(i => i.InvoiceNumber)),
+            InvoiceNumber = await _numbers.NextAsync("FT", db => db.SalesInvoices.Select(i => i.InvoiceNumber), yearDigits: 2, seqDigits: 2),
             InvoiceDate = DateTime.Today,
             GstPercentage = settings.DefaultGstPercentage
         });
     }
 
+    [ModulePermission(Modules.Sales, edit: true)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(SalesInvoice invoice)
@@ -121,16 +132,45 @@ public class SalesInvoicesController : Controller
             .Include(i => i.Buyer)
             .Include(i => i.Product)
             .Include(i => i.BankAccount)
+            .Include(i => i.Agent)
             .Include(i => i.ConsignmentReceipt)
             .ThenInclude(c => c!.StockOwner)
             .FirstOrDefaultAsync(i => i.Id == id);
         if (invoice is null) return NotFound();
 
-        ViewBag.AmountPaid = await _db.BankTransactions
-            .Where(t => t.SalesInvoiceId == id && t.Type == TransactionType.Deposit)
-            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+        // Settlement now happens via ledger entries (Add Ledger Entry), not Bank Transaction.
+        ViewBag.AmountPaid = await _db.LedgerEntries
+            .Where(v => v.SalesInvoiceId == id && v.Type == LedgerEntryType.PaymentReceived)
+            .SumAsync(v => (decimal?)v.Amount) ?? 0m;
 
         return View(invoice);
+    }
+
+    // Live stock lookup used by the Sales Invoice form to show on-hand qty / remaining
+    // consignment qty and (for owned stock) which vendors have historically supplied it.
+    [HttpGet]
+    public async Task<IActionResult> StockInfo(int productId, StockType stockType, int? consignmentReceiptId)
+    {
+        if (stockType == StockType.ConsignmentStock)
+        {
+            if (!consignmentReceiptId.HasValue)
+            {
+                return Json(new { onHand = 0m, uom = "", vendors = Array.Empty<object>() });
+            }
+
+            var receipt = await _db.ConsignmentReceipts.AsNoTracking()
+                .Include(c => c.Product)
+                .FirstOrDefaultAsync(c => c.Id == consignmentReceiptId.Value);
+            var remaining = await _invoices.ConsignmentRemainingAsync(consignmentReceiptId.Value);
+            return Json(new { onHand = remaining, uom = receipt?.Product?.Uom.ToString() ?? "", vendors = Array.Empty<object>() });
+        }
+
+        var onHandQty = await _invoices.OwnedStockOnHandAsync(productId);
+        var product = await _db.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == productId);
+        var byVendor = await _invoices.OwnedStockByVendorAsync(productId);
+        var vendors = byVendor.Select(v => new { name = v.VendorName, qty = v.RemainingQty });
+
+        return Json(new { onHand = onHandQty, uom = product?.Uom.ToString() ?? "", vendors });
     }
 
     public async Task<IActionResult> Pdf(int id)
@@ -154,9 +194,22 @@ public class SalesInvoicesController : Controller
         ViewBag.Buyers = new SelectList(
             await _db.Parties.Where(p => p.Type == PartyType.Buyer || p.Type == PartyType.Both).OrderBy(p => p.FullName).ToListAsync(),
             "Id", "FullName");
-        ViewBag.Products = new SelectList(
-            await _db.Products.Where(p => p.IsActive).OrderBy(p => p.Name).ToListAsync(),
-            "Id", "Name");
+
+        // Owned-stock product list: one option per vendor who still has remaining supply,
+        // e.g. "Vendor A CHIA SEED(50.00)", so the buyer can see/choose which vendor's
+        // stock they're effectively drawing from (informational — the sale itself still
+        // only records Product+Qty, cost is the same weighted average regardless of pick).
+        var activeProducts = await _db.Products.Where(p => p.IsActive).OrderBy(p => p.Name).ToListAsync();
+        var ownedOptions = new List<object>();
+        foreach (var product in activeProducts)
+        {
+            var byVendor = await _invoices.OwnedStockByVendorAsync(product.Id);
+            foreach (var (vendorName, qty) in byVendor)
+            {
+                ownedOptions.Add(new { product.Id, Label = $"{vendorName} {product.Name}({qty:N2})" });
+            }
+        }
+        ViewBag.Products = new SelectList(ownedOptions, "Id", "Label");
         ViewBag.Receipts = new SelectList(
             await _db.ConsignmentReceipts.Include(c => c.StockOwner).Include(c => c.Product)
                 .OrderByDescending(c => c.ReceiptDate)
@@ -166,5 +219,8 @@ public class SalesInvoicesController : Controller
         ViewBag.BankAccounts = new SelectList(
             await _db.BankAccounts.OrderBy(b => b.BankName).ToListAsync(),
             "Id", "AccountTitle");
+        ViewBag.Agents = new SelectList(
+            await _db.Parties.OrderBy(p => p.FullName).ToListAsync(),
+            "Id", "FullName");
     }
 }

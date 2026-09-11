@@ -13,7 +13,7 @@ public class SalesInvoice
     [Display(Name = "Invoice Date"), DataType(DataType.Date)]
     public DateTime InvoiceDate { get; set; } = DateTime.Today;
 
-    [Display(Name = "Buyer")]
+    [Display(Name = "Buyer"), Range(1, int.MaxValue, ErrorMessage = "Buyer is required.")]
     public int BuyerId { get; set; }
     public Party? Buyer { get; set; }
 
@@ -24,20 +24,27 @@ public class SalesInvoice
     public int? ConsignmentReceiptId { get; set; }
     public ConsignmentReceipt? ConsignmentReceipt { get; set; }
 
-    [Display(Name = "Product")]
+    [Display(Name = "Product"), Range(1, int.MaxValue, ErrorMessage = "Product is required.")]
     public int ProductId { get; set; }
     public Product? Product { get; set; }
 
-    [Display(Name = "Quantity Sold"), Column(TypeName = "decimal(18,4)")]
+    [Display(Name = "Quantity Sold"), Range(0.0001, double.MaxValue, ErrorMessage = "Quantity must be greater than 0."), Column(TypeName = "decimal(18,4)")]
     public decimal QuantitySold { get; set; }
 
-    [Display(Name = "Rate Per Unit"), Column(TypeName = "decimal(18,4)")]
+    [Display(Name = "Rate Per Unit"), Range(0.0001, double.MaxValue, ErrorMessage = "Rate must be greater than 0."), Column(TypeName = "decimal(18,4)")]
     public decimal RatePerUnit { get; set; }
 
     [Display(Name = "Subtotal"), Column(TypeName = "decimal(18,2)")]
     public decimal SubtotalAmount { get; set; }
 
-    // --- Agent / Sales Commission (NEW — generic, replaces old consignment split) ---
+    // --- Agent / Sales Commission ---
+    // Who earns this commission (optional). When set, the accrued commission is posted
+    // to that party's own ledger (Head = Commission) so it can be tracked, per party,
+    // separately as receivable (accrued but unpaid) vs received (already paid out).
+    [Display(Name = "Commission Agent")]
+    public int? AgentId { get; set; }
+    public Party? Agent { get; set; }
+
     [Display(Name = "Commission %"), Column(TypeName = "decimal(5,2)")]
     public decimal AgentCommissionPercentage { get; set; }
 
@@ -82,7 +89,7 @@ public class SalesInvoice
     [Display(Name = "Due Date"), DataType(DataType.Date)]
     public DateTime? DueDate { get; set; }
 
-    // Convenience flag used by dashboard/index — computed in the controller/service,
+    // Convenience flag used by dashboard/index ï¿½ computed in the controller/service,
     // NOT persisted, so it can't drift out of sync with actual payments.
     [NotMapped]
     public bool IsOverdue => PaymentType == PaymentType.Credit

@@ -17,24 +17,32 @@
             <input asp-for="PurchaseDate" type="date" class="form-control" />
         </div>
         <div class="col-md-4">
-            <label asp-for="VendorId" class="form-label"></label>
-            <select asp-for="VendorId" asp-items="ViewBag.Vendors" class="form-select"></select>
+            <label asp-for="VendorId" class="form-label required"></label>
+            <select asp-for="VendorId" asp-items="ViewBag.Vendors" class="form-select">
+                <option value="">-- select vendor --</option>
+            </select>
+            <span asp-validation-for="VendorId" class="text-danger"></span>
         </div>
         <div class="col-md-4">
-            <label asp-for="ProductId" class="form-label"></label>
-            <select asp-for="ProductId" asp-items="ViewBag.Products" class="form-select"></select>
+            <label asp-for="ProductId" class="form-label required"></label>
+            <select asp-for="ProductId" asp-items="ViewBag.Products" class="form-select">
+                <option value="">-- select product --</option>
+            </select>
+            <span asp-validation-for="ProductId" class="text-danger"></span>
         </div>
         <div class="col-md-2">
-            <label asp-for="Quantity" class="form-label"></label>
+            <label asp-for="Quantity" class="form-label required"></label>
             <input asp-for="Quantity" class="form-control" />
+            <span asp-validation-for="Quantity" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="Unit" class="form-label"></label>
             <select asp-for="Unit" asp-items="Html.GetEnumSelectList<UnitOfMeasure>()" class="form-select"></select>
         </div>
         <div class="col-md-2">
-            <label asp-for="RatePerUnit" class="form-label"></label>
+            <label asp-for="RatePerUnit" class="form-label required"></label>
             <input asp-for="RatePerUnit" class="form-control" />
+            <span asp-validation-for="RatePerUnit" class="text-danger"></span>
         </div>
         <div class="col-md-2">
             <label asp-for="FreightLabourCharges" class="form-label"></label>
@@ -50,3 +58,5 @@
         <a class="btn btn-link" asp-action="Index">Cancel</a>
     </div>
 </form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

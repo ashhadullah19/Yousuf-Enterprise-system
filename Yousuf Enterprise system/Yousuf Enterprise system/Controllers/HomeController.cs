@@ -8,7 +8,8 @@ using Yousuf_Enterprise_system.ViewModels;
 
 namespace Yousuf_Enterprise_system.Controllers;
 
-[Authorize(Roles = AppRoles.Staff)]
+[Authorize]
+[ModulePermission(Modules.Dashboard)]
 public class HomeController : Controller
 {
     private readonly ApplicationDbContext _db;
@@ -41,7 +42,7 @@ public class HomeController : Controller
             }
         }
 
-        // Due tomorrow (1 day before) through overdue — matches "1 day before" reminder rule.
+        // Due tomorrow (1 day before) through overdue ï¿½ matches "1 day before" reminder rule.
         var today = DateTime.Today;
         var reminderWindowStart = today.AddDays(1);
 
@@ -55,12 +56,12 @@ public class HomeController : Controller
         var paymentReminders = new List<PaymentReminder>();
         foreach (var inv in creditInvoices)
         {
-            var paid = await _db.BankTransactions
-                .Where(t => t.SalesInvoiceId == inv.Id && t.Type == TransactionType.Deposit)
-                .SumAsync(t => (decimal?)t.Amount) ?? 0;
+            var paid = await _db.LedgerEntries
+                .Where(v => v.SalesInvoiceId == inv.Id && v.Type == LedgerEntryType.PaymentReceived)
+                .SumAsync(v => (decimal?)v.Amount) ?? 0;
 
             var amountDue = inv.GrandTotalAmount - paid;
-            if (amountDue <= 0) continue; // fully paid — no reminder needed
+            if (amountDue <= 0) continue; // fully paid ï¿½ no reminder needed
 
             paymentReminders.Add(new PaymentReminder
             {
@@ -80,6 +81,8 @@ public class HomeController : Controller
             Receivables = totals.Receivables,
             Payables = totals.Payables,
             TodayCashFlow = await _ledger.TodayCashFlowAsync(),
+            TotalCommission = await _ledger.GetTotalCommissionAsync(),
+            TotalProfit = await _ledger.GetTotalProfitAsync(),
             LowStock = alerts,
             PaymentReminders = paymentReminders,
             RecentInvoices = await _db.SalesInvoices.AsNoTracking()

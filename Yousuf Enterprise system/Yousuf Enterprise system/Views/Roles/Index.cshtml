@@ -1,0 +1,37 @@
+@model IEnumerable<Microsoft.AspNetCore.Identity.IdentityRole>
+@{
+    ViewData["Title"] = "Roles";
+    var userCounts = ViewBag.UserCounts as Dictionary<string, int> ?? new Dictionary<string, int>();
+}
+
+@if (TempData["Message"] is not null)
+{
+    <div class="alert alert-info">@TempData["Message"]</div>
+}
+
+<form asp-action="Create" method="post" class="row g-2 mb-3">
+    <div class="col-md-4"><input class="form-control" name="name" placeholder="New role name..." required /></div>
+    <div class="col-auto"><button class="btn btn-success">Add role</button></div>
+</form>
+
+<table class="table table-striped bg-white">
+    <thead><tr><th>Role</th><th>Users</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var role in Model)
+    {
+        <tr>
+            <td>@role.Name</td>
+            <td>@(userCounts.TryGetValue(role.Id, out var c) ? c : 0)</td>
+            <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" asp-action="Permissions" asp-route-roleId="@role.Id">Permissions</a>
+                @if (role.Name is not (AppRoles.SuperAdmin or AppRoles.Accountant))
+                {
+                    <form asp-action="Delete" asp-route-roleId="@role.Id" method="post" class="d-inline">
+                        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this role?');">Delete</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

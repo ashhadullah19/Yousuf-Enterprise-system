@@ -16,28 +16,137 @@ body.app-body {
 }
 
 .app-sidebar {
-  width: 240px;
+  width: 250px;
+  flex-shrink: 0;
   background: #14332b;
   color: #fff;
-  min-height: 100vh;
+  height: 100vh;
   padding: 1.25rem 0.75rem;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  transition: width 0.15s ease;
+}
+
+.app-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
 }
 
 .app-sidebar .brand {
   font-weight: 700;
-  padding: 0.5rem 0.75rem 1.25rem;
+  font-size: 1.05rem;
+  padding: 0.5rem 0.75rem 1.5rem;
   letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sidebar-toggle {
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  color: #d7e6e0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.sidebar-toggle i {
+  transition: transform 0.15s ease;
+}
+
+/* Collapsed state: icon-only rail. Class lives on <html> (set before paint) so
+   there's no flash of the expanded sidebar on load. */
+html.sidebar-collapsed .app-sidebar {
+  width: 64px;
+}
+
+html.sidebar-collapsed .app-sidebar .label {
+  display: none;
+}
+
+html.sidebar-collapsed .app-sidebar .brand {
+  padding-left: 0;
+  padding-right: 0;
+  justify-content: center;
+}
+
+html.sidebar-collapsed .sidebar-toggle {
+  margin-left: 0;
+}
+
+html.sidebar-collapsed .sidebar-toggle i {
+  transform: rotate(180deg);
+}
+
+html.sidebar-collapsed .app-sidebar .nav-link {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+html.sidebar-collapsed .app-sidebar .nav-section {
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+}
+
+.app-sidebar .nav-section {
+  color: rgba(215, 230, 224, 0.55);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 1rem 0.75rem 0.35rem;
 }
 
 .app-sidebar .nav-link {
   color: #d7e6e0;
-  border-radius: 0.4rem;
-  padding: 0.45rem 0.75rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.92rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.app-sidebar .nav-link i {
+  font-size: 1rem;
+  width: 1.1rem;
+  text-align: center;
+  opacity: 0.85;
 }
 
 .app-sidebar .nav-link:hover {
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
+}
+
+.app-sidebar .nav-link.active {
+  background: #2f6f5e;
+  color: #fff;
+  font-weight: 600;
 }
 
 .app-main {
@@ -54,6 +163,17 @@ body.app-body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #4a5a55;
+  font-size: 0.85rem;
 }
 
 .app-content {
@@ -66,7 +186,10 @@ body.app-body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(160deg, #14332b, #2f6f5e);
+  background-image: linear-gradient(160deg, rgba(10, 20, 30, 0.55), rgba(10, 20, 30, 0.55)), url("/images/login.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .stat-card {
@@ -77,4 +200,9 @@ body.app-body {
 
 .table thead th {
   white-space: nowrap;
+}
+
+.form-label.required::after {
+  content: " *";
+  color: #dc3545;
 }

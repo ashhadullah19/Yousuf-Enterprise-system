@@ -8,31 +8,24 @@
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="mb-3">
-        <label asp-for="BankAccountId" class="form-label"></label>
+        <label asp-for="BankAccountId" class="form-label required"></label>
         <select asp-for="BankAccountId" asp-items="ViewBag.BankAccounts" class="form-select">
             <option value="">-- Select Bank Account --</option>
         </select>
         <span asp-validation-for="BankAccountId" class="text-danger"></span>
     </div>
-    <div class="mb-3">
-        <label asp-for="SalesInvoiceId" class="form-label">Against Invoice (optional)</label>
-        <select asp-for="SalesInvoiceId" asp-items="ViewBag.Invoices" class="form-select">
-            <option value="">-- none --</option>
-        </select>
-    </div>
-
     <div class="row g-3">
         <div class="col-md-4">
-            <label asp-for="TransactionDate" class="form-label"></label>
+            <label asp-for="TransactionDate" class="form-label required"></label>
             <input asp-for="TransactionDate" class="form-control" />
             <span asp-validation-for="TransactionDate" class="text-danger"></span>
         </div>
         <div class="col-md-4">
-            <label asp-for="Type" class="form-label"></label>
+            <label asp-for="Type" class="form-label required"></label>
             <select asp-for="Type" asp-items="Html.GetEnumSelectList<TransactionType>()" class="form-select"></select>
         </div>
         <div class="col-md-4">
-            <label asp-for="Amount" class="form-label"></label>
+            <label asp-for="Amount" class="form-label required"></label>
             <input asp-for="Amount" class="form-control" />
             <span asp-validation-for="Amount" class="text-danger"></span>
         </div>

@@ -27,8 +27,12 @@
 </div>
 
 <div class="card stat-card p-4 mt-3" style="max-width:640px;">
-    <h2 class="h6">Excel import (Parties / Products sheets)</h2>
-    <p class="small text-muted">Use columns: Parties — Name, Type, Phone, CNIC. Products — Name, UOM, Description.</p>
+    <h2 class="h6">Bulk Excel import (both at once)</h2>
+    <p class="small text-muted">
+        One workbook with a "Parties" sheet (Name, Type, Phone) and/or a "Products" sheet (Name, UOM, Description).
+        To import just one with the full field set (bank details, tax info, etc.), use the Import button on the
+        <a asp-controller="Parties" asp-action="Index">Parties</a> or <a asp-controller="Products" asp-action="Index">Products</a> page instead.
+    </p>
     <form asp-action="Import" method="post" enctype="multipart/form-data">
         <input type="file" name="file" class="form-control mb-2" accept=".xlsx" />
         <button class="btn btn-outline-success">Import masters</button>

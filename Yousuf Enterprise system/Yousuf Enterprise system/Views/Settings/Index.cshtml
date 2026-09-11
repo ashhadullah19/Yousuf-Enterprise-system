@@ -4,10 +4,12 @@
 }
 
 <form asp-action="Index" method="post" enctype="multipart/form-data" class="card stat-card p-4" style="max-width:720px;">
+    <div asp-validation-summary="All" class="text-danger"></div>
     <input type="hidden" asp-for="Id" />
     <div class="mb-3">
-        <label asp-for="CompanyName" class="form-label"></label>
+        <label asp-for="CompanyName" class="form-label required"></label>
         <input asp-for="CompanyName" class="form-control" />
+        <span asp-validation-for="CompanyName" class="text-danger"></span>
     </div>
     <div class="mb-3">
         <label asp-for="Address" class="form-label"></label>
@@ -23,11 +25,14 @@
     </div>
     <div class="mb-3">
         <label class="form-label">Logo</label>
-        <input type="file" name="logo" class="form-control" />
+        <input type="file" name="logo" class="form-control" accept=".png,.jpg,.jpeg,.gif,.svg,.webp" />
+        <div class="form-text">PNG, JPG, GIF, SVG or WEBP.</div>
         @if (!string.IsNullOrEmpty(Model.LogoPath))
         {
-            <img src="~/@Model.LogoPath" alt="Logo" class="mt-2" style="max-height:80px;" />
+            <img src="~/@Model.LogoPath?v=@DateTime.Now.Ticks" alt="Logo" class="mt-2" style="max-height:80px;" />
         }
     </div>
     <button class="btn btn-success">Save settings</button>
 </form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

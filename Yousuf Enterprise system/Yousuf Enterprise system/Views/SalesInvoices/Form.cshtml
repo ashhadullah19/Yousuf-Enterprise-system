@@ -15,8 +15,11 @@
             <input asp-for="InvoiceDate" type="date" class="form-control" />
         </div>
         <div class="col-md-4">
-            <label asp-for="BuyerId" class="form-label"></label>
-            <select asp-for="BuyerId" asp-items="ViewBag.Buyers" class="form-select"></select>
+            <label asp-for="BuyerId" class="form-label required"></label>
+            <select asp-for="BuyerId" asp-items="ViewBag.Buyers" class="form-select">
+                <option value="">-- select buyer --</option>
+            </select>
+            <span asp-validation-for="BuyerId" class="text-danger"></span>
         </div>
         <div class="col-md-4">
             <label asp-for="StockType" class="form-label"></label>
@@ -24,26 +27,39 @@
         </div>
         <div class="col-md-4" id="receiptRow">
             <label asp-for="ConsignmentReceiptId" class="form-label"></label>
-            <select asp-for="ConsignmentReceiptId" asp-items="ViewBag.Receipts" class="form-select">
+            <select asp-for="ConsignmentReceiptId" asp-items="ViewBag.Receipts" class="form-select" id="receiptSelect">
                 <option value="">-- select receipt --</option>
             </select>
         </div>
-        <div class="col-md-4">
-            <label asp-for="ProductId" class="form-label"></label>
-            <select asp-for="ProductId" asp-items="ViewBag.Products" class="form-select"></select>
+        <div class="col-md-4" id="productRow">
+            <label asp-for="ProductId" class="form-label required"></label>
+            <select asp-for="ProductId" asp-items="ViewBag.Products" class="form-select" id="productSelect">
+                <option value="">-- select product --</option>
+            </select>
+            <span asp-validation-for="ProductId" class="text-danger"></span>
+            <div id="stockBadge" class="small text-muted mt-1"></div>
         </div>
         <div class="col-md-3">
-            <label asp-for="QuantitySold" class="form-label"></label>
-            <input asp-for="QuantitySold" class="form-control" />
+            <label asp-for="QuantitySold" class="form-label required"></label>
+            <input asp-for="QuantitySold" class="form-control" id="quantitySold" />
+            <span asp-validation-for="QuantitySold" class="text-danger"></span>
         </div>
         <div class="col-md-3">
-            <label asp-for="RatePerUnit" class="form-label"></label>
+            <label asp-for="RatePerUnit" class="form-label required"></label>
             <input asp-for="RatePerUnit" class="form-control" />
+            <span asp-validation-for="RatePerUnit" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="AgentId" class="form-label"></label>
+            <select asp-for="AgentId" asp-items="ViewBag.Agents" class="form-select">
+                <option value="">-- none --</option>
+            </select>
+            <small class="text-muted">Who earns this commission — tracked on their own ledger.</small>
         </div>
         <div class="col-md-3">
             <label asp-for="AgentCommissionPercentage" class="form-label"></label>
             <input asp-for="AgentCommissionPercentage" class="form-control" />
-            <small class="text-muted">Commission is calculated automatically on save.</small>
+            <small class="text-muted">Commission amount is calculated automatically on save.</small>
         </div>
         <div class="col-md-3">
             <label class="form-label d-block">&nbsp;</label>
@@ -74,13 +90,13 @@
             <select asp-for="PaymentType" asp-items="Html.GetEnumSelectList<PaymentType>()" class="form-select" id="paymentType" data-online-value="@((int)PaymentType.Online)" data-credit-value="@((int)PaymentType.Credit)"></select>
         </div>
         <div class="col-md-4" id="bankRow">
-            <label asp-for="BankAccountId" class="form-label"></label>
+            <label asp-for="BankAccountId" class="form-label required"></label>
             <select asp-for="BankAccountId" asp-items="ViewBag.BankAccounts" class="form-select">
                 <option value="">-- select account --</option>
             </select>
         </div>
         <div class="col-md-4" id="dueDateRow">
-            <label asp-for="DueDate" class="form-label"></label>
+            <label asp-for="DueDate" class="form-label required"></label>
             <input asp-for="DueDate" type="date" class="form-control" />
         </div>
     </div>
@@ -92,19 +108,54 @@
 </form>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
         function toggleReceipt() {
             const type = document.getElementById('stockType').value;
-            document.getElementById('receiptRow').style.display = type === 'ConsignmentStock' ? '' : 'none';
+            const isConsignment = type === 'ConsignmentStock';
+            document.getElementById('receiptRow').style.display = isConsignment ? '' : 'none';
+            // For consignment sales the product is determined by the selected receipt,
+            // so the (owned-stock-only) product dropdown isn't relevant there.
+            document.getElementById('productRow').style.display = isConsignment ? 'none' : '';
+            refreshStockBadge();
         }
-                function togglePaymentFields() {
+        function togglePaymentFields() {
             const el = document.getElementById('paymentType');
             const type = el.value;
             document.getElementById('bankRow').style.display = type === el.dataset.onlineValue ? '' : 'none';
             document.getElementById('dueDateRow').style.display = type === el.dataset.creditValue ? '' : 'none';
         }
+        async function refreshStockBadge() {
+            const stockType = document.getElementById('stockType').value;
+            const badge = document.getElementById('stockBadge');
+            const qtyInput = document.getElementById('quantitySold');
+            let url;
+            if (stockType === 'ConsignmentStock') {
+                const receiptId = document.getElementById('receiptSelect').value;
+                if (!receiptId) { badge.textContent = ''; qtyInput.removeAttribute('max'); return; }
+                url = `/SalesInvoices/StockInfo?stockType=ConsignmentStock&consignmentReceiptId=${receiptId}&productId=0`;
+            } else {
+                const productId = document.getElementById('productSelect').value;
+                if (!productId) { badge.textContent = ''; qtyInput.removeAttribute('max'); return; }
+                url = `/SalesInvoices/StockInfo?stockType=OwnedStock&productId=${productId}`;
+            }
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                qtyInput.setAttribute('max', data.onHand);
+                let text = `Available: ${Number(data.onHand).toFixed(4)} ${data.uom}`;
+                if (data.vendors && data.vendors.length) {
+                    text += ' (supplied by: ' + data.vendors.map(v => `${v.name} ${Number(v.qty).toFixed(2)}`).join(', ') + ')';
+                }
+                badge.textContent = text;
+            } catch {
+                badge.textContent = '';
+            }
+        }
         document.getElementById('stockType').addEventListener('change', toggleReceipt);
         document.getElementById('paymentType').addEventListener('change', togglePaymentFields);
+        document.getElementById('productSelect').addEventListener('change', refreshStockBadge);
+        document.getElementById('receiptSelect').addEventListener('change', refreshStockBadge);
         toggleReceipt();
         togglePaymentFields();
     </script>

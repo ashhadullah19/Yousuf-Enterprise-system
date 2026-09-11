@@ -13,7 +13,7 @@ public class BankTransaction
 {
     public int Id { get; set; }
 
-    [Required]
+    [Required, Range(1, int.MaxValue, ErrorMessage = "Bank account is required.")]
     public int BankAccountId { get; set; }
     [ForeignKey(nameof(BankAccountId))]
     public BankAccount? BankAccount { get; set; }
@@ -30,11 +30,6 @@ public class BankTransaction
 
     [StringLength(50)]
     public string? ReferenceNumber { get; set; }
-
-    // NEW — optional link so late/credit payments can be reconciled against the invoice
-    [Display(Name = "Against Invoice")]
-    public int? SalesInvoiceId { get; set; }
-    public SalesInvoice? SalesInvoice { get; set; }
 
     [StringLength(1000)]
     public string? Remarks { get; set; }

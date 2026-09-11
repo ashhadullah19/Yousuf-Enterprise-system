@@ -1,6 +1,13 @@
+@using Yousuf_Enterprise_system.Services
 @model IEnumerable<Party>
 @{
     ViewData["Title"] = "Party Master";
+    var balances = ViewBag.Balances as Dictionary<int, PartyCommissionBalance> ?? new Dictionary<int, PartyCommissionBalance>();
+}
+
+@if (TempData["Message"] is not null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
 }
 
 <form class="row g-2 mb-3" method="get">
@@ -9,6 +16,12 @@
     </div>
     <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
     <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add party</a></div>
+    <div class="col-auto"><a class="btn btn-outline-secondary" asp-action="DownloadTemplate">Download template</a></div>
+</form>
+
+<form asp-action="Import" method="post" enctype="multipart/form-data" class="row g-2 mb-3">
+    <div class="col-md-4"><input type="file" name="file" class="form-control" accept=".xlsx" required /></div>
+    <div class="col-auto"><button class="btn btn-outline-success">Import from Excel</button></div>
 </form>
 
 <table class="table table-striped bg-white">
@@ -16,20 +29,26 @@
         <tr>
             <th>Name</th>
             <th>Type</th>
-            <th>CNIC</th>
             <th>Phone</th>
             <th>NTN</th>
+            <th>Dues</th>
+            <th>Commission Receivable</th>
+            <th>Commission Received</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
     @foreach (var item in Model)
     {
+        var balance = balances.TryGetValue(item.Id, out var b) ? b : new PartyCommissionBalance();
         <tr>
             <td>@item.FullName</td>
-            <td>@item.Type</td>
+            <td>@item.Type.GetDisplayName()</td>
             <td>@item.PrimaryContact</td>
             <td>@item.Ntn</td>
+            <td>@balance.Dues.ToString("N2")</td>
+            <td>@balance.CommissionReceivable.ToString("N2")</td>
+            <td>@balance.CommissionReceived.ToString("N2")</td>
             <td class="text-end">
                 <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
                 @if (User.IsInRole(AppRoles.SuperAdmin))

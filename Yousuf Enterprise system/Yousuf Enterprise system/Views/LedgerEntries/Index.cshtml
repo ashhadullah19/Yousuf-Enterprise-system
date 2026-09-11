@@ -1,28 +1,29 @@
-@model IEnumerable<FinancialVoucher>
+@model IEnumerable<LedgerEntry>
 @{
     ViewData["Title"] = "Financial ledgers";
 }
 
 <form class="row g-2 mb-3" method="get">
-    <div class="col-md-4"><input class="form-control" name="q" value="@ViewBag.Query" placeholder="Voucher, party, reference..." /></div>
+    <div class="col-md-4"><input class="form-control" name="q" value="@ViewBag.Query" placeholder="Ledger entry, party, reference..." /></div>
     <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
-    <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add voucher</a></div>
+    <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add ledger entry</a></div>
 </form>
 
 <table class="table table-striped bg-white">
-    <thead><tr><th>Voucher</th><th>Date</th><th>Party</th><th>Type</th><th>Head</th><th>Amount</th><th>Status</th></tr></thead>
+    <thead><tr><th>Ledger #</th><th>Date</th><th>Party</th><th>Type</th><th>Head</th><th>Against Invoice</th><th>Amount</th><th>Status</th></tr></thead>
     <tbody>
     @foreach (var item in Model)
     {
         <tr>
-            <td>@item.VoucherNumber</td>
-            <td>@item.VoucherDate.ToString("dd-MMM-yyyy")</td>
+            <td>@item.LedgerNumber</td>
+            <td>@item.LedgerDate.ToString("dd-MMM-yyyy")</td>
             <td>@item.Party?.FullName</td>
-            <td>@item.Type</td>
-            <td>@item.Head</td>
+            <td>@item.Type.GetDisplayName()</td>
+            <td>@item.Head.GetDisplayName()</td>
+            <td>@(item.SalesInvoice?.InvoiceNumber ?? "-")</td>
             <td>@item.Amount.ToString("N2")</td>
             <td>
-                @if (item.Type == VoucherType.ContraAdjustment && !item.ApprovedByAdmin)
+                @if (item.Type == LedgerEntryType.ContraAdjustment && !item.ApprovedByAdmin)
                 {
                     <span class="badge bg-warning text-dark">Pending approval</span>
                     @if (User.IsInRole(AppRoles.SuperAdmin))

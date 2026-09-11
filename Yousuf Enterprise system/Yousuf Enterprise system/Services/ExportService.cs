@@ -12,6 +12,10 @@ public interface IExportService
     Task<byte[]> ExportInvoicesAsync();
     Task<byte[]> ExportStockAsync();
     Task<(int Parties, int Products)> ImportMastersAsync(Stream excelStream);
+    Task<int> ImportPartiesAsync(Stream excelStream);
+    Task<int> ImportProductsAsync(Stream excelStream);
+    byte[] PartiesTemplate();
+    byte[] ProductsTemplate();
 }
 
 public class ExportService : IExportService
@@ -179,6 +183,156 @@ public class ExportService : IExportService
 
         await _db.SaveChangesAsync();
         return (partiesAdded, productsAdded);
+    }
+
+    // Reads the first worksheet's header row and matches columns by name (case-insensitive),
+    // so each page's import doesn't depend on a fixed sheet name like the combined importer does.
+    private static Dictionary<string, int> ReadHeaders(ClosedXML.Excel.IXLWorksheet sheet)
+    {
+        var columns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var used = sheet.RangeUsed();
+        if (used is null)
+        {
+            return columns;
+        }
+
+        foreach (var cell in used.FirstRow().Cells())
+        {
+            var text = cell.GetString().Trim();
+            if (!string.IsNullOrEmpty(text))
+            {
+                columns[text] = cell.Address.ColumnNumber;
+            }
+        }
+
+        return columns;
+    }
+
+    public async Task<int> ImportPartiesAsync(Stream excelStream)
+    {
+        using var workbook = new XLWorkbook(excelStream);
+        var sheet = workbook.Worksheet(1);
+        var used = sheet.RangeUsed();
+        if (used is null)
+        {
+            return 0;
+        }
+
+        var columns = ReadHeaders(sheet);
+        string? Get(IXLRangeRow row, string col) => columns.TryGetValue(col, out var idx) ? row.Cell(idx).GetString().Trim() : null;
+
+        var added = 0;
+        foreach (var row in used.RowsUsed().Skip(1))
+        {
+            var name = Get(row, "FullName");
+            if (string.IsNullOrWhiteSpace(name) || await _db.Parties.AnyAsync(p => p.FullName == name))
+            {
+                continue;
+            }
+
+            Enum.TryParse<PartyType>(Get(row, "Type"), true, out var type);
+            if (type == 0)
+            {
+                type = PartyType.Both;
+            }
+
+            var bankName = Get(row, "BankName");
+
+            _db.Parties.Add(new Party
+            {
+                FullName = name,
+                Type = type,
+                FatherName = Get(row, "FatherName"),
+                PrimaryContact = Get(row, "PrimaryContact") ?? string.Empty,
+                SecondaryContact = Get(row, "SecondaryContact"),
+                BusinessAddress = Get(row, "BusinessAddress"),
+                Ntn = Get(row, "Ntn"),
+                StrnSbr = Get(row, "StrnSbr"),
+                HasBankDetails = !string.IsNullOrWhiteSpace(bankName),
+                BankName = bankName,
+                AccountTitle = Get(row, "AccountTitle"),
+                AccountNumber = Get(row, "AccountNumber"),
+                Iban = Get(row, "Iban"),
+                BranchCode = Get(row, "BranchCode")
+            });
+            added++;
+        }
+
+        await _db.SaveChangesAsync();
+        return added;
+    }
+
+    public async Task<int> ImportProductsAsync(Stream excelStream)
+    {
+        using var workbook = new XLWorkbook(excelStream);
+        var sheet = workbook.Worksheet(1);
+        var used = sheet.RangeUsed();
+        if (used is null)
+        {
+            return 0;
+        }
+
+        var columns = ReadHeaders(sheet);
+        string? Get(IXLRangeRow row, string col) => columns.TryGetValue(col, out var idx) ? row.Cell(idx).GetString().Trim() : null;
+
+        var added = 0;
+        foreach (var row in used.RowsUsed().Skip(1))
+        {
+            var name = Get(row, "Name");
+            if (string.IsNullOrWhiteSpace(name) || await _db.Products.AnyAsync(p => p.Name == name))
+            {
+                continue;
+            }
+
+            Enum.TryParse<UnitOfMeasure>(Get(row, "Uom"), true, out var uom);
+            if (uom == 0)
+            {
+                uom = UnitOfMeasure.KG;
+            }
+
+            decimal.TryParse(Get(row, "MinimumStockAlertQty"), out var minQty);
+            var isActiveText = Get(row, "IsActive");
+            var isActive = string.IsNullOrWhiteSpace(isActiveText) || !string.Equals(isActiveText, "false", StringComparison.OrdinalIgnoreCase);
+
+            _db.Products.Add(new Product
+            {
+                Name = name,
+                Description = Get(row, "Description"),
+                Uom = uom,
+                MinimumStockAlertQty = minQty,
+                IsActive = isActive
+            });
+            added++;
+        }
+
+        await _db.SaveChangesAsync();
+        return added;
+    }
+
+    public byte[] PartiesTemplate()
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Parties");
+        var headers = new[] { "FullName", "Type", "FatherName", "PrimaryContact", "SecondaryContact", "BusinessAddress", "Ntn", "StrnSbr", "BankName", "AccountTitle", "AccountNumber", "Iban", "BranchCode" };
+        for (var i = 0; i < headers.Length; i++)
+        {
+            sheet.Cell(1, i + 1).Value = headers[i];
+        }
+
+        return Save(workbook);
+    }
+
+    public byte[] ProductsTemplate()
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Products");
+        var headers = new[] { "Name", "Description", "Uom", "MinimumStockAlertQty", "IsActive" };
+        for (var i = 0; i < headers.Length; i++)
+        {
+            sheet.Cell(1, i + 1).Value = headers[i];
+        }
+
+        return Save(workbook);
     }
 
     private static byte[] Save(XLWorkbook workbook)

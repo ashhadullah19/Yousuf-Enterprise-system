@@ -8,7 +8,8 @@ using Yousuf_Enterprise_system.Services;
 
 namespace Yousuf_Enterprise_system.Controllers;
 
-[Authorize(Roles = AppRoles.Staff)]
+[Authorize]
+[ModulePermission(Modules.OwnedStock)]
 public class OwnedPurchasesController : Controller
 {
     private readonly ApplicationDbContext _db;
@@ -49,6 +50,7 @@ public class OwnedPurchasesController : Controller
         });
     }
 
+    [ModulePermission(Modules.OwnedStock, edit: true)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(OwnedPurchase purchase)
@@ -77,6 +79,7 @@ public class OwnedPurchasesController : Controller
         return View("Form", purchase);
     }
 
+    [ModulePermission(Modules.OwnedStock, edit: true)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, OwnedPurchase purchase)

@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Yousuf_Enterprise_system.Data;
 using Yousuf_Enterprise_system.Models;
+using Yousuf_Enterprise_system.Services;
 
 namespace Yousuf_Enterprise_system.Controllers;
 
-[Authorize(Roles = AppRoles.Staff)]
+[Authorize]
+[ModulePermission(Modules.BankAccounts)]
 public class BankAccountsController : Controller
 {
     private readonly ApplicationDbContext _db;
@@ -30,6 +32,7 @@ public class BankAccountsController : Controller
 
     public IActionResult Create() => View("Form", new BankAccount());
 
+    [ModulePermission(Modules.BankAccounts, edit: true)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(BankAccount bankAccount)
@@ -50,6 +53,7 @@ public class BankAccountsController : Controller
         return product is null ? NotFound() : View("Form", product);
     }
 
+    [ModulePermission(Modules.BankAccounts, edit: true)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, BankAccount product)
@@ -74,10 +78,18 @@ public class BankAccountsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        var product = await _db.BankAccounts.FindAsync(id);
-        if (product is not null)
+        var account = await _db.BankAccounts.FindAsync(id);
+        if (account is not null)
         {
-            await _db.SaveChangesAsync();
+            try
+            {
+                _db.BankAccounts.Remove(account);
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                TempData["Message"] = "Can't delete this bank account — it's already used by an invoice or transaction.";
+            }
         }
 
         return RedirectToAction(nameof(Index));

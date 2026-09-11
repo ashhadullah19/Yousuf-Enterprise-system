@@ -1,6 +1,7 @@
 @model IEnumerable<SalesInvoice>
 @{
     ViewData["Title"] = "Sales & GST";
+    var amountPaid = ViewBag.AmountPaid as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
 }
 
 <form class="row g-2 mb-3" method="get">
@@ -24,19 +25,23 @@
 </form>
 
 <table class="table table-striped bg-white">
-    <thead><tr><th>Invoice</th><th>Date</th><th>Buyer</th><th>Payment</th><th>Due</th><th>GST</th><th>Profit</th><th>Total</th><th></th></tr></thead>
+    <thead><tr><th>Invoice</th><th>Date</th><th>Buyer</th><th>Payment</th><th>Due</th><th>GST</th><th>Profit</th><th>Total</th><th>Status</th><th></th></tr></thead>
     <tbody>
         @foreach (var item in Model)
         {
+            var paid = amountPaid.TryGetValue(item.Id, out var p) ? p : 0m;
+            var status = paid <= 0 ? "Unpaid" : paid >= item.GrandTotalAmount ? "Paid" : "Partial";
+            var statusClass = status switch { "Paid" => "badge bg-success", "Partial" => "badge bg-warning text-dark", _ => "badge bg-secondary" };
             <tr class="@(item.IsOverdue ? "table-danger" : "")">
                 <td>@item.InvoiceNumber</td>
                 <td>@item.InvoiceDate.ToString("dd-MMM-yyyy")</td>
                 <td>@item.Buyer?.FullName</td>
-                <td>@item.PaymentType</td>
+                <td>@item.PaymentType.GetDisplayName()</td>
                 <td>@(item.DueDate?.ToString("dd-MMM-yyyy") ?? "-")</td>
                 <td>@(item.ApplyGst ? "Yes" : "No")</td>
                 <td>@item.ProfitAmount.ToString("N2")</td>
                 <td>@item.GrandTotalAmount.ToString("N2")</td>
+                <td><span class="@statusClass">@status</span></td>
                 <td class="text-end">
                     <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@item.Id">View</a>
                     <a class="btn btn-sm btn-outline-primary" asp-action="Pdf" asp-route-id="@item.Id">PDF</a>
