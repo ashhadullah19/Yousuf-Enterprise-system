@@ -21,6 +21,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
     public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<Expense> Expenses => Set<Expense>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -66,6 +67,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(v => v.SalesInvoiceId)
             .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<LedgerEntry>()
+            .HasOne(v => v.BankAccount)
+            .WithMany()
+            .HasForeignKey(v => v.BankAccountId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<Expense>()
+            .HasOne(e => e.BankAccount)
+            .WithMany()
+            .HasForeignKey(e => e.BankAccountId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.Entity<BankTransaction>()
             .HasOne(t => t.BankAccount)
             .WithMany()
@@ -84,5 +95,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<OwnedPurchase>().Property(p => p.Quantity).HasPrecision(18, 4);
         builder.Entity<Product>().Property(p => p.MinimumStockAlertQty).HasPrecision(18, 4);
         builder.Entity<SystemSetting>().Property(s => s.DefaultGstPercentage).HasPrecision(5, 2);
+        builder.Entity<SystemSetting>().Property(s => s.BagWeightKg).HasPrecision(18, 4);
     }
 }

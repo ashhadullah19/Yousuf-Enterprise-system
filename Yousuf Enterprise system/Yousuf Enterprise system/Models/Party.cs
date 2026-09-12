@@ -12,15 +12,17 @@ public class Party : IValidatableObject
     [Required, StringLength(200), Display(Name = "Full Name")]
     public string FullName { get; set; } = string.Empty;
 
-    [StringLength(200), Display(Name = "Father Name")]
+    [StringLength(200), Display(Name = "Company Name")]
     public string? FatherName { get; set; }
 
 
 
     [Required, StringLength(30), Display(Name = "Primary Contact")]
+    [RegularExpression(@"^\d{10,15}$", ErrorMessage = "Contact number must be 10-15 digits, numbers only.")]
     public string PrimaryContact { get; set; } = string.Empty;
 
     [StringLength(30), Display(Name = "Secondary Contact")]
+    [RegularExpression(@"^\d{10,15}$", ErrorMessage = "Contact number must be 10-15 digits, numbers only.")]
     public string? SecondaryContact { get; set; }
 
     [StringLength(500), Display(Name = "Business Address")]

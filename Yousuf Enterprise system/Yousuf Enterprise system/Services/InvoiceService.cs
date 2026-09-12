@@ -16,11 +16,23 @@ public class InvoiceCalculationResult
     public decimal ProfitAmount { get; set; }
 }
 
+// One vendor's slice of a specific owned-stock sale, resolved via FIFO against purchase
+// history. Used to split that sale's cost/commission across whichever vendor(s) actually
+// supplied the stock, without the invoice itself needing to show more than one vendor.
+public class VendorAllocation
+{
+    public int VendorId { get; set; }
+    public string VendorName { get; set; } = string.Empty;
+    public decimal Quantity { get; set; }
+    public decimal Cost { get; set; }
+}
+
 public interface IInvoiceService
 {
     Task<InvoiceCalculationResult> CalculateAsync(SalesInvoice invoice);
     Task<decimal> OwnedStockOnHandAsync(int productId, int? excludeInvoiceId = null);
     Task<List<(string VendorName, decimal RemainingQty)>> OwnedStockByVendorAsync(int productId);
+    Task<List<VendorAllocation>> GetSaleVendorAllocationAsync(SalesInvoice invoice);
     Task<decimal> ConsignmentRemainingAsync(int receiptId, int? excludeInvoiceId = null);
     Task<decimal> AverageCostAsync(int productId);
     Task ApplyAndValidateAsync(SalesInvoice invoice);
@@ -80,27 +92,31 @@ public class InvoiceService : IInvoiceService
             result.GstAmount = 0;
         }
 
-        // Extra charges are an internal cost (conveyance/labour) � they reduce
+        // Extra charges are an internal cost (conveyance/labour) — they reduce
         // profit but are NOT billed to the buyer, so they don't touch GrandTotal.
         result.GrandTotal = result.Subtotal + result.GstAmount;
-
-        // Generic agent/sales commission � applies to ANY invoice, owned or consignment.
-        result.AgentCommissionAmount = Math.Round(result.Subtotal * invoice.AgentCommissionPercentage / 100m, 2);
 
         if (invoice.StockType == StockType.OwnedStock)
         {
             var avgCost = await AverageCostAsync(invoice.ProductId);
             result.CostOfGoodsSold = Math.Round(avgCost * invoice.QuantitySold, 2);
-            result.ProfitAmount = Math.Round(
-                result.Subtotal - result.CostOfGoodsSold - result.AgentCommissionAmount - invoice.ExtraChargesAmount,
-                2);
+
+            // Owned-stock commission is a vendor-side concession, not a cut of the sale price:
+            // it's a % of what the stock cost (COGS), and it comes out of what's owed to the
+            // vendor(s) who supplied it (see GetSaleVendorAllocationAsync) — not out of profit.
+            result.AgentCommissionAmount = Math.Round(result.CostOfGoodsSold * invoice.AgentCommissionPercentage / 100m, 2);
+            result.ProfitAmount = Math.Round(result.Subtotal - result.CostOfGoodsSold - invoice.ExtraChargesAmount, 2);
         }
         else
         {
             // Consignment: we never owned this stock, so the full subtotal isn't ours -- most of
             // it is owed straight back to the stock owner. Only our agreed commission cut is
-            // actual revenue, so that (not the subtotal) is the profit basis here.
+            // actual revenue, so that (not the subtotal) is the profit basis here. The generic
+            // agent commission here is still sale-price based (there's no purchase cost basis
+            // for consignment stock) and still reduces profit, unlike the owned-stock case above.
             result.CostOfGoodsSold = 0;
+            result.AgentCommissionAmount = Math.Round(result.Subtotal * invoice.AgentCommissionPercentage / 100m, 2);
+
             var consignmentCommissionPct = 0m;
             if (invoice.ConsignmentReceiptId.HasValue)
             {
@@ -113,6 +129,67 @@ public class InvoiceService : IInvoiceService
             result.ProfitAmount = Math.Round(
                 consignmentCommissionRevenue - result.AgentCommissionAmount - invoice.ExtraChargesAmount,
                 2);
+        }
+
+        return result;
+    }
+
+    // Resolves which vendor(s) actually supplied the stock behind a specific owned-stock sale,
+    // via the same FIFO-against-purchase-history logic as OwnedStockByVendorAsync, but scoped
+    // to just this sale's quantity (skipping past whatever earlier sales already consumed).
+    // Lets cost/commission be split per vendor even though the invoice itself stays one buyer,
+    // one product, one quantity.
+    public async Task<List<VendorAllocation>> GetSaleVendorAllocationAsync(SalesInvoice invoice)
+    {
+        var purchases = await _db.OwnedPurchases.AsNoTracking()
+            .Where(p => p.ProductId == invoice.ProductId)
+            .OrderBy(p => p.PurchaseDate).ThenBy(p => p.Id)
+            .Select(p => new { p.VendorId, VendorName = p.Vendor!.FullName, p.Quantity, p.RatePerUnit })
+            .ToListAsync();
+
+        var priorQuery = _db.SalesInvoices.AsNoTracking()
+            .Where(s => s.ProductId == invoice.ProductId && s.StockType == StockType.OwnedStock
+                && (s.InvoiceDate < invoice.InvoiceDate
+                    || (s.InvoiceDate == invoice.InvoiceDate && (invoice.Id == 0 || s.Id < invoice.Id))));
+        if (invoice.Id != 0)
+        {
+            priorQuery = priorQuery.Where(s => s.Id != invoice.Id);
+        }
+
+        var priorSold = await priorQuery.SumAsync(s => (decimal?)s.QuantitySold) ?? 0;
+
+        var toSkip = priorSold;
+        var toAllocate = invoice.QuantitySold;
+        var result = new List<VendorAllocation>();
+
+        foreach (var purchase in purchases)
+        {
+            var available = purchase.Quantity;
+            if (toSkip > 0)
+            {
+                var skip = Math.Min(toSkip, available);
+                available -= skip;
+                toSkip -= skip;
+            }
+
+            if (available <= 0 || toAllocate <= 0)
+            {
+                continue;
+            }
+
+            var take = Math.Min(available, toAllocate);
+            result.Add(new VendorAllocation
+            {
+                VendorId = purchase.VendorId,
+                VendorName = purchase.VendorName,
+                Quantity = Math.Round(take, 4),
+                Cost = Math.Round(take * purchase.RatePerUnit, 2)
+            });
+            toAllocate -= take;
+            if (toAllocate <= 0)
+            {
+                break;
+            }
         }
 
         return result;

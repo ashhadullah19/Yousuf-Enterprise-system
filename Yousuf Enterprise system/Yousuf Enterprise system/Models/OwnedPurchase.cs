@@ -38,6 +38,18 @@ public class OwnedPurchase
     [Display(Name = "Grand Total"), Column(TypeName = "decimal(18,2)")]
     public decimal GrandTotalAmount { get; set; }
 
+    // --- Vendor payment ---
+    [Display(Name = "Payment Type")]
+    public PaymentType PaymentType { get; set; } = PaymentType.Cash;
+
+    [Display(Name = "Due Date"), DataType(DataType.Date)]
+    public DateTime? DueDate { get; set; }
+
     [StringLength(1000)]
     public string? Remarks { get; set; }
+
+    [NotMapped]
+    public bool IsOverdue => PaymentType == PaymentType.Credit
+        && DueDate.HasValue
+        && DueDate.Value.Date < DateTime.Today;
 }

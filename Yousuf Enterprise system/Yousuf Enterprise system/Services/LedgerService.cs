@@ -37,10 +37,12 @@ public interface ILedgerService
 public class LedgerService : ILedgerService
 {
     private readonly ApplicationDbContext _db;
+    private readonly IInvoiceService _invoices;
 
-    public LedgerService(ApplicationDbContext db)
+    public LedgerService(ApplicationDbContext db, IInvoiceService invoices)
     {
         _db = db;
+        _invoices = invoices;
     }
 
     public async Task<IReadOnlyList<PartyLedgerLine>> GetPartyLedgerAsync(int partyId, DateTime? from = null, DateTime? to = null)
@@ -121,6 +123,40 @@ public class LedgerService : ILedgerService
                 Head = HeadType.DirectProductHead,
                 Credit = purchase.GrandTotalAmount
             });
+        }
+
+        // Owned-stock commission comes out of the vendor's payable, not the company's profit
+        // (see InvoiceService.CalculateAsync). Every owned-stock sale with a commission gets
+        // resolved via FIFO to whichever vendor(s) actually supplied that stock, and this
+        // vendor's share of it is booked here as a debit reducing what they're owed.
+        if (purchases.Count > 0)
+        {
+            var commissionedSales = await _db.SalesInvoices.AsNoTracking()
+                .Where(s => s.StockType == StockType.OwnedStock
+                    && s.AgentCommissionAmount > 0
+                    && purchases.Select(p => p.ProductId).Distinct().Contains(s.ProductId))
+                .ToListAsync();
+
+            foreach (var sale in commissionedSales)
+            {
+                var allocation = await _invoices.GetSaleVendorAllocationAsync(sale);
+                var vendorShare = allocation.FirstOrDefault(a => a.VendorId == partyId);
+                if (vendorShare is not null && vendorShare.Cost > 0)
+                {
+                    var commissionShare = Math.Round(vendorShare.Cost * sale.AgentCommissionPercentage / 100m, 2);
+                    if (commissionShare > 0)
+                    {
+                        lines.Add(new PartyLedgerLine
+                        {
+                            Date = sale.InvoiceDate,
+                            Document = sale.InvoiceNumber,
+                            Description = $"Commission deducted from purchase cost (invoice {sale.InvoiceNumber})",
+                            Head = HeadType.DirectProductHead,
+                            Debit = commissionShare
+                        });
+                    }
+                }
+            }
         }
 
         var ledgerEntries = await _db.LedgerEntries.AsNoTracking()

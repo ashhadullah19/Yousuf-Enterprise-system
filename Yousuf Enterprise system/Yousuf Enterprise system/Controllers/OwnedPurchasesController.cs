@@ -55,6 +55,7 @@ public class OwnedPurchasesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(OwnedPurchase purchase)
     {
+        ValidatePurchase(purchase);
         Recalculate(purchase);
         if (!ModelState.IsValid)
         {
@@ -89,6 +90,7 @@ public class OwnedPurchasesController : Controller
             return BadRequest();
         }
 
+        ValidatePurchase(purchase);
         Recalculate(purchase);
         if (!ModelState.IsValid)
         {
@@ -99,6 +101,24 @@ public class OwnedPurchasesController : Controller
         _db.Update(purchase);
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
+    }
+
+    private void ValidatePurchase(OwnedPurchase purchase)
+    {
+        if (purchase.PurchaseDate.Date > DateTime.Today)
+        {
+            ModelState.AddModelError(nameof(purchase.PurchaseDate), "Purchase date can't be in the future.");
+        }
+
+        if (purchase.PaymentType == PaymentType.Credit && purchase.DueDate is null)
+        {
+            ModelState.AddModelError(nameof(purchase.DueDate), "Due date is required when payment is on credit.");
+        }
+
+        if (purchase.PaymentType != PaymentType.Credit)
+        {
+            purchase.DueDate = null;
+        }
     }
 
     private static void Recalculate(OwnedPurchase purchase)
@@ -115,5 +135,7 @@ public class OwnedPurchasesController : Controller
         ViewBag.Products = new SelectList(
             await _db.Products.Where(p => p.IsActive).OrderBy(p => p.Name).ToListAsync(),
             "Id", "Name");
+        var settings = await _db.SystemSettings.AsNoTracking().FirstAsync();
+        ViewBag.BagWeightKg = settings.BagWeightKg;
     }
 }

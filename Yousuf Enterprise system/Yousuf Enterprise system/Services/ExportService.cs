@@ -120,6 +120,10 @@ public class ExportService : IExportService
             var used = partySheet.RangeUsed();
             if (used is not null)
             {
+                var existingPartyNames = (await _db.Parties.Select(p => p.FullName).ToListAsync())
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var seenPartyNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
                 foreach (var row in used.RowsUsed().Skip(1))
                 {
                     var name = row.Cell(1).GetString().Trim();
@@ -128,7 +132,7 @@ public class ExportService : IExportService
                         continue;
                     }
 
-                    if (await _db.Parties.AnyAsync(p => p.FullName == name))
+                    if (existingPartyNames.Contains(name) || !seenPartyNames.Add(name))
                     {
                         continue;
                     }
@@ -155,10 +159,14 @@ public class ExportService : IExportService
             var used = productSheet.RangeUsed();
             if (used is not null)
             {
+                var existingProductNames = (await _db.Products.Select(p => p.Name).ToListAsync())
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var seenProductNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
                 foreach (var row in used.RowsUsed().Skip(1))
                 {
                     var name = row.Cell(1).GetString().Trim();
-                    if (string.IsNullOrWhiteSpace(name) || await _db.Products.AnyAsync(p => p.Name == name))
+                    if (string.IsNullOrWhiteSpace(name) || existingProductNames.Contains(name) || !seenProductNames.Add(name))
                     {
                         continue;
                     }
@@ -221,11 +229,15 @@ public class ExportService : IExportService
         var columns = ReadHeaders(sheet);
         string? Get(IXLRangeRow row, string col) => columns.TryGetValue(col, out var idx) ? row.Cell(idx).GetString().Trim() : null;
 
+        var existingNames = (await _db.Parties.Select(p => p.FullName).ToListAsync())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var seenInBatch = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         var added = 0;
         foreach (var row in used.RowsUsed().Skip(1))
         {
             var name = Get(row, "FullName");
-            if (string.IsNullOrWhiteSpace(name) || await _db.Parties.AnyAsync(p => p.FullName == name))
+            if (string.IsNullOrWhiteSpace(name) || existingNames.Contains(name) || !seenInBatch.Add(name))
             {
                 continue;
             }
@@ -262,6 +274,21 @@ public class ExportService : IExportService
         return added;
     }
 
+    // "No"/"N"/"0"/"false" (any casing) => inactive; anything else, including blank => active.
+    private static bool ParseActiveFlag(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return true;
+        }
+
+        return text.Trim().ToLowerInvariant() switch
+        {
+            "false" or "no" or "n" or "0" or "inactive" => false,
+            _ => true
+        };
+    }
+
     public async Task<int> ImportProductsAsync(Stream excelStream)
     {
         using var workbook = new XLWorkbook(excelStream);
@@ -275,11 +302,18 @@ public class ExportService : IExportService
         var columns = ReadHeaders(sheet);
         string? Get(IXLRangeRow row, string col) => columns.TryGetValue(col, out var idx) ? row.Cell(idx).GetString().Trim() : null;
 
+        var existingNames = (await _db.Products.Select(p => p.Name).ToListAsync())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        // Rows already staged (Added but not yet saved) aren't visible to a DB query, so a
+        // duplicate name within the same file would otherwise pass the check twice and both
+        // get inserted — track this batch's names locally as well.
+        var seenInBatch = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         var added = 0;
         foreach (var row in used.RowsUsed().Skip(1))
         {
             var name = Get(row, "Name");
-            if (string.IsNullOrWhiteSpace(name) || await _db.Products.AnyAsync(p => p.Name == name))
+            if (string.IsNullOrWhiteSpace(name) || existingNames.Contains(name) || !seenInBatch.Add(name))
             {
                 continue;
             }
@@ -291,8 +325,6 @@ public class ExportService : IExportService
             }
 
             decimal.TryParse(Get(row, "MinimumStockAlertQty"), out var minQty);
-            var isActiveText = Get(row, "IsActive");
-            var isActive = string.IsNullOrWhiteSpace(isActiveText) || !string.Equals(isActiveText, "false", StringComparison.OrdinalIgnoreCase);
 
             _db.Products.Add(new Product
             {
@@ -300,7 +332,7 @@ public class ExportService : IExportService
                 Description = Get(row, "Description"),
                 Uom = uom,
                 MinimumStockAlertQty = minQty,
-                IsActive = isActive
+                IsActive = ParseActiveFlag(Get(row, "IsActive"))
             });
             added++;
         }

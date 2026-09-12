@@ -19,12 +19,12 @@
                 <td>@item.Remarks</td>
                 <td class="text-end">
                     <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    <a class="btn btn-sm btn-outline-secondary" asp-controller="BankTransaction" asp-action="Statement" asp-route-bankAccountId="@item.Id">Statement</a>
                     @if (User.IsInRole(AppRoles.SuperAdmin))
                     {
                         <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
                             <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this bank account? This cannot be undone.');">Delete</button>
                         </form>
-                        <a class="btn btn-sm btn-outline-secondary" asp-controller="BankTransaction" asp-action="Statement" asp-route-bankAccountId="@item.Id">Statement</a>
                     }
                 </td>
             </tr>

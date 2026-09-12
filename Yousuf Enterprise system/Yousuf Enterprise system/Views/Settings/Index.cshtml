@@ -24,6 +24,11 @@
         <input asp-for="DefaultGstPercentage" class="form-control" />
     </div>
     <div class="mb-3">
+        <label asp-for="BagWeightKg" class="form-label"></label>
+        <input asp-for="BagWeightKg" class="form-control" />
+        <div class="form-text">Used on Owned Purchase to show the KG equivalent when quantity is entered in Bags.</div>
+    </div>
+    <div class="mb-3">
         <label class="form-label">Logo</label>
         <input type="file" name="logo" class="form-control" accept=".png,.jpg,.jpeg,.gif,.svg,.webp" />
         <div class="form-text">PNG, JPG, GIF, SVG or WEBP.</div>

@@ -20,4 +20,7 @@ public class SystemSetting
 
     [Range(0, 100)]
     public decimal DefaultGstPercentage { get; set; } = 18.00m;
+
+    [Display(Name = "Bag Weight (KG)"), Range(0.0001, double.MaxValue, ErrorMessage = "Bag weight must be greater than 0.")]
+    public decimal BagWeightKg { get; set; } = 50m;
 }

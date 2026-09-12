@@ -21,6 +21,14 @@
             </select>
             <span asp-validation-for="BuyerId" class="text-danger"></span>
         </div>
+        <div class="col-md-4" id="productRow">
+            <label asp-for="ProductId" class="form-label required"></label>
+            <select asp-for="ProductId" asp-items="ViewBag.Products" class="form-select" id="productSelect">
+                <option value="">-- select product --</option>
+            </select>
+            <span asp-validation-for="ProductId" class="text-danger"></span>
+            <div id="stockBadge" class="small text-muted mt-1"></div>
+        </div>
         <div class="col-md-4">
             <label asp-for="StockType" class="form-label"></label>
             <select asp-for="StockType" asp-items="Html.GetEnumSelectList<StockType>()" class="form-select" id="stockType"></select>
@@ -31,18 +39,14 @@
                 <option value="">-- select receipt --</option>
             </select>
         </div>
-        <div class="col-md-4" id="productRow">
-            <label asp-for="ProductId" class="form-label required"></label>
-            <select asp-for="ProductId" asp-items="ViewBag.Products" class="form-select" id="productSelect">
-                <option value="">-- select product --</option>
-            </select>
-            <span asp-validation-for="ProductId" class="text-danger"></span>
-            <div id="stockBadge" class="small text-muted mt-1"></div>
-        </div>
         <div class="col-md-3">
             <label asp-for="QuantitySold" class="form-label required"></label>
             <input asp-for="QuantitySold" class="form-control" id="quantitySold" />
             <span asp-validation-for="QuantitySold" class="text-danger"></span>
+        </div>
+        <div class="col-md-2">
+            <label asp-for="Unit" class="form-label"></label>
+            <select asp-for="Unit" asp-items="Html.GetEnumSelectList<UnitOfMeasure>()" class="form-select"></select>
         </div>
         <div class="col-md-3">
             <label asp-for="RatePerUnit" class="form-label required"></label>

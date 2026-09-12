@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Infrastructure;
 using Yousuf_Enterprise_system.Data;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.Services;
@@ -99,6 +101,17 @@ public class LedgerEntriesController : Controller
             }
         }
 
+        // Bank account only makes sense for an actual bank movement, and a cheque hasn't
+        // cleared yet — only an online transfer posts a bank transaction automatically.
+        if (entry.Mode != PaymentMode.OnlineBankTransfer)
+        {
+            entry.BankAccountId = null;
+        }
+        if (entry.Mode != PaymentMode.Cheque)
+        {
+            entry.ChequeDate = null;
+        }
+
         if (!ModelState.IsValid)
         {
             await FillListsAsync();
@@ -107,6 +120,22 @@ public class LedgerEntriesController : Controller
 
         _db.LedgerEntries.Add(entry);
         await _db.SaveChangesAsync();
+
+        if (entry.Mode == PaymentMode.OnlineBankTransfer && entry.BankAccountId.HasValue
+            && entry.Type is LedgerEntryType.PaymentReceived or LedgerEntryType.PaymentPaid)
+        {
+            _db.BankTransactions.Add(new BankTransaction
+            {
+                BankAccountId = entry.BankAccountId.Value,
+                TransactionDate = entry.LedgerDate,
+                Type = entry.Type == LedgerEntryType.PaymentReceived ? TransactionType.Deposit : TransactionType.Withdrawal,
+                Amount = entry.Amount,
+                ReferenceNumber = entry.LedgerNumber,
+                Remarks = $"Ledger entry {entry.LedgerNumber}"
+            });
+            await _db.SaveChangesAsync();
+        }
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -151,8 +180,65 @@ public class LedgerEntriesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    public async Task<IActionResult> Pdf(int id)
+    {
+        var entry = await _db.LedgerEntries.AsNoTracking()
+            .Include(e => e.Party)
+            .Include(e => e.SalesInvoice)
+            .FirstOrDefaultAsync(e => e.Id == id);
+        if (entry is null)
+        {
+            return NotFound();
+        }
+
+        var settings = await _db.SystemSettings.AsNoTracking().FirstAsync();
+
+        QuestPDF.Settings.License = LicenseType.Community;
+        var bytes = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(40);
+                page.Header().Column(col =>
+                {
+                    col.Item().Text(settings.CompanyName).FontSize(20).Bold();
+                    col.Item().Text($"Ledger Entry {entry.LedgerNumber}").SemiBold();
+                });
+
+                page.Content().PaddingVertical(16).Column(col =>
+                {
+                    col.Item().Text($"Date: {entry.LedgerDate:dd-MMM-yyyy}");
+                    col.Item().Text($"Party: {entry.Party?.FullName}");
+                    col.Item().Text($"Type: {entry.Type.GetDisplayName()}");
+                    col.Item().Text($"Head: {entry.Head.GetDisplayName()}");
+                    col.Item().Text($"Mode: {entry.Mode.GetDisplayName()}");
+                    if (entry.SalesInvoice is not null)
+                    {
+                        col.Item().Text($"Against Invoice: {entry.SalesInvoice.InvoiceNumber}");
+                    }
+                    if (!string.IsNullOrWhiteSpace(entry.ReferenceNumber))
+                    {
+                        col.Item().Text($"Reference: {entry.ReferenceNumber}");
+                    }
+                    if (!string.IsNullOrWhiteSpace(entry.BankName))
+                    {
+                        col.Item().Text($"Bank: {entry.BankName}");
+                    }
+                    if (!string.IsNullOrWhiteSpace(entry.Remarks))
+                    {
+                        col.Item().Text($"Remarks: {entry.Remarks}");
+                    }
+                    col.Item().PaddingTop(12).Text($"Amount: {entry.Amount:N2}").FontSize(16).Bold();
+                });
+            });
+        }).GeneratePdf();
+
+        return File(bytes, "application/pdf", $"{entry.LedgerNumber}.pdf");
+    }
+
     private async Task FillListsAsync()
     {
         ViewBag.Parties = new SelectList(await _db.Parties.OrderBy(p => p.FullName).ToListAsync(), "Id", "FullName");
+        ViewBag.BankAccounts = new SelectList(await _db.BankAccounts.OrderBy(b => b.BankName).ToListAsync(), "Id", "AccountTitle");
     }
 }

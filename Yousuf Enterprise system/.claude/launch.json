@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "yousuf-web",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "Yousuf Enterprise system/Yousuf Enterprise system.csproj", "--urls", "http://localhost:5090"],
+      "port": 5090
+    }
+  ]
+}

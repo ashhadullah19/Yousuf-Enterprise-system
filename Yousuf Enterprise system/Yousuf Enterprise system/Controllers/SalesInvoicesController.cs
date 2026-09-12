@@ -123,7 +123,59 @@ public class SalesInvoicesController : Controller
 
         _db.SalesInvoices.Add(invoice);
         await _db.SaveChangesAsync();
+
+        // Cash/Online sales are paid at the point of sale — auto-settle so they don't sit as
+        // open receivables (that's what a Credit sale is for). Online additionally posts the
+        // matching bank deposit so it actually shows up in that account's transactions.
+        if (invoice.PaymentType is PaymentType.Cash or PaymentType.Online)
+        {
+            var settlement = new LedgerEntry
+            {
+                LedgerNumber = await _numbers.NextAsync("LED", db => db.LedgerEntries.Select(e => e.LedgerNumber)),
+                LedgerDate = invoice.InvoiceDate,
+                PartyId = invoice.BuyerId,
+                SalesInvoiceId = invoice.Id,
+                Type = LedgerEntryType.PaymentReceived,
+                Head = HeadType.DirectProductHead,
+                Mode = invoice.PaymentType == PaymentType.Online ? PaymentMode.OnlineBankTransfer : PaymentMode.Cash,
+                Amount = invoice.GrandTotalAmount,
+                ApprovedByAdmin = true,
+                Remarks = $"Auto-settled at sale ({invoice.PaymentType})"
+            };
+            _db.LedgerEntries.Add(settlement);
+
+            if (invoice.PaymentType == PaymentType.Online && invoice.BankAccountId.HasValue)
+            {
+                _db.BankTransactions.Add(new BankTransaction
+                {
+                    BankAccountId = invoice.BankAccountId.Value,
+                    TransactionDate = invoice.InvoiceDate,
+                    Type = TransactionType.Deposit,
+                    Amount = invoice.GrandTotalAmount,
+                    ReferenceNumber = invoice.InvoiceNumber,
+                    Remarks = $"Sales invoice {invoice.InvoiceNumber}"
+                });
+            }
+
+            await _db.SaveChangesAsync();
+        }
+
         return RedirectToAction(nameof(Index));
+    }
+
+    [ModulePermission(Modules.Sales, edit: true)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DismissReminder(int id)
+    {
+        var invoice = await _db.SalesInvoices.FindAsync(id);
+        if (invoice is not null)
+        {
+            invoice.ReminderDismissed = true;
+            await _db.SaveChangesAsync();
+        }
+
+        return RedirectToAction("Index", "Home");
     }
 
     public async Task<IActionResult> Details(int id)

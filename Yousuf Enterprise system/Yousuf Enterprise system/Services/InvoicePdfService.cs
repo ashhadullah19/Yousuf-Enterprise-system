@@ -55,7 +55,7 @@ public class InvoicePdfService : IInvoicePdfService
                             h.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text("Amount");
                         });
                         table.Cell().Padding(4).Text(invoice.Product?.Name);
-                        table.Cell().Padding(4).Text($"{invoice.QuantitySold:N4}");
+                        table.Cell().Padding(4).Text($"{invoice.QuantitySold:N4} {invoice.Unit}");
                         table.Cell().Padding(4).Text($"{invoice.RatePerUnit:N2}");
                         table.Cell().Padding(4).Text($"{invoice.SubtotalAmount:N2}");
                     });

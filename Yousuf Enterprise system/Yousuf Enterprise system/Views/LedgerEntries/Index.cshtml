@@ -10,7 +10,7 @@
 </form>
 
 <table class="table table-striped bg-white">
-    <thead><tr><th>Ledger #</th><th>Date</th><th>Party</th><th>Type</th><th>Head</th><th>Against Invoice</th><th>Amount</th><th>Status</th></tr></thead>
+    <thead><tr><th>Ledger #</th><th>Date</th><th>Party</th><th>Type</th><th>Head</th><th>Mode</th><th>Against Invoice</th><th>Amount</th><th>Status</th><th></th></tr></thead>
     <tbody>
     @foreach (var item in Model)
     {
@@ -20,6 +20,7 @@
             <td>@item.Party?.FullName</td>
             <td>@item.Type.GetDisplayName()</td>
             <td>@item.Head.GetDisplayName()</td>
+            <td>@item.Mode.GetDisplayName()</td>
             <td>@(item.SalesInvoice?.InvoiceNumber ?? "-")</td>
             <td>@item.Amount.ToString("N2")</td>
             <td>
@@ -38,6 +39,7 @@
                     <span class="badge bg-success">Posted</span>
                 }
             </td>
+            <td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Pdf" asp-route-id="@item.Id">PDF</a></td>
         </tr>
     }
     </tbody>

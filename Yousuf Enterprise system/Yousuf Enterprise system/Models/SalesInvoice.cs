@@ -31,6 +31,12 @@ public class SalesInvoice
     [Display(Name = "Quantity Sold"), Range(0.0001, double.MaxValue, ErrorMessage = "Quantity must be greater than 0."), Column(TypeName = "decimal(18,4)")]
     public decimal QuantitySold { get; set; }
 
+    // The unit the buyer actually negotiated in (kg, maund, bag, etc.) — independent of the
+    // product's own base unit, same as OwnedPurchase.Unit. Quantity/rate are understood to
+    // already be in this unit; it's for display/record-keeping, not automatic conversion.
+    [Display(Name = "Unit")]
+    public UnitOfMeasure Unit { get; set; } = UnitOfMeasure.KG;
+
     [Display(Name = "Rate Per Unit"), Range(0.0001, double.MaxValue, ErrorMessage = "Rate must be greater than 0."), Column(TypeName = "decimal(18,4)")]
     public decimal RatePerUnit { get; set; }
 
@@ -88,6 +94,10 @@ public class SalesInvoice
 
     [Display(Name = "Due Date"), DataType(DataType.Date)]
     public DateTime? DueDate { get; set; }
+
+    // Lets a reminder be explicitly dismissed from the dashboard without needing to settle
+    // the invoice (e.g. "vendor already told me verbally, stop nagging me about this one").
+    public bool ReminderDismissed { get; set; }
 
     // Convenience flag used by dashboard/index � computed in the controller/service,
     // NOT persisted, so it can't drift out of sync with actual payments.

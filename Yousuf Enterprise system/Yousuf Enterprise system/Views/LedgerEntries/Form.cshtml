@@ -40,7 +40,7 @@
         </div>
         <div class="col-md-4">
             <label asp-for="Mode" class="form-label"></label>
-            <select asp-for="Mode" asp-items="Html.GetEnumSelectList<PaymentMode>()" class="form-select"></select>
+            <select asp-for="Mode" asp-items="Html.GetEnumSelectList<PaymentMode>()" class="form-select" id="modeSelect" data-online-value="@((int)PaymentMode.OnlineBankTransfer)" data-cheque-value="@((int)PaymentMode.Cheque)"></select>
         </div>
         <div class="col-md-4">
             <label asp-for="Amount" class="form-label required"></label>
@@ -50,6 +50,18 @@
         <div class="col-md-4">
             <label asp-for="ReferenceNumber" class="form-label"></label>
             <input asp-for="ReferenceNumber" class="form-control" />
+        </div>
+        <div class="col-md-4" id="bankAccountRow">
+            <label asp-for="BankAccountId" class="form-label"></label>
+            <select asp-for="BankAccountId" asp-items="ViewBag.BankAccounts" class="form-select">
+                <option value="">-- select account --</option>
+            </select>
+            <small class="text-muted">Posts a matching entry to that account's Bank Transactions.</small>
+        </div>
+        <div class="col-md-4" id="chequeDateRow">
+            <label asp-for="ChequeDate" class="form-label"></label>
+            <input asp-for="ChequeDate" type="date" class="form-control" />
+            <small class="text-muted">Shows as a dashboard reminder ahead of this date.</small>
         </div>
         <div class="col-md-4">
             <label asp-for="BankName" class="form-label"></label>
@@ -109,8 +121,16 @@
             } catch { /* ignore */ }
         }
 
+        function toggleModeFields() {
+            const el = document.getElementById('modeSelect');
+            document.getElementById('bankAccountRow').style.display = el.value === el.dataset.onlineValue ? '' : 'none';
+            document.getElementById('chequeDateRow').style.display = el.value === el.dataset.chequeValue ? '' : 'none';
+        }
+
         document.getElementById('entryType').addEventListener('change', toggleInvoiceRow);
         document.getElementById('partySelect').addEventListener('change', loadOutstandingInvoices);
+        document.getElementById('modeSelect').addEventListener('change', toggleModeFields);
         toggleInvoiceRow();
+        toggleModeFields();
     </script>
 }

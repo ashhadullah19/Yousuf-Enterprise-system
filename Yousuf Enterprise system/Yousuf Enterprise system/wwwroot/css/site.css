@@ -206,3 +206,106 @@ html.sidebar-collapsed .app-sidebar .nav-section {
   content: " *";
   color: #dc3545;
 }
+
+.mobile-menu-btn {
+  display: none;
+  background: transparent;
+  border: 0;
+  color: #14332b;
+  font-size: 1.3rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem;
+  flex-shrink: 0;
+}
+
+.mobile-menu-btn:hover {
+  background: rgba(20, 51, 43, 0.08);
+}
+
+.mobile-backdrop {
+  display: none;
+}
+
+/* Below md: the sidebar becomes an off-canvas drawer (hidden by default, slides in over the
+   page) instead of pushing/squeezing content, and wide tables scroll horizontally in place
+   instead of blowing out the page width. */
+@media (max-width: 767.98px) {
+  body.app-body {
+    display: block;
+  }
+
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
+
+  .app-sidebar,
+  html.sidebar-collapsed .app-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: -270px;
+    width: 250px;
+    height: 100vh;
+    z-index: 1050;
+    transition: left 0.2s ease;
+  }
+
+  .app-sidebar.mobile-open {
+    left: 0;
+  }
+
+  html.sidebar-collapsed .app-sidebar .label {
+    display: inline;
+  }
+
+  html.sidebar-collapsed .app-sidebar .brand,
+  html.sidebar-collapsed .app-sidebar .nav-link,
+  html.sidebar-collapsed .app-sidebar .nav-section {
+    justify-content: flex-start;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    text-align: left;
+  }
+
+  .sidebar-toggle {
+    display: none;
+  }
+
+  .mobile-backdrop.show {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 20, 15, 0.45);
+    z-index: 1040;
+  }
+
+  .app-main {
+    width: 100%;
+  }
+
+  .app-topbar {
+    padding: 0.75rem 1rem;
+  }
+
+  .app-topbar strong {
+    font-size: 0.95rem;
+  }
+
+  .user-chip .label {
+    display: none;
+  }
+
+  .app-content {
+    padding: 1rem;
+  }
+
+  .table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+}

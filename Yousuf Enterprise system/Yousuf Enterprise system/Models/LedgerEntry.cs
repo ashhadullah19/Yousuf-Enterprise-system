@@ -34,6 +34,17 @@ public class LedgerEntry
     [StringLength(100), Display(Name = "Bank Name")]
     public string? BankName { get; set; }
 
+    // When Mode = Online Bank Transfer, picking an account here auto-posts the matching
+    // deposit/withdrawal to Bank Transactions instead of that having to be entered separately.
+    [Display(Name = "Bank Account")]
+    public int? BankAccountId { get; set; }
+    public BankAccount? BankAccount { get; set; }
+
+    // When Mode = Cheque: the date the cheque is dated/expected to clear, so it can show up
+    // as a dashboard reminder ahead of time.
+    [Display(Name = "Cheque Date"), DataType(DataType.Date)]
+    public DateTime? ChequeDate { get; set; }
+
     [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than 0."), Column(TypeName = "decimal(18,2)")]
     public decimal Amount { get; set; }
 

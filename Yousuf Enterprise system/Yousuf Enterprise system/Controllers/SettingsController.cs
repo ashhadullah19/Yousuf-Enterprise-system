@@ -57,6 +57,7 @@ public class SettingsController : Controller
         settings.Address = model.Address;
         settings.ContactNumbers = model.ContactNumbers;
         settings.DefaultGstPercentage = model.DefaultGstPercentage;
+        settings.BagWeightKg = model.BagWeightKg;
 
         if (logo is { Length: > 0 })
         {

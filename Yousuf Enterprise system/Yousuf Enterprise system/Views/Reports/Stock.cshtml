@@ -4,7 +4,7 @@
 }
 
 <table class="table table-striped bg-white">
-    <thead><tr><th>Product</th><th>UOM</th><th>Owned on hand</th><th>Consignment on hand</th></tr></thead>
+    <thead><tr><th>Product</th><th>UOM</th><th>Owned on hand</th><th>Consignment on hand</th><th>Total remaining</th></tr></thead>
     <tbody>
     @foreach (var row in Model)
     {
@@ -13,6 +13,7 @@
             <td>@row.Product.Uom</td>
             <td>@row.Owned.ToString("N4")</td>
             <td>@row.Consignment.ToString("N4")</td>
+            <td><strong>@((row.Owned + row.Consignment).ToString("N4"))</strong></td>
         </tr>
     }
     </tbody>

@@ -71,6 +71,11 @@ public class ProductsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Product product)
     {
+        if (await _db.Products.AnyAsync(p => p.Name == product.Name))
+        {
+            ModelState.AddModelError(nameof(product.Name), "A product with this name already exists.");
+        }
+
         if (!ModelState.IsValid)
         {
             return View("Form", product);
@@ -95,6 +100,11 @@ public class ProductsController : Controller
         if (id != product.Id)
         {
             return BadRequest();
+        }
+
+        if (await _db.Products.AnyAsync(p => p.Name == product.Name && p.Id != id))
+        {
+            ModelState.AddModelError(nameof(product.Name), "A product with this name already exists.");
         }
 
         if (!ModelState.IsValid)

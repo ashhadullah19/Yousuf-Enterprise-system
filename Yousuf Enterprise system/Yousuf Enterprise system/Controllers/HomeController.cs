@@ -49,6 +49,7 @@ public class HomeController : Controller
         var creditInvoices = await _db.SalesInvoices.AsNoTracking()
             .Include(i => i.Buyer)
             .Where(i => i.PaymentType == PaymentType.Credit
+                && !i.ReminderDismissed
                 && i.DueDate != null
                 && i.DueDate.Value.Date <= reminderWindowStart)
             .ToListAsync();
@@ -63,6 +64,9 @@ public class HomeController : Controller
             var amountDue = inv.GrandTotalAmount - paid;
             if (amountDue <= 0) continue; // fully paid � no reminder needed
 
+            var dueDate = inv.DueDate!.Value.Date;
+            var status = dueDate < today ? "Overdue" : dueDate == today ? "Due today" : "Due tomorrow";
+
             paymentReminders.Add(new PaymentReminder
             {
                 InvoiceId = inv.Id,
@@ -70,10 +74,33 @@ public class HomeController : Controller
                 BuyerName = inv.Buyer?.FullName ?? "-",
                 DueDate = inv.DueDate!.Value,
                 AmountDue = amountDue,
-                IsOverdue = inv.DueDate.Value.Date < today
+                IsOverdue = dueDate < today,
+                Status = status
             });
         }
         paymentReminders = paymentReminders.OrderBy(r => r.DueDate).ToList();
+
+        var chequeEntries = await _db.LedgerEntries.AsNoTracking()
+            .Include(e => e.Party)
+            .Where(e => e.Mode == PaymentMode.Cheque
+                && e.ChequeDate != null
+                && e.ChequeDate.Value.Date <= reminderWindowStart)
+            .ToListAsync();
+
+        var chequeReminders = chequeEntries.Select(e =>
+        {
+            var chequeDate = e.ChequeDate!.Value.Date;
+            return new ChequeReminder
+            {
+                LedgerEntryId = e.Id,
+                LedgerNumber = e.LedgerNumber,
+                PartyName = e.Party?.FullName ?? "-",
+                ChequeDate = e.ChequeDate!.Value,
+                Amount = e.Amount,
+                IsOverdue = chequeDate < today,
+                Status = chequeDate < today ? "Overdue" : chequeDate == today ? "Due today" : "Due tomorrow"
+            };
+        }).OrderBy(r => r.ChequeDate).ToList();
 
         var model = new DashboardViewModel
         {
@@ -83,8 +110,10 @@ public class HomeController : Controller
             TodayCashFlow = await _ledger.TodayCashFlowAsync(),
             TotalCommission = await _ledger.GetTotalCommissionAsync(),
             TotalProfit = await _ledger.GetTotalProfitAsync(),
+            TotalExpenses = await _db.Expenses.AsNoTracking().SumAsync(e => (decimal?)e.Amount) ?? 0m,
             LowStock = alerts,
             PaymentReminders = paymentReminders,
+            ChequeReminders = chequeReminders,
             RecentInvoices = await _db.SalesInvoices.AsNoTracking()
                 .Include(i => i.Buyer)
                 .Include(i => i.Product)
