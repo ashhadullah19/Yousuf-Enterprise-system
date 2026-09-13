@@ -17,7 +17,7 @@ namespace Yousuf_Enterprise_system.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.23")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -492,6 +492,9 @@ namespace Yousuf_Enterprise_system.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("Bags")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
 
@@ -714,6 +717,9 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.Property<decimal>("CostOfGoodsSold")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int?>("DisplayUnit")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
 
@@ -781,6 +787,41 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("SalesInvoices");
+                });
+
+            modelBuilder.Entity("Yousuf_Enterprise_system.Models.SalesInvoiceAllocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("CommissionAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CommissionPercentage")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("OwnedPurchaseId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PurchaseRate")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("SalesInvoiceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnedPurchaseId");
+
+                    b.HasIndex("SalesInvoiceId");
+
+                    b.ToTable("SalesInvoiceAllocations");
                 });
 
             modelBuilder.Entity("Yousuf_Enterprise_system.Models.SystemSetting", b =>
@@ -1004,6 +1045,30 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.Navigation("ConsignmentReceipt");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Yousuf_Enterprise_system.Models.SalesInvoiceAllocation", b =>
+                {
+                    b.HasOne("Yousuf_Enterprise_system.Models.OwnedPurchase", "OwnedPurchase")
+                        .WithMany()
+                        .HasForeignKey("OwnedPurchaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Yousuf_Enterprise_system.Models.SalesInvoice", "SalesInvoice")
+                        .WithMany("Allocations")
+                        .HasForeignKey("SalesInvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OwnedPurchase");
+
+                    b.Navigation("SalesInvoice");
+                });
+
+            modelBuilder.Entity("Yousuf_Enterprise_system.Models.SalesInvoice", b =>
+                {
+                    b.Navigation("Allocations");
                 });
 #pragma warning restore 612, 618
         }

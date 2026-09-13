@@ -1,8 +1,15 @@
 @model OwnedPurchase
+@using Microsoft.AspNetCore.Mvc.Rendering
 @{
     ViewData["Title"] = Model.Id == 0 ? "Add owned purchase" : "Edit owned purchase";
     var action = Model.Id == 0 ? "Create" : "Edit";
     var bagWeightKg = ViewBag.BagWeightKg as decimal? ?? 50m;
+    // Bag used to be a selectable Unit; it's now a separate informational count instead, so
+    // it's dropped from new selections here but kept selectable if an existing record already
+    // has it (editing shouldn't silently change historical data).
+    var unitOptions = Enum.GetValues<UnitOfMeasure>()
+        .Where(u => u != UnitOfMeasure.Bag || Model.Unit == UnitOfMeasure.Bag)
+        .Select(u => new SelectListItem { Value = ((int)u).ToString(), Text = u.ToString(), Selected = u == Model.Unit });
 }
 
 <form asp-action="@action" method="post" class="card stat-card p-4">
@@ -36,11 +43,10 @@
             <label asp-for="Quantity" class="form-label required"></label>
             <input asp-for="Quantity" class="form-control" id="quantity" />
             <span asp-validation-for="Quantity" class="text-danger"></span>
-            <div id="bagHint" class="small text-muted mt-1"></div>
         </div>
         <div class="col-md-2">
             <label asp-for="Unit" class="form-label"></label>
-            <select asp-for="Unit" asp-items="Html.GetEnumSelectList<UnitOfMeasure>()" class="form-select" id="unit" data-bag-value="@((int)UnitOfMeasure.Bag)"></select>
+            <select asp-for="Unit" asp-items="unitOptions" class="form-select" id="unit"></select>
         </div>
         <div class="col-md-2">
             <label asp-for="RatePerUnit" class="form-label required"></label>
@@ -50,6 +56,12 @@
         <div class="col-md-2">
             <label asp-for="FreightLabourCharges" class="form-label"></label>
             <input asp-for="FreightLabourCharges" class="form-control" id="freight" />
+        </div>
+        <div class="col-md-2">
+            <label asp-for="Bags" class="form-label"></label>
+            <input asp-for="Bags" class="form-control" id="bags" />
+            <span asp-validation-for="Bags" class="text-danger"></span>
+            <div id="bagHint" class="small text-muted mt-1"></div>
         </div>
         <div class="col-md-4">
             <label asp-for="PaymentType" class="form-label"></label>
@@ -89,14 +101,14 @@
             const productCost = qty * rate;
             document.getElementById('totalProductCost').textContent = productCost.toFixed(2);
             document.getElementById('grandTotal').textContent = (productCost + freight).toFixed(2);
+        }
 
-            const unitSelect = document.getElementById('unit');
+        function updateBagHint() {
+            const bags = parseFloat(document.getElementById('bags').value) || 0;
             const bagHint = document.getElementById('bagHint');
-            if (unitSelect.value === unitSelect.dataset.bagValue && qty > 0) {
-                bagHint.textContent = `= ${(qty * bagWeightKg).toFixed(2)} KG (@bagWeightKg.ToString("N0") KG/bag)`;
-            } else {
-                bagHint.textContent = '';
-            }
+            bagHint.textContent = bags > 0
+                ? `≈ ${(bags * bagWeightKg).toFixed(2)} KG (@bagWeightKg.ToString("N0") KG/bag)`
+                : '';
         }
 
         function toggleDueDate() {
@@ -105,9 +117,10 @@
         }
 
         ['quantity', 'ratePerUnit', 'freight'].forEach(id => document.getElementById(id).addEventListener('input', updateTotals));
-        document.getElementById('unit').addEventListener('change', updateTotals);
+        document.getElementById('bags').addEventListener('input', updateBagHint);
         document.getElementById('paymentType').addEventListener('change', toggleDueDate);
         updateTotals();
+        updateBagHint();
         toggleDueDate();
     </script>
 }

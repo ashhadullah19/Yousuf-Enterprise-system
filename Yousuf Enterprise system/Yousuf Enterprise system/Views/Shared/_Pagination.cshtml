@@ -1,0 +1,68 @@
+@model Yousuf_Enterprise_system.ViewModels.IPagedResult
+@using Microsoft.AspNetCore.WebUtilities
+@{
+    var preserved = Context.Request.Query
+        .Where(kv => kv.Key is not ("page" or "pageSize"))
+        .ToDictionary(kv => kv.Key, string? (kv) => kv.Value.ToString());
+
+    string PageHref(int page)
+    {
+        var routeValues = new Dictionary<string, string?>(preserved)
+        {
+            ["page"] = page.ToString(),
+            ["pageSize"] = Model.PageSize.ToString()
+        };
+        return QueryHelpers.AddQueryString(Context.Request.Path, routeValues);
+    }
+
+    var rangeStart = Model.TotalCount == 0 ? 0 : ((Model.Page - 1) * Model.PageSize) + 1;
+    var rangeEnd = Math.Min(Model.Page * Model.PageSize, Model.TotalCount);
+}
+
+<div class="grid-pagination">
+    <div class="grid-pagination-info">
+        @if (Model.TotalCount == 0)
+        {
+            <text>No records</text>
+        }
+        else
+        {
+            <text>Showing @rangeStart&ndash;@rangeEnd of @Model.TotalCount</text>
+        }
+    </div>
+    <div class="grid-pagination-controls">
+        <form method="get" class="page-size-form">
+            @foreach (var kv in preserved)
+            {
+                <input type="hidden" name="@kv.Key" value="@kv.Value" />
+            }
+            <input type="hidden" name="page" value="1" />
+            <label class="page-size-label">
+                Rows per page
+                <select name="pageSize" class="form-select form-select-sm" onchange="this.form.submit()">
+                    @foreach (var size in Yousuf_Enterprise_system.Extensions.PagingExtensions.AllowedPageSizes)
+                    {
+                        <option value="@size" selected="@(size == Model.PageSize ? "selected" : null)">@size</option>
+                    }
+                </select>
+            </label>
+        </form>
+        <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                    <a class="page-link" href="@PageHref(1)" aria-label="First">&laquo;</a>
+                </li>
+                <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                    <a class="page-link" href="@PageHref(Math.Max(1, Model.Page - 1))" aria-label="Previous">&lsaquo;</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">Page @Model.Page of @Model.TotalPages</span></li>
+                <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="@PageHref(Math.Min(Model.TotalPages, Model.Page + 1))" aria-label="Next">&rsaquo;</a>
+                </li>
+                <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="@PageHref(Model.TotalPages)" aria-label="Last">&raquo;</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>

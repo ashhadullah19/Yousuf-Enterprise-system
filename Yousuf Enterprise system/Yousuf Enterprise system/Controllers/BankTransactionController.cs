@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using Yousuf_Enterprise_system.Data;
+using Yousuf_Enterprise_system.Extensions;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.Services;
 using Yousuf_Enterprise_system.ViewModels;
@@ -20,24 +21,45 @@ public class BankTransactionController : Controller
         _db = db;
     }
 
-    public async Task<IActionResult> Index(string? q)
+    public async Task<IActionResult> Index(int? bankAccountId, string? q, int page = 1, int pageSize = 25)
     {
-        var query = _db.BankTransactions
-            .AsNoTracking()
-            .Include(t => t.BankAccount)
-            .AsQueryable();
+        var accounts = await _db.BankAccounts.AsNoTracking()
+            .OrderBy(b => b.BankName).ThenBy(b => b.AccountTitle)
+            .ToListAsync();
+
+        var selected = bankAccountId.HasValue ? accounts.FirstOrDefault(a => a.Id == bankAccountId.Value) : null;
+
+        ViewBag.BankAccounts = accounts
+            .Select(a => new SelectListItem
+            {
+                Value = a.Id.ToString(),
+                Text = $"{a.BankName} - {a.AccountTitle} ({a.AccountNumber})",
+                Selected = a.Id == selected?.Id
+            })
+            .ToList();
+        ViewBag.SelectedAccount = selected;
+        ViewBag.Query = q;
+
+        // Nothing is listed until a bank is picked, so each list (and its search) is per account.
+        if (selected is null)
+        {
+            return View(new PagedResult<BankTransaction>());
+        }
+
+        var query = _db.BankTransactions.AsNoTracking()
+            .Where(t => t.BankAccountId == selected.Id);
 
         if (!string.IsNullOrWhiteSpace(q))
         {
             query = query.Where(t =>
                 (t.ReferenceNumber != null && t.ReferenceNumber.Contains(q)) ||
-                (t.Remarks != null && t.Remarks.Contains(q)) ||
-                t.BankAccount!.AccountTitle.Contains(q) ||
-                t.BankAccount!.BankName.Contains(q));
+                (t.Remarks != null && t.Remarks.Contains(q)));
         }
 
-        ViewBag.Query = q;
-        return View(await query.OrderByDescending(t => t.TransactionDate).ToListAsync());
+        return View(await query
+            .OrderByDescending(t => t.TransactionDate)
+            .ThenByDescending(t => t.Id)
+            .ToPagedResultAsync(page, pageSize));
     }
 
     private async Task PopulateBankAccountsAsync(int? selectedId = null)
@@ -47,10 +69,10 @@ public class BankTransactionController : Controller
             "Id", "AccountTitle", selectedId);
     }
 
-    public async Task<IActionResult> Create()
+    public async Task<IActionResult> Create(int? bankAccountId)
     {
-        await PopulateBankAccountsAsync();
-        return View("Form", new BankTransaction());
+        await PopulateBankAccountsAsync(bankAccountId);
+        return View("Form", new BankTransaction { BankAccountId = bankAccountId ?? 0 });
     }
 
     [ModulePermission(Modules.BankTransactions, edit: true)]
@@ -65,7 +87,7 @@ public class BankTransactionController : Controller
         }
         _db.BankTransactions.Add(transaction);
         await _db.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { bankAccountId = transaction.BankAccountId });
     }
 
     public async Task<IActionResult> Edit(int id)
@@ -95,7 +117,7 @@ public class BankTransactionController : Controller
         }
         _db.Update(transaction);
         await _db.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { bankAccountId = transaction.BankAccountId });
     }
 
     [Authorize(Roles = AppRoles.SuperAdmin)]
@@ -104,12 +126,14 @@ public class BankTransactionController : Controller
     public async Task<IActionResult> Delete(int id)
     {
         var transaction = await _db.BankTransactions.FindAsync(id);
-        if (transaction is not null)
+        if (transaction is null)
         {
-            _db.BankTransactions.Remove(transaction);
-            await _db.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
-        return RedirectToAction(nameof(Index));
+
+        _db.BankTransactions.Remove(transaction);
+        await _db.SaveChangesAsync();
+        return RedirectToAction(nameof(Index), new { bankAccountId = transaction.BankAccountId });
     }
     public async Task<IActionResult> Statement(int bankAccountId, DateTime? from, DateTime? to)
     {

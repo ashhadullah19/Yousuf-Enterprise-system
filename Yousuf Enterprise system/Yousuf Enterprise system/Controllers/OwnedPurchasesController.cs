@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Yousuf_Enterprise_system.Data;
+using Yousuf_Enterprise_system.Extensions;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.Services;
 
@@ -21,7 +22,7 @@ public class OwnedPurchasesController : Controller
         _numbers = numbers;
     }
 
-    public async Task<IActionResult> Index(string? q)
+    public async Task<IActionResult> Index(string? q, int page = 1, int pageSize = 25)
     {
         var query = _db.OwnedPurchases.AsNoTracking()
             .Include(p => p.Vendor)
@@ -37,7 +38,7 @@ public class OwnedPurchasesController : Controller
         }
 
         ViewBag.Query = q;
-        return View(await query.OrderByDescending(p => p.PurchaseDate).ToListAsync());
+        return View(await query.OrderByDescending(p => p.PurchaseDate).ToPagedResultAsync(page, pageSize));
     }
 
     public async Task<IActionResult> Create()

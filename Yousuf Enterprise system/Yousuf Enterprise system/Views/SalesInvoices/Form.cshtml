@@ -31,7 +31,7 @@
         </div>
         <div class="col-md-4">
             <label asp-for="StockType" class="form-label"></label>
-            <select asp-for="StockType" asp-items="Html.GetEnumSelectList<StockType>()" class="form-select" id="stockType"></select>
+            <select asp-for="StockType" asp-items="Html.GetEnumSelectList<StockType>()" class="form-select" id="stockType" data-owned-value="@((int)StockType.OwnedStock)"></select>
         </div>
         <div class="col-md-4" id="receiptRow">
             <label asp-for="ConsignmentReceiptId" class="form-label"></label>
@@ -39,28 +39,48 @@
                 <option value="">-- select receipt --</option>
             </select>
         </div>
+        <div class="col-12" id="allocationSection">
+            <label class="form-label mb-1">Owned stock sources</label>
+            <div class="form-text mb-2">
+                Pick which parties' stock fills this sale. Quantity sold is the total of the rows below,
+                and each row's commission is charged against that party.
+            </div>
+            <div class="border rounded" id="allocationGrid">
+                <partial name="_StockAllocationRows" model="ViewBag.AllocationPicker as Yousuf_Enterprise_system.ViewModels.StockAllocationPickerViewModel ?? new Yousuf_Enterprise_system.ViewModels.StockAllocationPickerViewModel()" />
+            </div>
+        </div>
         <div class="col-md-3">
             <label asp-for="QuantitySold" class="form-label required"></label>
             <input asp-for="QuantitySold" class="form-control" id="quantitySold" />
             <span asp-validation-for="QuantitySold" class="text-danger"></span>
+            <small class="text-muted" id="quantityHint"></small>
         </div>
         <div class="col-md-2">
             <label asp-for="Unit" class="form-label"></label>
             <select asp-for="Unit" asp-items="Html.GetEnumSelectList<UnitOfMeasure>()" class="form-select"></select>
+        </div>
+        <div class="col-md-2">
+            <label asp-for="DisplayUnit" class="form-label"></label>
+            <select asp-for="DisplayUnit" asp-items="Html.GetEnumSelectList<UnitOfMeasure>()" class="form-select">
+                <option value="">-- none --</option>
+            </select>
+            <small class="text-muted">Optional — also prints the quantity converted to this unit.</small>
         </div>
         <div class="col-md-3">
             <label asp-for="RatePerUnit" class="form-label required"></label>
             <input asp-for="RatePerUnit" class="form-control" />
             <span asp-validation-for="RatePerUnit" class="text-danger"></span>
         </div>
-        <div class="col-md-3">
+        @* Owned-stock sales record commission per source party in the grid above, so the single
+           invoice-level agent cut only applies to consignment sales now. *@
+        <div class="col-md-3" id="agentRow">
             <label asp-for="AgentId" class="form-label"></label>
             <select asp-for="AgentId" asp-items="ViewBag.Agents" class="form-select">
                 <option value="">-- none --</option>
             </select>
             <small class="text-muted">Who earns this commission — tracked on their own ledger.</small>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-3" id="agentPercentageRow">
             <label asp-for="AgentCommissionPercentage" class="form-label"></label>
             <input asp-for="AgentCommissionPercentage" class="form-control" />
             <small class="text-muted">Commission amount is calculated automatically on save.</small>
@@ -114,14 +134,104 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        function isOwnedStock() {
+            // The select posts the enum's numeric value, not its name.
+            const el = document.getElementById('stockType');
+            return el.value === el.dataset.ownedValue;
+        }
+
         function toggleReceipt() {
-            const type = document.getElementById('stockType').value;
-            const isConsignment = type === 'ConsignmentStock';
+            const isConsignment = !isOwnedStock();
             document.getElementById('receiptRow').style.display = isConsignment ? '' : 'none';
             // For consignment sales the product is determined by the selected receipt,
             // so the (owned-stock-only) product dropdown isn't relevant there.
             document.getElementById('productRow').style.display = isConsignment ? 'none' : '';
+            document.getElementById('allocationSection').style.display = isConsignment ? 'none' : '';
+            document.getElementById('agentRow').style.display = isConsignment ? '' : 'none';
+            document.getElementById('agentPercentageRow').style.display = isConsignment ? '' : 'none';
+
+            // Owned-stock quantity is the sum of the picked sources, so it isn't typed directly.
+            const qtyInput = document.getElementById('quantitySold');
+            qtyInput.readOnly = !isConsignment;
+            document.getElementById('quantityHint').style.display = isConsignment ? 'none' : '';
+
             refreshStockBadge();
+            recalcAllocations();
+        }
+
+        async function loadAllocationRows() {
+            if (!isOwnedStock()) return;
+            const productId = document.getElementById('productSelect').value || 0;
+            const grid = document.getElementById('allocationGrid');
+            try {
+                const res = await fetch(`/SalesInvoices/StockAllocationRows?productId=${productId}`);
+                grid.innerHTML = await res.text();
+            } catch {
+                grid.innerHTML = '<div class="text-danger small p-3">Could not load stock list.</div>';
+            }
+            wireAllocationRows();
+            recalcAllocations();
+        }
+
+        function setRowEnabled(row, enabled) {
+            row.querySelectorAll('.allocation-input').forEach(input => input.disabled = !enabled);
+            if (enabled) {
+                const qty = row.querySelector('.allocation-qty');
+                if (!qty.value) {
+                    qty.value = row.dataset.available;
+                }
+            }
+        }
+
+        function wireAllocationRows() {
+            document.querySelectorAll('.allocation-row').forEach(row => {
+                const toggle = row.querySelector('.allocation-toggle');
+                toggle.addEventListener('change', () => {
+                    setRowEnabled(row, toggle.checked);
+                    recalcAllocations();
+                });
+                row.querySelectorAll('.allocation-qty, .allocation-commission')
+                    .forEach(input => input.addEventListener('input', recalcAllocations));
+            });
+        }
+
+        function recalcAllocations() {
+            let qtyTotal = 0;
+            let commissionTotal = 0;
+            let selectedCount = 0;
+
+            document.querySelectorAll('.allocation-row').forEach(row => {
+                const toggle = row.querySelector('.allocation-toggle');
+                const amountCell = row.querySelector('.allocation-commission-amount');
+                if (!toggle.checked) {
+                    amountCell.textContent = '0.00';
+                    return;
+                }
+
+                const qty = parseFloat(row.querySelector('.allocation-qty').value) || 0;
+                const pct = parseFloat(row.querySelector('.allocation-commission').value) || 0;
+                const rate = parseFloat(row.dataset.rate) || 0;
+                const commission = qty * rate * pct / 100;
+
+                amountCell.textContent = commission.toFixed(2);
+                qtyTotal += qty;
+                commissionTotal += commission;
+                selectedCount++;
+            });
+
+            const qtyTotalCell = document.getElementById('allocationQtyTotal');
+            if (qtyTotalCell) qtyTotalCell.textContent = qtyTotal.toFixed(4);
+            const commissionTotalCell = document.getElementById('allocationCommissionTotal');
+            if (commissionTotalCell) commissionTotalCell.textContent = commissionTotal.toFixed(2);
+
+            if (isOwnedStock()) {
+                // Keep a bindable number in the box — posting an empty string would fail model
+                // binding with a generic error before the clearer "pick a source" one is shown.
+                document.getElementById('quantitySold').value = qtyTotal > 0 ? qtyTotal.toFixed(4) : '0';
+                document.getElementById('quantityHint').textContent = selectedCount > 0
+                    ? `Total of ${selectedCount} selected source${selectedCount === 1 ? '' : 's'}.`
+                    : 'Select at least one stock source above.';
+            }
         }
         function togglePaymentFields() {
             const el = document.getElementById('paymentType');
@@ -129,37 +239,34 @@
             document.getElementById('bankRow').style.display = type === el.dataset.onlineValue ? '' : 'none';
             document.getElementById('dueDateRow').style.display = type === el.dataset.creditValue ? '' : 'none';
         }
+        // Owned-stock availability is shown per source in the allocation grid now, so this
+        // badge/max only applies to consignment sales.
         async function refreshStockBadge() {
-            const stockType = document.getElementById('stockType').value;
             const badge = document.getElementById('stockBadge');
             const qtyInput = document.getElementById('quantitySold');
-            let url;
-            if (stockType === 'ConsignmentStock') {
-                const receiptId = document.getElementById('receiptSelect').value;
-                if (!receiptId) { badge.textContent = ''; qtyInput.removeAttribute('max'); return; }
-                url = `/SalesInvoices/StockInfo?stockType=ConsignmentStock&consignmentReceiptId=${receiptId}&productId=0`;
-            } else {
-                const productId = document.getElementById('productSelect').value;
-                if (!productId) { badge.textContent = ''; qtyInput.removeAttribute('max'); return; }
-                url = `/SalesInvoices/StockInfo?stockType=OwnedStock&productId=${productId}`;
+            if (isOwnedStock()) {
+                badge.textContent = '';
+                qtyInput.removeAttribute('max');
+                return;
             }
+
+            const receiptId = document.getElementById('receiptSelect').value;
+            if (!receiptId) { badge.textContent = ''; qtyInput.removeAttribute('max'); return; }
+
             try {
-                const res = await fetch(url);
+                const res = await fetch(`/SalesInvoices/StockInfo?stockType=ConsignmentStock&consignmentReceiptId=${receiptId}&productId=0`);
                 const data = await res.json();
                 qtyInput.setAttribute('max', data.onHand);
-                let text = `Available: ${Number(data.onHand).toFixed(4)} ${data.uom}`;
-                if (data.vendors && data.vendors.length) {
-                    text += ' (supplied by: ' + data.vendors.map(v => `${v.name} ${Number(v.qty).toFixed(2)}`).join(', ') + ')';
-                }
-                badge.textContent = text;
+                badge.textContent = `Available: ${Number(data.onHand).toFixed(4)} ${data.uom}`;
             } catch {
                 badge.textContent = '';
             }
         }
-        document.getElementById('stockType').addEventListener('change', toggleReceipt);
+        document.getElementById('stockType').addEventListener('change', () => { toggleReceipt(); loadAllocationRows(); });
         document.getElementById('paymentType').addEventListener('change', togglePaymentFields);
-        document.getElementById('productSelect').addEventListener('change', refreshStockBadge);
+        document.getElementById('productSelect').addEventListener('change', loadAllocationRows);
         document.getElementById('receiptSelect').addEventListener('change', refreshStockBadge);
+        wireAllocationRows();
         toggleReceipt();
         togglePaymentFields();
     </script>

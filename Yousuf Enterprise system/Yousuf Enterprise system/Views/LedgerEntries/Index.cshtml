@@ -1,4 +1,4 @@
-@model IEnumerable<LedgerEntry>
+@model Yousuf_Enterprise_system.ViewModels.PagedResult<LedgerEntry>
 @{
     ViewData["Title"] = "Financial ledgers";
 }
@@ -9,10 +9,15 @@
     <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add ledger entry</a></div>
 </form>
 
-<table class="table table-striped bg-white">
+<div class="table-card">
+<table class="table table-striped">
     <thead><tr><th>Ledger #</th><th>Date</th><th>Party</th><th>Type</th><th>Head</th><th>Mode</th><th>Against Invoice</th><th>Amount</th><th>Status</th><th></th></tr></thead>
     <tbody>
-    @foreach (var item in Model)
+    @if (!Model.Items.Any())
+    {
+        <tr class="empty-row"><td colspan="10">No ledger entries found.</td></tr>
+    }
+    @foreach (var item in Model.Items)
     {
         <tr>
             <td>@item.LedgerNumber</td>
@@ -44,3 +49,5 @@
     }
     </tbody>
 </table>
+<partial name="_Pagination" model="Model" />
+</div>

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Yousuf_Enterprise_system.Data;
+using Yousuf_Enterprise_system.Extensions;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.Services;
 
@@ -19,9 +20,9 @@ public class BackupsController : Controller
         _backup = backup;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1, int pageSize = 25)
     {
-        var logs = await _db.BackupLogs.AsNoTracking().OrderByDescending(b => b.Timestamp).Take(50).ToListAsync();
+        var logs = await _db.BackupLogs.AsNoTracking().OrderByDescending(b => b.Timestamp).ToPagedResultAsync(page, pageSize);
         return View(logs);
     }
 

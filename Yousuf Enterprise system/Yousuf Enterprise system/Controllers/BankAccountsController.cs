@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Yousuf_Enterprise_system.Data;
+using Yousuf_Enterprise_system.Extensions;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.Services;
 
@@ -18,7 +19,7 @@ public class BankAccountsController : Controller
         _db = db;
     }
 
-    public async Task<IActionResult> Index(string? q)
+    public async Task<IActionResult> Index(string? q, int page = 1, int pageSize = 25)
     {
         var query = _db.BankAccounts.AsNoTracking().AsQueryable();
         if (!string.IsNullOrWhiteSpace(q))
@@ -27,7 +28,7 @@ public class BankAccountsController : Controller
         }
 
         ViewBag.Query = q;
-        return View(await query.OrderBy(p => p.BankName).ToListAsync());
+        return View(await query.OrderBy(p => p.BankName).ToPagedResultAsync(page, pageSize));
     }
 
     public IActionResult Create() => View("Form", new BankAccount());

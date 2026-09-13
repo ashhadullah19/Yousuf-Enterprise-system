@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Yousuf_Enterprise_system.Data;
+using Yousuf_Enterprise_system.Extensions;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.Services;
 
@@ -24,7 +25,7 @@ public class PartiesController : Controller
         _export = export;
     }
 
-    public async Task<IActionResult> Index(string? q, string sort = "name")
+    public async Task<IActionResult> Index(string? q, string sort = "name", int page = 1, int pageSize = 25)
     {
         var query = _db.Parties.AsNoTracking().AsQueryable();
         if (!string.IsNullOrWhiteSpace(q))
@@ -45,7 +46,7 @@ public class PartiesController : Controller
 
         ViewBag.Query = q;
         ViewBag.Balances = await _ledger.GetAllPartyBalancesAsync();
-        return View(await query.ToListAsync());
+        return View(await query.ToPagedResultAsync(page, pageSize));
     }
 
     [ModulePermission(Modules.Parties, edit: true)]

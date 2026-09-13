@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Yousuf_Enterprise_system.Data;
+using Yousuf_Enterprise_system.Extensions;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.Services;
+using Yousuf_Enterprise_system.ViewModels;
 
 namespace Yousuf_Enterprise_system.Controllers;
 
@@ -29,7 +31,7 @@ public class SalesInvoicesController : Controller
         _pdf = pdf;
     }
 
-    public async Task<IActionResult> Index(string? q, bool? gst, bool? overdueOnly)
+    public async Task<IActionResult> Index(string? q, bool? gst, bool? overdueOnly, int page = 1, int pageSize = 25)
     {
         var query = _db.SalesInvoices.AsNoTracking()
             .Include(i => i.Buyer)
@@ -59,9 +61,9 @@ public class SalesInvoicesController : Controller
         ViewBag.Query = q;
         ViewBag.Gst = gst;
         ViewBag.OverdueOnly = overdueOnly;
-        var invoices = await query.OrderByDescending(i => i.InvoiceDate).ThenByDescending(i => i.Id).ToListAsync();
+        var invoices = await query.OrderByDescending(i => i.InvoiceDate).ThenByDescending(i => i.Id).ToPagedResultAsync(page, pageSize);
 
-        var invoiceIds = invoices.Select(i => i.Id).ToList();
+        var invoiceIds = invoices.Items.Select(i => i.Id).ToList();
         ViewBag.AmountPaid = await _db.LedgerEntries.AsNoTracking()
             .Where(v => v.SalesInvoiceId != null && invoiceIds.Contains(v.SalesInvoiceId.Value) && v.Type == LedgerEntryType.PaymentReceived)
             .GroupBy(v => v.SalesInvoiceId!.Value)
@@ -75,11 +77,23 @@ public class SalesInvoicesController : Controller
     {
         await FillListsAsync();
         var settings = await _db.SystemSettings.AsNoTracking().FirstAsync();
+        ViewBag.AllocationPicker = new StockAllocationPickerViewModel();
         return View("Form", new SalesInvoice
         {
-            InvoiceNumber = await _numbers.NextAsync("FT", db => db.SalesInvoices.Select(i => i.InvoiceNumber), yearDigits: 2, seqDigits: 2),
+            InvoiceNumber = await _numbers.NextAsync("YT", db => db.SalesInvoices.Select(i => i.InvoiceNumber), yearDigits: 2, seqDigits: 2),
             InvoiceDate = DateTime.Today,
             GstPercentage = settings.DefaultGstPercentage
+        });
+    }
+
+    // Renders the owned-stock picker for a product. Returning the partial (rather than JSON)
+    // keeps one copy of the row markup for both the initial render and product changes.
+    [HttpGet]
+    public async Task<IActionResult> StockAllocationRows(int productId)
+    {
+        return PartialView("_StockAllocationRows", new StockAllocationPickerViewModel
+        {
+            Lots = productId <= 0 ? new List<OwnedStockLot>() : await _invoices.AvailableLotsAsync(productId)
         });
     }
 
@@ -88,6 +102,13 @@ public class SalesInvoicesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(SalesInvoice invoice)
     {
+        // Owned-stock quantity is derived from the picked lots, not typed, so its own field-level
+        // validation would only add a second, less useful message next to the real cause.
+        if (invoice.StockType == StockType.OwnedStock)
+        {
+            ModelState.Remove(nameof(invoice.QuantitySold));
+        }
+
         // Conditional requirements based on PaymentType
         if (invoice.PaymentType == PaymentType.Online && invoice.BankAccountId is null)
         {
@@ -118,6 +139,13 @@ public class SalesInvoicesController : Controller
         if (!ModelState.IsValid)
         {
             await FillListsAsync();
+            ViewBag.AllocationPicker = new StockAllocationPickerViewModel
+            {
+                Lots = invoice.ProductId <= 0
+                    ? new List<OwnedStockLot>()
+                    : await _invoices.AvailableLotsAsync(invoice.ProductId),
+                Selected = invoice.Allocations
+            };
             return View("Form", invoice);
         }
 
@@ -187,6 +215,9 @@ public class SalesInvoicesController : Controller
             .Include(i => i.Agent)
             .Include(i => i.ConsignmentReceipt)
             .ThenInclude(c => c!.StockOwner)
+            .Include(i => i.Allocations)
+            .ThenInclude(a => a.OwnedPurchase!)
+            .ThenInclude(p => p.Vendor)
             .FirstOrDefaultAsync(i => i.Id == id);
         if (invoice is null) return NotFound();
 
@@ -194,6 +225,12 @@ public class SalesInvoicesController : Controller
         ViewBag.AmountPaid = await _db.LedgerEntries
             .Where(v => v.SalesInvoiceId == id && v.Type == LedgerEntryType.PaymentReceived)
             .SumAsync(v => (decimal?)v.Amount) ?? 0m;
+
+        if (invoice.DisplayUnit.HasValue)
+        {
+            var settings = await _db.SystemSettings.AsNoTracking().FirstAsync();
+            ViewBag.ConvertedQuantity = UnitConversion.Convert(invoice.QuantitySold, invoice.Unit, invoice.DisplayUnit.Value, settings.BagWeightKg);
+        }
 
         return View(invoice);
     }
@@ -247,19 +284,15 @@ public class SalesInvoicesController : Controller
             await _db.Parties.Where(p => p.Type == PartyType.Buyer || p.Type == PartyType.Both).OrderBy(p => p.FullName).ToListAsync(),
             "Id", "FullName");
 
-        // Owned-stock product list: one option per vendor who still has remaining supply,
-        // e.g. "Vendor A CHIA SEED(50.00)", so the buyer can see/choose which vendor's
-        // stock they're effectively drawing from (informational — the sale itself still
-        // only records Product+Qty, cost is the same weighted average regardless of pick).
+        // One option per product with its total on-hand. Which vendor's stock the sale actually
+        // draws from is now picked explicitly in the allocation grid below, so this no longer
+        // needs to repeat the same product once per vendor.
         var activeProducts = await _db.Products.Where(p => p.IsActive).OrderBy(p => p.Name).ToListAsync();
         var ownedOptions = new List<object>();
         foreach (var product in activeProducts)
         {
-            var byVendor = await _invoices.OwnedStockByVendorAsync(product.Id);
-            foreach (var (vendorName, qty) in byVendor)
-            {
-                ownedOptions.Add(new { product.Id, Label = $"{vendorName} {product.Name}({qty:N2})" });
-            }
+            var onHand = await _invoices.OwnedStockOnHandAsync(product.Id);
+            ownedOptions.Add(new { product.Id, Label = $"{product.Name} ({onHand:N2} {product.Uom})" });
         }
         ViewBag.Products = new SelectList(ownedOptions, "Id", "Label");
         ViewBag.Receipts = new SelectList(

@@ -27,11 +27,26 @@ public class VendorAllocation
     public decimal Cost { get; set; }
 }
 
+// A single owned-stock purchase (GRN) with however much of it is still unsold, so a sale can be
+// filled by picking specific lots — each with its own vendor, purchase rate and commission.
+public class OwnedStockLot
+{
+    public int OwnedPurchaseId { get; set; }
+    public string GrnNumber { get; set; } = string.Empty;
+    public int VendorId { get; set; }
+    public string VendorName { get; set; } = string.Empty;
+    public DateTime PurchaseDate { get; set; }
+    public decimal RatePerUnit { get; set; }
+    public decimal AvailableQuantity { get; set; }
+    public UnitOfMeasure Unit { get; set; }
+}
+
 public interface IInvoiceService
 {
     Task<InvoiceCalculationResult> CalculateAsync(SalesInvoice invoice);
     Task<decimal> OwnedStockOnHandAsync(int productId, int? excludeInvoiceId = null);
     Task<List<(string VendorName, decimal RemainingQty)>> OwnedStockByVendorAsync(int productId);
+    Task<List<OwnedStockLot>> AvailableLotsAsync(int productId, int? excludeInvoiceId = null);
     Task<List<VendorAllocation>> GetSaleVendorAllocationAsync(SalesInvoice invoice);
     Task<decimal> ConsignmentRemainingAsync(int receiptId, int? excludeInvoiceId = null);
     Task<decimal> AverageCostAsync(int productId);
@@ -98,13 +113,25 @@ public class InvoiceService : IInvoiceService
 
         if (invoice.StockType == StockType.OwnedStock)
         {
-            var avgCost = await AverageCostAsync(invoice.ProductId);
-            result.CostOfGoodsSold = Math.Round(avgCost * invoice.QuantitySold, 2);
+            if (invoice.Allocations.Count > 0)
+            {
+                // Sale names the exact lots it draws from, so cost is what those lots actually
+                // cost — not a product-wide average — and commission is recorded per lot on the
+                // allocation rows instead of as one invoice-level agent cut.
+                result.CostOfGoodsSold = Math.Round(invoice.Allocations.Sum(a => a.Quantity * a.PurchaseRate), 2);
+                result.AgentCommissionAmount = 0;
+            }
+            else
+            {
+                // Invoices issued before lot selection existed: weighted-average cost, with a
+                // single invoice-level commission split FIFO across vendors at ledger time.
+                var avgCost = await AverageCostAsync(invoice.ProductId);
+                result.CostOfGoodsSold = Math.Round(avgCost * invoice.QuantitySold, 2);
+                result.AgentCommissionAmount = Math.Round(result.CostOfGoodsSold * invoice.AgentCommissionPercentage / 100m, 2);
+            }
 
-            // Owned-stock commission is a vendor-side concession, not a cut of the sale price:
-            // it's a % of what the stock cost (COGS), and it comes out of what's owed to the
-            // vendor(s) who supplied it (see GetSaleVendorAllocationAsync) — not out of profit.
-            result.AgentCommissionAmount = Math.Round(result.CostOfGoodsSold * invoice.AgentCommissionPercentage / 100m, 2);
+            // Owned-stock commission is a vendor-side concession, not a cut of the sale price —
+            // it comes out of what's owed to the vendor(s) who supplied the stock, not profit.
             result.ProfitAmount = Math.Round(result.Subtotal - result.CostOfGoodsSold - invoice.ExtraChargesAmount, 2);
         }
         else
@@ -195,6 +222,89 @@ public class InvoiceService : IInvoiceService
         return result;
     }
 
+    // Per-lot availability for the sale form's stock picker. Lots consumed by invoices that
+    // recorded their sources are reduced directly; quantity sold by older invoices (which only
+    // recorded Product+Qty) is depleted FIFO on top, so the per-lot totals still reconcile with
+    // OwnedStockOnHandAsync.
+    public async Task<List<OwnedStockLot>> AvailableLotsAsync(int productId, int? excludeInvoiceId = null)
+    {
+        var purchases = await _db.OwnedPurchases.AsNoTracking()
+            .Where(p => p.ProductId == productId)
+            .OrderBy(p => p.PurchaseDate).ThenBy(p => p.Id)
+            .Select(p => new
+            {
+                p.Id,
+                p.GrnNumber,
+                p.VendorId,
+                VendorName = p.Vendor!.FullName,
+                p.PurchaseDate,
+                p.Quantity,
+                p.RatePerUnit,
+                p.Unit
+            })
+            .ToListAsync();
+
+        if (purchases.Count == 0)
+        {
+            return new List<OwnedStockLot>();
+        }
+
+        var allocQuery = _db.SalesInvoiceAllocations.AsNoTracking()
+            .Where(a => a.OwnedPurchase!.ProductId == productId);
+        if (excludeInvoiceId.HasValue)
+        {
+            allocQuery = allocQuery.Where(a => a.SalesInvoiceId != excludeInvoiceId.Value);
+        }
+
+        var allocated = await allocQuery
+            .GroupBy(a => a.OwnedPurchaseId)
+            .Select(g => new { OwnedPurchaseId = g.Key, Qty = g.Sum(x => x.Quantity) })
+            .ToDictionaryAsync(x => x.OwnedPurchaseId, x => x.Qty);
+
+        var legacyQuery = _db.SalesInvoices.AsNoTracking()
+            .Where(s => s.ProductId == productId
+                && s.StockType == StockType.OwnedStock
+                && !s.Allocations.Any());
+        if (excludeInvoiceId.HasValue)
+        {
+            legacyQuery = legacyQuery.Where(s => s.Id != excludeInvoiceId.Value);
+        }
+
+        var legacySold = await legacyQuery.SumAsync(s => (decimal?)s.QuantitySold) ?? 0;
+
+        var lots = new List<OwnedStockLot>();
+        foreach (var purchase in purchases)
+        {
+            var remaining = purchase.Quantity - (allocated.TryGetValue(purchase.Id, out var used) ? used : 0);
+
+            if (legacySold > 0 && remaining > 0)
+            {
+                var consumed = Math.Min(remaining, legacySold);
+                remaining -= consumed;
+                legacySold -= consumed;
+            }
+
+            if (remaining <= 0)
+            {
+                continue;
+            }
+
+            lots.Add(new OwnedStockLot
+            {
+                OwnedPurchaseId = purchase.Id,
+                GrnNumber = purchase.GrnNumber,
+                VendorId = purchase.VendorId,
+                VendorName = purchase.VendorName,
+                PurchaseDate = purchase.PurchaseDate,
+                RatePerUnit = purchase.RatePerUnit,
+                AvailableQuantity = Math.Round(remaining, 4),
+                Unit = purchase.Unit
+            });
+        }
+
+        return lots;
+    }
+
     public async Task<decimal> OwnedStockOnHandAsync(int productId, int? excludeInvoiceId = null)
     {
         var purchased = await _db.OwnedPurchases
@@ -267,8 +377,70 @@ public class InvoiceService : IInvoiceService
         return receipt.ReceivedQuantity - sold;
     }
 
+    // Validates the picked lots against what's actually still available, snapshots each lot's
+    // purchase rate, and works out each one's commission. Quantity sold is the sum of the rows,
+    // so the invoice total can never disagree with the sources it was filled from.
+    private async Task ApplyOwnedStockAllocationsAsync(SalesInvoice invoice)
+    {
+        invoice.Allocations.RemoveAll(a => a.OwnedPurchaseId == 0 || a.Quantity <= 0);
+
+        if (invoice.Allocations.Count == 0)
+        {
+            throw new InvalidOperationException("Select at least one owned stock source and enter the quantity to sell from it.");
+        }
+
+        var duplicate = invoice.Allocations
+            .GroupBy(a => a.OwnedPurchaseId)
+            .FirstOrDefault(g => g.Count() > 1);
+        if (duplicate is not null)
+        {
+            throw new InvalidOperationException("The same stock lot is selected more than once.");
+        }
+
+        var lots = (await AvailableLotsAsync(invoice.ProductId, invoice.Id == 0 ? null : invoice.Id))
+            .ToDictionary(l => l.OwnedPurchaseId);
+
+        foreach (var allocation in invoice.Allocations)
+        {
+            if (!lots.TryGetValue(allocation.OwnedPurchaseId, out var lot))
+            {
+                throw new InvalidOperationException("One of the selected stock lots is no longer available. Re-check the stock list and try again.");
+            }
+
+            if (allocation.Quantity > lot.AvailableQuantity)
+            {
+                throw new InvalidOperationException($"{lot.VendorName} ({lot.GrnNumber}): only {lot.AvailableQuantity:N4} available, {allocation.Quantity:N4} requested.");
+            }
+
+            if (allocation.CommissionPercentage is < 0 or > 100)
+            {
+                throw new InvalidOperationException("Commission percentage must be between 0 and 100.");
+            }
+
+            // Rate comes from the lot, never from the posted form, so it can't be tampered with.
+            allocation.PurchaseRate = lot.RatePerUnit;
+            allocation.CommissionAmount = Math.Round(
+                allocation.Quantity * allocation.PurchaseRate * allocation.CommissionPercentage / 100m, 2);
+        }
+
+        invoice.QuantitySold = Math.Round(invoice.Allocations.Sum(a => a.Quantity), 4);
+
+        // Commission is now per source lot, so the single invoice-level agent cut doesn't apply.
+        invoice.AgentId = null;
+        invoice.AgentCommissionPercentage = 0;
+    }
+
     public async Task ApplyAndValidateAsync(SalesInvoice invoice)
     {
+        if (invoice.StockType == StockType.OwnedStock)
+        {
+            await ApplyOwnedStockAllocationsAsync(invoice);
+        }
+        else
+        {
+            invoice.Allocations.Clear();
+        }
+
         if (invoice.QuantitySold <= 0)
         {
             throw new InvalidOperationException("Quantity sold must be greater than zero.");

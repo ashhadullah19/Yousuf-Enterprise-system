@@ -26,6 +26,11 @@ public class OwnedPurchase
 
     public UnitOfMeasure Unit { get; set; } = UnitOfMeasure.KG;
 
+    // Purely informational bag count (e.g. "received as 40 bags") — has no effect on
+    // Quantity, cost, or any other calculation. Optional.
+    [Display(Name = "Bags"), Range(0, int.MaxValue, ErrorMessage = "Bags can't be negative.")]
+    public int? Bags { get; set; }
+
     [Display(Name = "Rate Per Unit"), Range(0.0001, double.MaxValue, ErrorMessage = "Rate must be greater than 0."), Column(TypeName = "decimal(18,4)")]
     public decimal RatePerUnit { get; set; }
 

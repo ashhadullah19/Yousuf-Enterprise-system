@@ -16,6 +16,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<OwnedPurchase> OwnedPurchases => Set<OwnedPurchase>();
     public DbSet<ConsignmentReceipt> ConsignmentReceipts => Set<ConsignmentReceipt>();
     public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
+    public DbSet<SalesInvoiceAllocation> SalesInvoiceAllocations => Set<SalesInvoiceAllocation>();
     public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
     public DbSet<BackupLog> BackupLogs => Set<BackupLog>();
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
@@ -57,6 +58,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(s => s.AgentId)
             .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<SalesInvoiceAllocation>()
+            .HasOne(a => a.SalesInvoice)
+            .WithMany(s => s.Allocations)
+            .HasForeignKey(a => a.SalesInvoiceId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<SalesInvoiceAllocation>()
+            .HasOne(a => a.OwnedPurchase)
+            .WithMany()
+            .HasForeignKey(a => a.OwnedPurchaseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Entity<LedgerEntry>()
             .HasOne(v => v.Party)
             .WithMany()

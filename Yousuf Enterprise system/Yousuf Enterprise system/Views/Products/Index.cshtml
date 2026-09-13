@@ -1,4 +1,4 @@
-@model IEnumerable<Product>
+@model Yousuf_Enterprise_system.ViewModels.PagedResult<Product>
 @{
     ViewData["Title"] = "Product Master";
     var onHand = ViewBag.OnHand as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
@@ -21,10 +21,15 @@
     <div class="col-auto"><button class="btn btn-outline-success">Import from Excel</button></div>
 </form>
 
-<table class="table table-striped bg-white">
+<div class="table-card">
+<table class="table table-striped">
     <thead><tr><th>Name</th><th>UOM</th><th>On hand</th><th>Min alert</th><th>Status</th><th></th></tr></thead>
     <tbody>
-    @foreach (var item in Model)
+    @if (!Model.Items.Any())
+    {
+        <tr class="empty-row"><td colspan="6">No products found.</td></tr>
+    }
+    @foreach (var item in Model.Items)
     {
         <tr>
             <td>@item.Name</td>
@@ -45,3 +50,5 @@
     }
     </tbody>
 </table>
+<partial name="_Pagination" model="Model" />
+</div>

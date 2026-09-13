@@ -1,5 +1,5 @@
 @using Yousuf_Enterprise_system.Services
-@model IEnumerable<Party>
+@model Yousuf_Enterprise_system.ViewModels.PagedResult<Party>
 @{
     ViewData["Title"] = "Party Master";
     var balances = ViewBag.Balances as Dictionary<int, PartyCommissionBalance> ?? new Dictionary<int, PartyCommissionBalance>();
@@ -24,7 +24,8 @@
     <div class="col-auto"><button class="btn btn-outline-success">Import from Excel</button></div>
 </form>
 
-<table class="table table-striped bg-white">
+<div class="table-card">
+<table class="table table-striped">
     <thead>
         <tr>
             <th>Name</th>
@@ -38,7 +39,11 @@
         </tr>
     </thead>
     <tbody>
-    @foreach (var item in Model)
+    @if (!Model.Items.Any())
+    {
+        <tr class="empty-row"><td colspan="8">No parties found.</td></tr>
+    }
+    @foreach (var item in Model.Items)
     {
         var balance = balances.TryGetValue(item.Id, out var b) ? b : new PartyCommissionBalance();
         <tr>
@@ -62,3 +67,5 @@
     }
     </tbody>
 </table>
+<partial name="_Pagination" model="Model" />
+</div>

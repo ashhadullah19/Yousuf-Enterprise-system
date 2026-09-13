@@ -20,6 +20,12 @@ public class InvoicePdfService : IInvoicePdfService
     public byte[] Build(SystemSetting settings, SalesInvoice invoice)
     {
         var gstLabel = invoice.ApplyGst ? "GST Invoice" : "Non-GST Invoice";
+        var qtyText = $"{invoice.QuantitySold:N4} {invoice.Unit}";
+        if (invoice.DisplayUnit.HasValue)
+        {
+            var converted = UnitConversion.Convert(invoice.QuantitySold, invoice.Unit, invoice.DisplayUnit.Value, settings.BagWeightKg);
+            qtyText += $" (= {converted:N4} {invoice.DisplayUnit})";
+        }
         return Document.Create(container =>
         {
             container.Page(page =>
@@ -55,7 +61,7 @@ public class InvoicePdfService : IInvoicePdfService
                             h.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text("Amount");
                         });
                         table.Cell().Padding(4).Text(invoice.Product?.Name);
-                        table.Cell().Padding(4).Text($"{invoice.QuantitySold:N4} {invoice.Unit}");
+                        table.Cell().Padding(4).Text(qtyText);
                         table.Cell().Padding(4).Text($"{invoice.RatePerUnit:N2}");
                         table.Cell().Padding(4).Text($"{invoice.SubtotalAmount:N2}");
                     });

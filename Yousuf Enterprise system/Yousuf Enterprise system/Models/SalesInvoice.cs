@@ -37,6 +37,12 @@ public class SalesInvoice
     [Display(Name = "Unit")]
     public UnitOfMeasure Unit { get; set; } = UnitOfMeasure.KG;
 
+    // Optional unit to also print the quantity as on the invoice/PDF (e.g. sold in KG but
+    // shown to the buyer in Maund too). Purely a display conversion — Quantity/Unit above
+    // remain the figures rate and amount are actually calculated from.
+    [Display(Name = "Also show quantity as")]
+    public UnitOfMeasure? DisplayUnit { get; set; }
+
     [Display(Name = "Rate Per Unit"), Range(0.0001, double.MaxValue, ErrorMessage = "Rate must be greater than 0."), Column(TypeName = "decimal(18,4)")]
     public decimal RatePerUnit { get; set; }
 
@@ -98,6 +104,14 @@ public class SalesInvoice
     // Lets a reminder be explicitly dismissed from the dashboard without needing to settle
     // the invoice (e.g. "vendor already told me verbally, stop nagging me about this one").
     public bool ReminderDismissed { get; set; }
+
+    // Which owned-stock lots this sale was filled from. Empty for consignment sales, and also
+    // for owned-stock invoices issued before lot selection existed (those still fall back to
+    // FIFO-derived vendor attribution).
+    public List<SalesInvoiceAllocation> Allocations { get; set; } = new();
+
+    [NotMapped]
+    public decimal AllocationCommissionTotal => Allocations.Sum(a => a.CommissionAmount);
 
     // Convenience flag used by dashboard/index � computed in the controller/service,
     // NOT persisted, so it can't drift out of sync with actual payments.

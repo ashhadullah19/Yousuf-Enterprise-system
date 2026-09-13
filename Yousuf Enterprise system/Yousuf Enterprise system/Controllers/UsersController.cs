@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Yousuf_Enterprise_system.Extensions;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.ViewModels;
 
@@ -25,7 +26,7 @@ public class UsersController : Controller
         ViewBag.Roles = new SelectList(await _roleManager.Roles.OrderBy(r => r.Name).ToListAsync(), "Name", "Name");
     }
 
-    public async Task<IActionResult> Index(string? q)
+    public async Task<IActionResult> Index(string? q, int page = 1, int pageSize = 25)
     {
         var users = await _userManager.Users.OrderBy(u => u.Email).ToListAsync();
         if (!string.IsNullOrWhiteSpace(q))
@@ -35,8 +36,10 @@ public class UsersController : Controller
                 || u.FullName.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
         }
 
+        var paged = users.ToPagedResult(page, pageSize);
+
         var rows = new List<UserFormViewModel>();
-        foreach (var user in users)
+        foreach (var user in paged.Items)
         {
             var roles = await _userManager.GetRolesAsync(user);
             rows.Add(new UserFormViewModel
@@ -50,7 +53,13 @@ public class UsersController : Controller
         }
 
         ViewBag.Query = q;
-        return View(rows);
+        return View(new PagedResult<UserFormViewModel>
+        {
+            Items = rows,
+            Page = paged.Page,
+            PageSize = paged.PageSize,
+            TotalCount = paged.TotalCount
+        });
     }
 
     public async Task<IActionResult> Create()

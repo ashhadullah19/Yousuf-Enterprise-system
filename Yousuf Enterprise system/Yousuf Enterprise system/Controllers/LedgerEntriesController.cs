@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using Yousuf_Enterprise_system.Data;
+using Yousuf_Enterprise_system.Extensions;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.Services;
 
@@ -23,7 +24,7 @@ public class LedgerEntriesController : Controller
         _numbers = numbers;
     }
 
-    public async Task<IActionResult> Index(string? q)
+    public async Task<IActionResult> Index(string? q, int page = 1, int pageSize = 25)
     {
         var query = _db.LedgerEntries.AsNoTracking().Include(v => v.Party).Include(v => v.SalesInvoice).AsQueryable();
         if (!string.IsNullOrWhiteSpace(q))
@@ -35,7 +36,7 @@ public class LedgerEntriesController : Controller
         }
 
         ViewBag.Query = q;
-        return View(await query.OrderByDescending(v => v.LedgerDate).ThenByDescending(v => v.Id).ToListAsync());
+        return View(await query.OrderByDescending(v => v.LedgerDate).ThenByDescending(v => v.Id).ToPagedResultAsync(page, pageSize));
     }
 
     public async Task<IActionResult> Create()

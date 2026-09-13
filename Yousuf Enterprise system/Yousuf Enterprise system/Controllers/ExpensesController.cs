@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Yousuf_Enterprise_system.Data;
+using Yousuf_Enterprise_system.Extensions;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.Services;
 
@@ -21,7 +22,7 @@ public class ExpensesController : Controller
         _numbers = numbers;
     }
 
-    public async Task<IActionResult> Index(string? q, DateTime? from, DateTime? to)
+    public async Task<IActionResult> Index(string? q, DateTime? from, DateTime? to, int page = 1, int pageSize = 25)
     {
         var query = _db.Expenses.AsNoTracking().Include(e => e.BankAccount).AsQueryable();
 
@@ -40,8 +41,8 @@ public class ExpensesController : Controller
         ViewBag.From = from?.ToString("yyyy-MM-dd");
         ViewBag.To = to?.ToString("yyyy-MM-dd");
 
-        var expenses = await query.OrderByDescending(e => e.ExpenseDate).ThenByDescending(e => e.Id).ToListAsync();
-        ViewBag.Total = expenses.Sum(e => e.Amount);
+        ViewBag.Total = await query.SumAsync(e => (decimal?)e.Amount) ?? 0m;
+        var expenses = await query.OrderByDescending(e => e.ExpenseDate).ThenByDescending(e => e.Id).ToPagedResultAsync(page, pageSize);
         return View(expenses);
     }
 

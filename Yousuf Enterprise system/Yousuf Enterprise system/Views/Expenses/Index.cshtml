@@ -1,4 +1,4 @@
-@model IEnumerable<Expense>
+@model Yousuf_Enterprise_system.ViewModels.PagedResult<Expense>
 @{
     ViewData["Title"] = "Expenses";
     var total = ViewBag.Total as decimal? ?? 0m;
@@ -17,14 +17,15 @@
     <div class="fs-4 fw-semibold">@total.ToString("N2")</div>
 </div>
 
-<table class="table table-striped bg-white">
+<div class="table-card">
+<table class="table table-striped">
     <thead><tr><th>Expense #</th><th>Date</th><th>Category</th><th>Description</th><th>Mode</th><th>Amount</th><th></th></tr></thead>
     <tbody>
-    @if (!Model.Any())
+    @if (!Model.Items.Any())
     {
-        <tr><td colspan="7" class="text-muted">No expenses recorded.</td></tr>
+        <tr class="empty-row"><td colspan="7">No expenses recorded.</td></tr>
     }
-    @foreach (var item in Model)
+    @foreach (var item in Model.Items)
     {
         <tr>
             <td>@item.ExpenseNumber</td>
@@ -46,3 +47,5 @@
     }
     </tbody>
 </table>
+<partial name="_Pagination" model="Model" />
+</div>

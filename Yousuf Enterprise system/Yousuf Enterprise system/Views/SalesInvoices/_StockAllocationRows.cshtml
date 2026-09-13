@@ -1,0 +1,65 @@
+@model Yousuf_Enterprise_system.ViewModels.StockAllocationPickerViewModel
+
+@if (!Model.Lots.Any())
+{
+    <div class="text-muted small p-3">No owned stock available for this product.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0 allocation-table">
+            <thead>
+                <tr>
+                    <th style="width:2.5rem;"></th>
+                    <th>Party</th>
+                    <th>GRN</th>
+                    <th class="text-end">Available</th>
+                    <th class="text-end">Purchase rate</th>
+                    <th style="width:9rem;">Qty to sell</th>
+                    <th style="width:8rem;">Commission %</th>
+                    <th class="text-end">Commission</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var lot in Model.Lots)
+                {
+                    var picked = Model.Selected.FirstOrDefault(s => s.OwnedPurchaseId == lot.OwnedPurchaseId);
+                    var isChecked = picked is not null;
+                    <tr class="allocation-row" data-available="@lot.AvailableQuantity.ToString(System.Globalization.CultureInfo.InvariantCulture)" data-rate="@lot.RatePerUnit.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                        <td>
+                            <input type="checkbox" class="form-check-input allocation-toggle" @(isChecked ? "checked" : "") />
+                        </td>
+                        <td>@lot.VendorName</td>
+                        <td class="text-muted small">@lot.GrnNumber<br />@lot.PurchaseDate.ToString("dd-MMM-yyyy")</td>
+                        <td class="text-end">@lot.AvailableQuantity.ToString("N4") @lot.Unit</td>
+                        <td class="text-end">@lot.RatePerUnit.ToString("N2")</td>
+                        <td>
+                            @* Index token lets unchecked rows simply drop out of model binding. *@
+                            <input type="hidden" name="Allocations.Index" value="@lot.OwnedPurchaseId" class="allocation-input" disabled="@(!isChecked)" />
+                            <input type="hidden" name="Allocations[@lot.OwnedPurchaseId].OwnedPurchaseId" value="@lot.OwnedPurchaseId" class="allocation-input" disabled="@(!isChecked)" />
+                            <input type="number" step="0.0001" min="0" max="@lot.AvailableQuantity.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                   name="Allocations[@lot.OwnedPurchaseId].Quantity"
+                                   value="@(picked?.Quantity.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture))"
+                                   class="form-control form-control-sm allocation-input allocation-qty" disabled="@(!isChecked)" />
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" min="0" max="100"
+                                   name="Allocations[@lot.OwnedPurchaseId].CommissionPercentage"
+                                   value="@(picked?.CommissionPercentage.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
+                                   class="form-control form-control-sm allocation-input allocation-commission" disabled="@(!isChecked)" />
+                        </td>
+                        <td class="text-end allocation-commission-amount text-muted">0.00</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="fw-semibold">
+                    <td colspan="5" class="text-end">Total</td>
+                    <td id="allocationQtyTotal">0.0000</td>
+                    <td></td>
+                    <td class="text-end" id="allocationCommissionTotal">0.00</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+}

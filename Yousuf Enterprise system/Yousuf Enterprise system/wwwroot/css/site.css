@@ -198,6 +198,123 @@ html.sidebar-collapsed .app-sidebar .nav-section {
   box-shadow: 0 8px 24px rgba(20, 51, 43, 0.08);
 }
 
+.table-card {
+  background: #fff;
+  border-radius: 0.6rem;
+  box-shadow: 0 8px 24px rgba(20, 51, 43, 0.08);
+  overflow: hidden;
+}
+
+.table-card .table {
+  margin-bottom: 0;
+}
+
+.table-card .table thead th {
+  background: #f7f9f8;
+  color: #52655e;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid #e5e9ec;
+  padding: 0.75rem 1rem;
+}
+
+.table-card .table tbody td {
+  padding: 0.7rem 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #eef1f2;
+  color: #2c3a35;
+}
+
+.table-card .table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table-card .table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: #fafbfa;
+}
+
+.table-card .table tbody tr:hover > * {
+  background-color: #eef6f2;
+}
+
+.table-card .table tbody tr.table-danger:hover > * {
+  background-color: #f8d7da;
+}
+
+.table-card .empty-row td {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: #8a978f;
+}
+
+.grid-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #eef1f2;
+  background: #fbfcfb;
+}
+
+.grid-pagination-info {
+  color: #6b7871;
+  font-size: 0.85rem;
+}
+
+.grid-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.page-size-form {
+  margin: 0;
+}
+
+.page-size-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: #6b7871;
+  margin: 0;
+}
+
+.page-size-label .form-select {
+  width: auto;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.grid-pagination .pagination .page-link {
+  color: #14332b;
+}
+
+.grid-pagination .pagination .page-item.active .page-link {
+  background-color: #14332b;
+  border-color: #14332b;
+}
+
+.grid-pagination .pagination .page-item.disabled .page-link {
+  color: #b7c0bc;
+}
+
+@media (max-width: 575.98px) {
+  .grid-pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grid-pagination-controls {
+    justify-content: space-between;
+  }
+}
+
 .table thead th {
   white-space: nowrap;
 }

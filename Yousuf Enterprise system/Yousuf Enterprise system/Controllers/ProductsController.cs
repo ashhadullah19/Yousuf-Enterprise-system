@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Yousuf_Enterprise_system.Data;
+using Yousuf_Enterprise_system.Extensions;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.Services;
 
@@ -22,7 +23,7 @@ public class ProductsController : Controller
         _export = export;
     }
 
-    public async Task<IActionResult> Index(string? q)
+    public async Task<IActionResult> Index(string? q, int page = 1, int pageSize = 25)
     {
         var query = _db.Products.AsNoTracking().AsQueryable();
         if (!string.IsNullOrWhiteSpace(q))
@@ -31,10 +32,10 @@ public class ProductsController : Controller
         }
 
         ViewBag.Query = q;
-        var products = await query.OrderBy(p => p.Name).ToListAsync();
+        var products = await query.OrderBy(p => p.Name).ToPagedResultAsync(page, pageSize);
 
         var onHand = new Dictionary<int, decimal>();
-        foreach (var product in products)
+        foreach (var product in products.Items)
         {
             onHand[product.Id] = await _invoices.OwnedStockOnHandAsync(product.Id);
         }

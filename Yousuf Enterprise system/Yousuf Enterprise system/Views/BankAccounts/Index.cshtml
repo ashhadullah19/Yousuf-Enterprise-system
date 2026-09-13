@@ -1,4 +1,4 @@
-@model IEnumerable<BankAccount>
+@model Yousuf_Enterprise_system.ViewModels.PagedResult<BankAccount>
 @{
     ViewData["Title"] = "Bank Accounts";
 }
@@ -7,10 +7,15 @@
     <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
     <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add account</a></div>
 </form>
-<table class="table table-striped bg-white">
+<div class="table-card">
+<table class="table table-striped">
     <thead><tr><th>Bank Name</th><th>Account Title</th><th>Account Number</th><th>Remarks</th><th></th></tr></thead>
     <tbody>
-        @foreach (var item in Model)
+        @if (!Model.Items.Any())
+        {
+            <tr class="empty-row"><td colspan="5">No bank accounts found.</td></tr>
+        }
+        @foreach (var item in Model.Items)
         {
             <tr>
                 <td>@item.BankName</td>
@@ -31,3 +36,5 @@
         }
     </tbody>
 </table>
+<partial name="_Pagination" model="Model" />
+</div>

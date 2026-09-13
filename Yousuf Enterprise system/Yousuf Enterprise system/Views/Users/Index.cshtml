@@ -1,4 +1,4 @@
-@model List<Yousuf_Enterprise_system.ViewModels.UserFormViewModel>
+@model Yousuf_Enterprise_system.ViewModels.PagedResult<Yousuf_Enterprise_system.ViewModels.UserFormViewModel>
 @{
     ViewData["Title"] = "Users";
 }
@@ -9,10 +9,15 @@
     <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add user</a></div>
 </form>
 
-<table class="table table-striped bg-white">
+<div class="table-card">
+<table class="table table-striped">
     <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th></th></tr></thead>
     <tbody>
-    @foreach (var row in Model)
+    @if (!Model.Items.Any())
+    {
+        <tr class="empty-row"><td colspan="5">No users found.</td></tr>
+    }
+    @foreach (var row in Model.Items)
     {
         <tr>
             <td>@row.FullName</td>
@@ -24,3 +29,5 @@
     }
     </tbody>
 </table>
+<partial name="_Pagination" model="Model" />
+</div>

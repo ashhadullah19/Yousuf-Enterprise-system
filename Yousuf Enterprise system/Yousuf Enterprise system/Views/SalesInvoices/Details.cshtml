@@ -13,7 +13,13 @@
     </div>
     <p>@(Model.ApplyGst ? "GST Invoice" : "Non-GST Invoice") · @Model.InvoiceDate.ToString("dd-MMM-yyyy")</p>
     <p>Buyer: @Model.Buyer?.FullName</p>
-    <p>Product: @Model.Product?.Name · Qty @Model.QuantitySold.ToString("N4") at @Model.RatePerUnit.ToString("N2")</p>
+    <p>
+        Product: @Model.Product?.Name · Qty @Model.QuantitySold.ToString("N4") @Model.Unit at @Model.RatePerUnit.ToString("N2")
+        @if (Model.DisplayUnit.HasValue)
+        {
+            <text>(= @(((decimal)ViewBag.ConvertedQuantity).ToString("N4")) @Model.DisplayUnit)</text>
+        }
+    </p>
     <p>Subtotal: @Model.SubtotalAmount.ToString("N2")</p>
     @if (!string.IsNullOrWhiteSpace(Model.ExtraChargesDescription) || Model.ExtraChargesAmount > 0)
     {
@@ -23,9 +29,62 @@
     <p class="fw-semibold">Grand total: @Model.GrandTotalAmount.ToString("N2") <span class="@settleClass">@settleStatus</span></p>
     <p>Paid so far: @paid.ToString("N2") / @Model.GrandTotalAmount.ToString("N2")</p>
 
+    @if (Model.Allocations.Any())
+    {
+        <hr />
+        <h3 class="h6">Stock sources</h3>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th>Party</th>
+                        <th>GRN</th>
+                        <th class="text-end">Qty</th>
+                        <th class="text-end">Purchase rate</th>
+                        <th class="text-end">Cost</th>
+                        <th class="text-end">Comm. %</th>
+                        <th class="text-end">Commission</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var allocation in Model.Allocations)
+                    {
+                        <tr>
+                            <td>@allocation.OwnedPurchase?.Vendor?.FullName</td>
+                            <td class="text-muted small">@allocation.OwnedPurchase?.GrnNumber</td>
+                            <td class="text-end">@allocation.Quantity.ToString("N4")</td>
+                            <td class="text-end">@allocation.PurchaseRate.ToString("N2")</td>
+                            <td class="text-end">@allocation.Cost.ToString("N2")</td>
+                            <td class="text-end">@allocation.CommissionPercentage.ToString("N2")</td>
+                            <td class="text-end">@allocation.CommissionAmount.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="fw-semibold">
+                        <td colspan="2" class="text-end">Total</td>
+                        <td class="text-end">@Model.Allocations.Sum(a => a.Quantity).ToString("N4")</td>
+                        <td></td>
+                        <td class="text-end">@Model.Allocations.Sum(a => a.Cost).ToString("N2")</td>
+                        <td></td>
+                        <td class="text-end">@Model.AllocationCommissionTotal.ToString("N2")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <p class="small text-muted">Commission is charged against each party's own account, and isn't shown on the printed invoice.</p>
+    }
+
     <hr />
     <p>Cost of goods sold: @Model.CostOfGoodsSold.ToString("N2")</p>
-    <p>Agent commission (@Model.AgentCommissionPercentage.ToString("N2")%): @Model.AgentCommissionAmount.ToString("N2") @(Model.Agent is not null ? $"— {Model.Agent.FullName}" : "")</p>
+    @if (Model.Allocations.Any())
+    {
+        <p>Total commission: @Model.AllocationCommissionTotal.ToString("N2")</p>
+    }
+    else
+    {
+        <p>Agent commission (@Model.AgentCommissionPercentage.ToString("N2")%): @Model.AgentCommissionAmount.ToString("N2") @(Model.Agent is not null ? $"— {Model.Agent.FullName}" : "")</p>
+    }
     <p class="fw-semibold">Profit: @Model.ProfitAmount.ToString("N2")</p>
 
     <hr />

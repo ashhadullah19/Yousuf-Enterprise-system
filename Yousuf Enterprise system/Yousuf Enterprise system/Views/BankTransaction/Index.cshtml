@@ -1,44 +1,94 @@
-@model IEnumerable<BankTransaction>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model Yousuf_Enterprise_system.ViewModels.PagedResult<BankTransaction>
 @{
     ViewData["Title"] = "Bank Transactions";
+    var accounts = ViewBag.BankAccounts as List<SelectListItem> ?? new List<SelectListItem>();
+    var selected = ViewBag.SelectedAccount as BankAccount;
 }
-<form class="row g-2 mb-3" method="get">
-    <div class="col-md-4"><input class="form-control" name="q" value="@ViewBag.Query" placeholder="Search transaction..." /></div>
-    <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
-    <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add transaction</a></div>
+
+<form class="row g-2 mb-3 align-items-end" method="get">
+    <div class="col-md-4">
+        <label for="bankAccountId" class="form-label">Bank account</label>
+        <select id="bankAccountId" name="bankAccountId" class="form-select" asp-items="accounts" onchange="this.form.q.value=''; this.form.submit()">
+            <option value="">-- Select bank account --</option>
+        </select>
+    </div>
+    @if (selected is not null)
+    {
+        <div class="col-md-4">
+            <input class="form-control" name="q" value="@ViewBag.Query" placeholder="Search reference or remarks..." />
+        </div>
+        <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
+    }
+    else
+    {
+        <input type="hidden" name="q" value="" />
+    }
+    <div class="col-auto">
+        <a class="btn btn-success" asp-action="Create" asp-route-bankAccountId="@selected?.Id">Add transaction</a>
+    </div>
+    @if (selected is not null)
+    {
+        <div class="col-auto">
+            <a class="btn btn-outline-secondary" asp-action="Statement" asp-route-bankAccountId="@selected.Id">Statement</a>
+        </div>
+    }
 </form>
-<table class="table table-striped bg-white">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Bank Account</th>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Reference</th>
-            <th>Remarks</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
+
+@if (!accounts.Any())
+{
+    <div class="table-card">
+        <div class="p-4 text-center text-muted">
+            No bank accounts yet. <a asp-controller="BankAccounts" asp-action="Create">Add a bank account</a> first.
+        </div>
+    </div>
+}
+else if (selected is null)
+{
+    <div class="table-card">
+        <div class="p-4 text-center text-muted">Select a bank account to view its transactions.</div>
+    </div>
+}
+else
+{
+    <div class="table-card">
+    <table class="table table-striped">
+        <thead>
             <tr>
-                <td>@item.TransactionDate.ToString("dd-MMM-yyyy")</td>
-                <td>@item.BankAccount?.AccountTitle (@item.BankAccount?.BankName)</td>
-                <td>@item.Type.GetDisplayName()</td>
-                <td>@item.Amount.ToString("N2")</td>
-                <td>@item.ReferenceNumber</td>
-                <td>@item.Remarks</td>
-                <td class="text-end">
-                    <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
-                    @if (User.IsInRole(AppRoles.SuperAdmin))
-                    {
-                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
-                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this transaction?');">Delete</button>
-                        </form>
-                    }
-                </td>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Reference</th>
+                <th>Remarks</th>
+                <th></th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @if (!Model.Items.Any())
+            {
+                <tr class="empty-row"><td colspan="6">@(string.IsNullOrWhiteSpace(ViewBag.Query as string) ? "No transactions for this account yet." : "No transactions match your search.")</td></tr>
+            }
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.TransactionDate.ToString("dd-MMM-yyyy")</td>
+                    <td>@item.Type.GetDisplayName()</td>
+                    <td>@item.Amount.ToString("N2")</td>
+                    <td>@item.ReferenceNumber</td>
+                    <td>@item.Remarks</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                        @if (User.IsInRole(AppRoles.SuperAdmin))
+                        {
+                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
+                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this transaction?');">Delete</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <partial name="_Pagination" model="Model" />
+    </div>
+}

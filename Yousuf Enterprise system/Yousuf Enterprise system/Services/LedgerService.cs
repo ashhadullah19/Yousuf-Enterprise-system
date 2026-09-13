@@ -126,14 +126,39 @@ public class LedgerService : ILedgerService
         }
 
         // Owned-stock commission comes out of the vendor's payable, not the company's profit
-        // (see InvoiceService.CalculateAsync). Every owned-stock sale with a commission gets
-        // resolved via FIFO to whichever vendor(s) actually supplied that stock, and this
-        // vendor's share of it is booked here as a debit reducing what they're owed.
+        // (see InvoiceService.CalculateAsync). Sales that picked their source lots explicitly
+        // already carry a per-lot commission, so this party's share is read straight off the
+        // rows drawn from their own purchases — no FIFO guesswork needed.
+        var allocatedCommissions = await _db.SalesInvoiceAllocations.AsNoTracking()
+            .Where(a => a.OwnedPurchase!.VendorId == partyId && a.CommissionAmount > 0)
+            .Select(a => new
+            {
+                a.SalesInvoice!.InvoiceDate,
+                a.SalesInvoice!.InvoiceNumber,
+                a.CommissionAmount
+            })
+            .ToListAsync();
+
+        foreach (var commission in allocatedCommissions)
+        {
+            lines.Add(new PartyLedgerLine
+            {
+                Date = commission.InvoiceDate,
+                Document = commission.InvoiceNumber,
+                Description = $"Commission deducted from purchase cost (invoice {commission.InvoiceNumber})",
+                Head = HeadType.DirectProductHead,
+                Debit = commission.CommissionAmount
+            });
+        }
+
+        // Invoices issued before lot selection existed carry one invoice-level commission with
+        // no recorded source, so those still get resolved via FIFO against purchase history.
         if (purchases.Count > 0)
         {
             var commissionedSales = await _db.SalesInvoices.AsNoTracking()
                 .Where(s => s.StockType == StockType.OwnedStock
                     && s.AgentCommissionAmount > 0
+                    && !s.Allocations.Any()
                     && purchases.Select(p => p.ProductId).Distinct().Contains(s.ProductId))
                 .ToListAsync();
 
