@@ -21,15 +21,27 @@ public class OwnedPurchase
     public int ProductId { get; set; }
     public Product? Product { get; set; }
 
-    [Range(0.0001, double.MaxValue, ErrorMessage = "Quantity must be greater than 0.")]
+    [Display(Name = "Quantity (Net Weight)"), Range(0.0001, double.MaxValue, ErrorMessage = "Quantity must be greater than 0.")]
     public decimal Quantity { get; set; }
 
     public UnitOfMeasure Unit { get; set; } = UnitOfMeasure.KG;
 
-    // Purely informational bag count (e.g. "received as 40 bags") — has no effect on
-    // Quantity, cost, or any other calculation. Optional.
-    [Display(Name = "Bags"), Range(0, int.MaxValue, ErrorMessage = "Bags can't be negative.")]
-    public int? Bags { get; set; }
+    // Combined weight of the packaging material itself (bags/drums), same unit as Quantity.
+    // Purely informational — doesn't affect Quantity, cost, or any calculation.
+    [Display(Name = "Total Package Weight"), Range(0, int.MaxValue, ErrorMessage = "Package weight can't be negative.")]
+    public int? TotalPackageWeight { get; set; }
+
+    // Net weight (Quantity) + package weight — stored so reports don't need to recompute it.
+    [Display(Name = "Gross Weight")]
+    public decimal GrossWeight { get; set; }
+
+    // How it was packed (bags/drums) and how many — purely informational, has no effect on
+    // Quantity, cost, or any other calculation. Both optional (e.g. loose bulk goods have neither).
+    [Display(Name = "Packing Type")]
+    public PackingType? PackingType { get; set; }
+
+    [Display(Name = "Packing Count"), Range(0, int.MaxValue, ErrorMessage = "Packing count can't be negative.")]
+    public int? PackingCount { get; set; }
 
     [Display(Name = "Rate Per Unit"), Range(0.0001, double.MaxValue, ErrorMessage = "Rate must be greater than 0."), Column(TypeName = "decimal(18,4)")]
     public decimal RatePerUnit { get; set; }

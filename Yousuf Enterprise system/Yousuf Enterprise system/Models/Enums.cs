@@ -22,7 +22,16 @@ public enum UnitOfMeasure
     KG = 1,
     Ton = 2,
     Bag = 3,
-    Maund = 4
+    Maund = 4,
+    Liter = 5
+}
+
+// How the goods were physically packed for this purchase — purely informational (see
+// OwnedPurchase.PackingCount), independent of the Unit the quantity/rate are recorded in.
+public enum PackingType
+{
+    Bags = 1,
+    Drum = 2
 }
 
 public enum StockType

@@ -15,11 +15,11 @@
 
 <div class="table-card">
 <table class="table table-striped">
-    <thead><tr><th>GRN</th><th>Date</th><th>Vendor</th><th>Product</th><th>Qty</th><th>Bags</th><th>Total</th><th></th></tr></thead>
+    <thead><tr><th>GRN</th><th>Date</th><th>Vendor</th><th>Product</th><th>Qty</th><th>Rate</th><th>Packing</th><th>Total</th><th></th></tr></thead>
     <tbody>
     @if (!Model.Items.Any())
     {
-        <tr class="empty-row"><td colspan="8">No purchases found.</td></tr>
+        <tr class="empty-row"><td colspan="9">No purchases found.</td></tr>
     }
     @foreach (var item in Model.Items)
     {
@@ -29,7 +29,8 @@
             <td>@item.Vendor?.FullName</td>
             <td>@item.Product?.Name</td>
             <td>@item.Quantity.ToString("N4") @item.Unit</td>
-            <td>@(item.Bags?.ToString("N0") ?? "-")</td>
+            <td>@item.RatePerUnit.ToString("N2")/@item.Unit</td>
+            <td>@(item.PackingCount.HasValue && item.PackingType.HasValue ? $"{item.PackingCount:N0} {item.PackingType}" : "-")</td>
             <td>@item.GrandTotalAmount.ToString("N2")</td>
             <td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id" data-modal>Edit</a></td>
         </tr>

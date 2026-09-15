@@ -149,6 +149,7 @@ public class OwnedPurchasesController : Controller
     {
         purchase.TotalProductCost = Math.Round(purchase.Quantity * purchase.RatePerUnit, 2);
         purchase.GrandTotalAmount = purchase.TotalProductCost + purchase.FreightLabourCharges;
+        purchase.GrossWeight = purchase.Quantity + (purchase.TotalPackageWeight ?? 0);
     }
 
     private async Task FillListsAsync()

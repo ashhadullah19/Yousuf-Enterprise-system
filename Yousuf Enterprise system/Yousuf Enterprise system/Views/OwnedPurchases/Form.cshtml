@@ -72,15 +72,27 @@
                 <input asp-for="FreightLabourCharges" class="form-control" id="freight" />
             </div>
             <div class="col-md-2">
-                <label asp-for="Bags" class="form-label"></label>
-                <input asp-for="Bags" class="form-control" id="bags" />
-                <span asp-validation-for="Bags" class="text-danger"></span>
+                <label asp-for="TotalPackageWeight" class="form-label"></label>
+                <input asp-for="TotalPackageWeight" class="form-control" id="packageWeight" />
+                <span asp-validation-for="TotalPackageWeight" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="PackingType" class="form-label"></label>
+                <select asp-for="PackingType" asp-items="Html.GetEnumSelectList<PackingType>()" class="form-select" id="packingType">
+                    <option value="">-- none --</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="PackingCount" class="form-label"></label>
+                <input asp-for="PackingCount" class="form-control" id="packingCount" />
+                <span asp-validation-for="PackingCount" class="text-danger"></span>
                 <div id="bagHint" class="small text-muted mt-1"></div>
             </div>
             <div class="col-12">
                 <div class="form-summary">
                     <div class="d-flex justify-content-between"><span class="text-muted">Total product cost</span><strong id="totalProductCost">0.00</strong></div>
                     <div class="d-flex justify-content-between"><span class="text-muted">Grand total (incl. freight/labour)</span><strong id="grandTotal">0.00</strong></div>
+                    <div class="d-flex justify-content-between"><span class="text-muted">Gross weight (net + package)</span><strong id="grossWeight">0.0000</strong></div>
                 </div>
             </div>
         </div>
@@ -115,21 +127,25 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         const bagWeightKg = @bagWeightKg.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        const bagsPackingValue = '@((int)PackingType.Bags)';
 
         function updateTotals() {
             const qty = parseFloat(document.getElementById('quantity').value) || 0;
             const rate = parseFloat(document.getElementById('ratePerUnit').value) || 0;
             const freight = parseFloat(document.getElementById('freight').value) || 0;
+            const packageWeight = parseFloat(document.getElementById('packageWeight').value) || 0;
             const productCost = qty * rate;
             document.getElementById('totalProductCost').textContent = productCost.toFixed(2);
             document.getElementById('grandTotal').textContent = (productCost + freight).toFixed(2);
+            document.getElementById('grossWeight').textContent = (qty + packageWeight).toFixed(4);
         }
 
         function updateBagHint() {
-            const bags = parseFloat(document.getElementById('bags').value) || 0;
+            const packingType = document.getElementById('packingType').value;
+            const count = parseFloat(document.getElementById('packingCount').value) || 0;
             const bagHint = document.getElementById('bagHint');
-            bagHint.textContent = bags > 0
-                ? `≈ ${(bags * bagWeightKg).toFixed(2)} KG (@bagWeightKg.ToString("N0") KG/bag)`
+            bagHint.textContent = (packingType === bagsPackingValue && count > 0)
+                ? `≈ ${(count * bagWeightKg).toFixed(2)} KG (@bagWeightKg.ToString("N0") KG/bag)`
                 : '';
         }
 
@@ -138,8 +154,9 @@
             document.getElementById('dueDateRow').style.display = el.value === el.dataset.creditValue ? '' : 'none';
         }
 
-        ['quantity', 'ratePerUnit', 'freight'].forEach(id => document.getElementById(id).addEventListener('input', updateTotals));
-        document.getElementById('bags').addEventListener('input', updateBagHint);
+        ['quantity', 'ratePerUnit', 'freight', 'packageWeight'].forEach(id => document.getElementById(id).addEventListener('input', updateTotals));
+        document.getElementById('packingType').addEventListener('change', updateBagHint);
+        document.getElementById('packingCount').addEventListener('input', updateBagHint);
         document.getElementById('paymentType').addEventListener('change', toggleDueDate);
         updateTotals();
         updateBagHint();

@@ -111,6 +111,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<OwnedPurchase>().Property(p => p.Quantity).HasPrecision(18, 4);
+        builder.Entity<OwnedPurchase>().Property(p => p.GrossWeight).HasPrecision(18, 4);
         builder.Entity<Product>().Property(p => p.MinimumStockAlertQty).HasPrecision(18, 4);
         builder.Entity<SystemSetting>().Property(s => s.DefaultGstPercentage).HasPrecision(5, 2);
         builder.Entity<SystemSetting>().Property(s => s.BagWeightKg).HasPrecision(18, 4);
