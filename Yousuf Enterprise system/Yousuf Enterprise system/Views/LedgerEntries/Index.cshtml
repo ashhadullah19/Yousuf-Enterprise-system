@@ -3,15 +3,19 @@
     ViewData["Title"] = "Financial ledgers";
 }
 
-<form class="row g-2 mb-3" method="get">
-    <div class="col-md-4"><input class="form-control" name="q" value="@ViewBag.Query" placeholder="Ledger entry, party, reference..." /></div>
-    <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
-    <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add ledger entry</a></div>
-</form>
+<div class="list-toolbar">
+    <div class="list-toolbar-actions">
+        <a class="btn btn-success" asp-action="Create" data-modal><i class="bi bi-plus-lg"></i> Add ledger entry</a>
+    </div>
+    <form class="list-toolbar-filters" method="get">
+        <input class="form-control filter-search" name="q" value="@ViewBag.Query" placeholder="Ledger entry, party, reference..." aria-label="Search ledger entries" />
+        <button class="btn btn-outline-secondary">Search</button>
+    </form>
+</div>
 
 <div class="table-card">
 <table class="table table-striped">
-    <thead><tr><th>Ledger #</th><th>Date</th><th>Party</th><th>Type</th><th>Head</th><th>Mode</th><th>Against Invoice</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+    <thead><tr><th>Ledger #</th><th>Date</th><th>Party</th><th>Type</th><th>Head</th><th>Mode</th><th>Against</th><th>Amount</th><th>Status</th><th></th></tr></thead>
     <tbody>
     @if (!Model.Items.Any())
     {
@@ -26,15 +30,16 @@
             <td>@item.Type.GetDisplayName()</td>
             <td>@item.Head.GetDisplayName()</td>
             <td>@item.Mode.GetDisplayName()</td>
-            <td>@(item.SalesInvoice?.InvoiceNumber ?? "-")</td>
-            <td>@item.Amount.ToString("N2")</td>
+            <td>@(item.SalesInvoice?.InvoiceNumber ?? item.OwnedPurchase?.GrnNumber ?? "-")</td>
+            <td><span class="@(item.Type == LedgerEntryType.PaymentReceived ? "amount-credit" : item.Type == LedgerEntryType.PaymentPaid ? "amount-debit" : null)">@item.Amount.ToString("N2")</span></td>
             <td>
                 @if (item.Type == LedgerEntryType.ContraAdjustment && !item.ApprovedByAdmin)
                 {
                     <span class="badge bg-warning text-dark">Pending approval</span>
                     @if (User.IsInRole(AppRoles.SuperAdmin))
                     {
-                        <form asp-action="Approve" asp-route-id="@item.Id" method="post" class="d-inline">
+                        <form asp-action="Approve" asp-route-id="@item.Id" method="post" class="d-inline"
+                              data-confirm-title="Approve @item.LedgerNumber?" data-confirm="The contra entry will be posted to the party's ledger." data-confirm-ok="Approve">
                             <button class="btn btn-sm btn-success">Approve</button>
                         </form>
                     }

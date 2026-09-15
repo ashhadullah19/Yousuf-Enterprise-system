@@ -2,24 +2,27 @@
 @{
     ViewData["Title"] = "Product Master";
     var onHand = ViewBag.OnHand as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
+    var importModal = new Yousuf_Enterprise_system.ViewModels.ImportModalViewModel
+    {
+        Title = "Import products from Excel",
+        EntityPlural = "products",
+        RequiredColumn = "Name",
+        Columns = new[] { "Name", "Description", "Uom", "MinimumStockAlertQty", "IsActive" }
+    };
 }
 
-@if (TempData["Message"] is not null)
-{
-    <div class="alert alert-success">@TempData["Message"]</div>
-}
+<div class="list-toolbar">
+    <div class="list-toolbar-actions">
+        <a class="btn btn-success" asp-action="Create" data-modal><i class="bi bi-plus-lg"></i> Add product</a>
+        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#@importModal.Id"><i class="bi bi-file-earmark-arrow-up"></i> Import</button>
+    </div>
+    <form class="list-toolbar-filters" method="get">
+        <input class="form-control filter-search" name="q" value="@ViewBag.Query" placeholder="Search product..." aria-label="Search products" />
+        <button class="btn btn-outline-secondary">Search</button>
+    </form>
+</div>
 
-<form class="row g-2 mb-3" method="get">
-    <div class="col-md-4"><input class="form-control" name="q" value="@ViewBag.Query" placeholder="Search product..." /></div>
-    <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
-    <div class="col-auto"><a class="btn btn-success" asp-action="Create">Add product</a></div>
-    <div class="col-auto"><a class="btn btn-outline-secondary" asp-action="DownloadTemplate">Download template</a></div>
-</form>
-
-<form asp-action="Import" method="post" enctype="multipart/form-data" class="row g-2 mb-3">
-    <div class="col-md-4"><input type="file" name="file" class="form-control" accept=".xlsx" required /></div>
-    <div class="col-auto"><button class="btn btn-outline-success">Import from Excel</button></div>
-</form>
+<partial name="_ImportModal" model="importModal" />
 
 <div class="table-card">
 <table class="table table-striped">
@@ -38,11 +41,12 @@
             <td>@item.MinimumStockAlertQty.ToString("N4")</td>
             <td>@(item.IsActive ? "Active" : "Inactive")</td>
             <td class="text-end">
-                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id" data-modal>Edit</a>
                 @if (User.IsInRole(AppRoles.SuperAdmin))
                 {
-                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
-                        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Soft delete this product?');">Delete</button>
+                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline"
+                          data-confirm-title="Delete @item.Name?" data-confirm="The product is hidden from lists; past purchases and invoices are kept." data-confirm-ok="Delete product" data-confirm-variant="danger">
+                        <button class="btn btn-sm btn-outline-danger">Delete</button>
                     </form>
                 }
             </td>

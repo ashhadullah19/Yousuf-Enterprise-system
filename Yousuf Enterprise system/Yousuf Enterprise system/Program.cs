@@ -49,6 +49,7 @@ try
     builder.Services.AddControllersWithViews(options =>
     {
         options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter());
+        options.Filters.Add<Yousuf_Enterprise_system.Filters.ModalRequestFilter>();
     });
 
     builder.Services.AddScoped<IPermissionService, PermissionService>();

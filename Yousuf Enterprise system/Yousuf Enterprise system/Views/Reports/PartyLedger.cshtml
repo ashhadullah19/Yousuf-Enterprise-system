@@ -1,13 +1,16 @@
-@model IEnumerable<Yousuf_Enterprise_system.Services.PartyLedgerLine>
+@using Yousuf_Enterprise_system.Services
+@model IEnumerable<PartyLedgerLine>
 @{
     ViewData["Title"] = "Party ledger";
     var parties = ViewBag.Parties as IEnumerable<Party> ?? Enumerable.Empty<Party>();
-    decimal running = 0;
+    var balance = ViewBag.Balance as PartyCommissionBalance;
+    decimal runningReceivable = 0;
+    decimal runningPayable = 0;
 }
 
-<form class="row g-2 mb-3" method="get">
-    <div class="col-md-4">
-        <select name="partyId" class="form-select">
+<div class="list-toolbar">
+    <form class="list-toolbar-filters" method="get">
+        <select name="partyId" class="form-select" aria-label="Party">
             <option value="">Select party</option>
             @foreach (var party in parties)
             {
@@ -21,50 +24,59 @@
                 }
             }
         </select>
-    </div>
-    <div class="col-md-2"><input type="date" name="from" class="form-control" value="@((ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"))" /></div>
-    <div class="col-md-2"><input type="date" name="to" class="form-control" value="@((ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"))" /></div>
-    <div class="col-auto"><button class="btn btn-outline-secondary">Load</button></div>
-</form>
+        <input type="date" name="from" class="form-control" value="@((ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"))" aria-label="From date" title="From" />
+        <span class="filter-label">to</span>
+        <input type="date" name="to" class="form-control" value="@((ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"))" aria-label="To date" title="To" />
+        <button class="btn btn-outline-secondary">Load</button>
+    </form>
+</div>
 
-@if (ViewBag.PartyId is not null)
+@if (balance is not null)
 {
     <div class="row g-3 mb-3">
         <div class="col-md-3">
             <div class="card stat-card p-3">
-                <div class="text-muted">Dues balance</div>
-                <div class="fs-5 fw-semibold">@(((decimal)ViewBag.DuesBalance).ToString("N2"))</div>
+                <div class="text-muted">Receivable (they owe us)</div>
+                <div class="fs-5 amount-credit">@balance.Receivable.ToString("N2")</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card p-3">
+                <div class="text-muted">Payable (we owe them)</div>
+                <div class="fs-5 amount-debit">@balance.Payable.ToString("N2")</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card stat-card p-3">
                 <div class="text-muted">Commission receivable</div>
-                <div class="fs-5 fw-semibold">@(((decimal)ViewBag.CommissionReceivable).ToString("N2"))</div>
+                <div class="fs-5 fw-semibold">@balance.CommissionReceivable.ToString("N2")</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card stat-card p-3">
                 <div class="text-muted">Commission received</div>
-                <div class="fs-5 fw-semibold">@(((decimal)ViewBag.CommissionReceived).ToString("N2"))</div>
+                <div class="fs-5 fw-semibold">@balance.CommissionReceived.ToString("N2")</div>
             </div>
         </div>
     </div>
 }
 
 <table class="table table-striped bg-white">
-    <thead><tr><th>Date</th><th>Document</th><th>Description</th><th>Head</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead>
+    <thead><tr><th>Date</th><th>Document</th><th>Description</th><th>Head</th><th>Debit</th><th>Credit</th><th>Receivable</th><th>Payable</th></tr></thead>
     <tbody>
     @foreach (var line in Model)
     {
-        running += line.Debit - line.Credit;
+        if (line.Side == DuesSide.Receivable) runningReceivable += line.Debit - line.Credit;
+        if (line.Side == DuesSide.Payable) runningPayable += line.Credit - line.Debit;
         <tr>
             <td>@line.Date.ToString("dd-MMM-yyyy")</td>
             <td>@line.Document</td>
             <td>@line.Description</td>
             <td>@line.Head.GetDisplayName()</td>
-            <td>@line.Debit.ToString("N2")</td>
-            <td>@line.Credit.ToString("N2")</td>
-            <td>@running.ToString("N2")</td>
+            <td><span class="@(line.Debit != 0 ? "amount-debit" : "text-muted")">@line.Debit.ToString("N2")</span></td>
+            <td><span class="@(line.Credit != 0 ? "amount-credit" : "text-muted")">@line.Credit.ToString("N2")</span></td>
+            <td><span class="@(line.Side == DuesSide.Receivable ? null : "text-muted")">@runningReceivable.ToString("N2")</span></td>
+            <td><span class="@(line.Side == DuesSide.Payable ? null : "text-muted")">@runningPayable.ToString("N2")</span></td>
         </tr>
     }
     </tbody>

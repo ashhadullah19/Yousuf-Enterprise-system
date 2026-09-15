@@ -1,15 +1,21 @@
 @model Party
 @{
-    ViewData["Title"] = Model.Id == 0 ? "Add party" : "Edit party";
-    var action = Model.Id == 0 ? "Create" : "Edit";
+    var isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "Add party" : "Edit party";
+    ViewData["ModalSize"] = "xl";
+    var action = isNew ? "Create" : "Edit";
 }
 
-<form asp-action="@action" method="post" enctype="multipart/form-data">
+<form asp-action="@action" method="post" enctype="multipart/form-data" class="app-form"
+      data-confirm-title="@(isNew ? "Add this party?" : "Save changes to this party?")"
+      data-confirm="Please make sure the details are correct."
+      data-confirm-ok="@(isNew ? "Yes, add party" : "Yes, save")">
     <input type="hidden" asp-for="Id" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <div class="card stat-card mb-3">
-        <div class="card-header">Personal & contact</div>
-        <div class="card-body row g-3">
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-person-vcard"></i> Personal &amp; contact</div>
+        <div class="row g-3">
             <div class="col-md-4">
                 <label asp-for="Type" class="form-label"></label>
                 <select asp-for="Type" asp-items="Html.GetEnumSelectList<PartyType>()" class="form-select"></select>
@@ -23,7 +29,6 @@
                 <label asp-for="FatherName" class="form-label"></label>
                 <input asp-for="FatherName" class="form-control" />
             </div>
-            
             <div class="col-md-4">
                 <label asp-for="PrimaryContact" class="form-label required"></label>
                 <input asp-for="PrimaryContact" class="form-control" />
@@ -36,13 +41,14 @@
             </div>
             <div class="col-12">
                 <label asp-for="BusinessAddress" class="form-label"></label>
-                <textarea asp-for="BusinessAddress" class="form-control"></textarea>
+                <textarea asp-for="BusinessAddress" class="form-control" rows="2"></textarea>
             </div>
         </div>
-    </div>
-    <div class="card stat-card mb-3">
-        <div class="card-header">Tax & banking</div>
-        <div class="card-body row g-3">
+    </section>
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-bank"></i> Tax &amp; banking</div>
+        <div class="row g-3">
             <div class="col-md-4">
                 <label asp-for="Ntn" class="form-label"></label>
                 <input asp-for="Ntn" class="form-control" />
@@ -54,47 +60,53 @@
             <div class="col-12">
                 <div class="form-check form-switch">
                     <input asp-for="HasBankDetails" class="form-check-input" id="hasBankDetails" />
-                    <label asp-for="HasBankDetails" class="form-check-label"></label>
+                    <label asp-for="HasBankDetails" class="form-check-label" for="hasBankDetails"></label>
                 </div>
             </div>
-            <div class="col-12"><div class="row g-3" id="bankFields">
-            <div class="col-md-4">
-                <label asp-for="BankName" class="form-label required"></label>
-                <input asp-for="BankName" class="form-control" />
-                <span asp-validation-for="BankName" class="text-danger"></span>
+            <div class="col-12">
+                <div class="row g-3" id="bankFields">
+                    <div class="col-md-4">
+                        <label asp-for="BankName" class="form-label required"></label>
+                        <input asp-for="BankName" class="form-control" />
+                        <span asp-validation-for="BankName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="AccountTitle" class="form-label required"></label>
+                        <input asp-for="AccountTitle" class="form-control" />
+                        <span asp-validation-for="AccountTitle" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="AccountNumber" class="form-label required"></label>
+                        <input asp-for="AccountNumber" class="form-control" />
+                        <span asp-validation-for="AccountNumber" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Iban" class="form-label"></label>
+                        <input asp-for="Iban" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="BranchCode" class="form-label"></label>
+                        <input asp-for="BranchCode" class="form-control" />
+                    </div>
+                </div>
             </div>
-            <div class="col-md-4">
-                <label asp-for="AccountTitle" class="form-label required"></label>
-                <input asp-for="AccountTitle" class="form-control" />
-                <span asp-validation-for="AccountTitle" class="text-danger"></span>
-            </div>
-            <div class="col-md-4">
-                <label asp-for="AccountNumber" class="form-label required"></label>
-                <input asp-for="AccountNumber" class="form-control" />
-                <span asp-validation-for="AccountNumber" class="text-danger"></span>
-            </div>
-            <div class="col-md-4">
-                <label asp-for="Iban" class="form-label"></label>
-                <input asp-for="Iban" class="form-control" />
-            </div>
-            <div class="col-md-4">
-                <label asp-for="BranchCode" class="form-label"></label>
-                <input asp-for="BranchCode" class="form-control" />
-            </div>
-            </div></div>
         </div>
-    </div>
-    <div class="card stat-card mb-3">
-        <div class="card-header">Attachments</div>
-        <div class="card-body row g-3">
-            <div class="col-md-6"><label class="form-label">CNIC front</label><input type="file" name="cnicFront" class="form-control" /></div>
-            <div class="col-md-6"><label class="form-label">CNIC back</label><input type="file" name="cnicBack" class="form-control" /></div>
-            <div class="col-md-6"><label class="form-label">Canceled cheque</label><input type="file" name="cheque" class="form-control" /></div>
-            <div class="col-md-6"><label class="form-label">Tax certificate</label><input type="file" name="taxCert" class="form-control" /></div>
+    </section>
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-paperclip"></i> Attachments</div>
+        <div class="row g-3">
+            <div class="col-md-6"><label class="form-label" for="cnicFront">CNIC front</label><input type="file" id="cnicFront" name="cnicFront" class="form-control" /></div>
+            <div class="col-md-6"><label class="form-label" for="cnicBack">CNIC back</label><input type="file" id="cnicBack" name="cnicBack" class="form-control" /></div>
+            <div class="col-md-6"><label class="form-label" for="cheque">Canceled cheque</label><input type="file" id="cheque" name="cheque" class="form-control" /></div>
+            <div class="col-md-6"><label class="form-label" for="taxCert">Tax certificate</label><input type="file" id="taxCert" name="taxCert" class="form-control" /></div>
         </div>
+    </section>
+
+    <div class="form-actions">
+        <a class="btn btn-light" asp-action="Index" data-modal-cancel>Cancel</a>
+        <button class="btn btn-success" type="submit"><i class="bi bi-check2"></i> @(isNew ? "Add party" : "Save changes")</button>
     </div>
-    <button class="btn btn-success" type="submit">Save</button>
-    <a class="btn btn-link" asp-action="Index">Cancel</a>
 </form>
 
 @section Scripts {

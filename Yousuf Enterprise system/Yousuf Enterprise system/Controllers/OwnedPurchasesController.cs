@@ -99,9 +99,32 @@ public class OwnedPurchasesController : Controller
             return View("Form", purchase);
         }
 
+        // The form doesn't carry the dismissed flag; keep it unless the due date changed, in which
+        // case the new due date should remind again.
+        var existing = await _db.OwnedPurchases.AsNoTracking()
+            .Where(p => p.Id == id)
+            .Select(p => new { p.ReminderDismissed, p.DueDate })
+            .FirstOrDefaultAsync();
+        purchase.ReminderDismissed = existing is not null && existing.ReminderDismissed && existing.DueDate == purchase.DueDate;
+
         _db.Update(purchase);
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
+    }
+
+    [ModulePermission(Modules.OwnedStock, edit: true)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DismissReminder(int id)
+    {
+        var purchase = await _db.OwnedPurchases.FindAsync(id);
+        if (purchase is not null)
+        {
+            purchase.ReminderDismissed = true;
+            await _db.SaveChangesAsync();
+        }
+
+        return RedirectToAction("Index", "Home");
     }
 
     private void ValidatePurchase(OwnedPurchase purchase)

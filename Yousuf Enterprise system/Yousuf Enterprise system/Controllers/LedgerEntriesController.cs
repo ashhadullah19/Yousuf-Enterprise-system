@@ -17,22 +17,29 @@ public class LedgerEntriesController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly IDocumentNumberService _numbers;
+    private readonly ILedgerService _ledger;
 
-    public LedgerEntriesController(ApplicationDbContext db, IDocumentNumberService numbers)
+    public LedgerEntriesController(ApplicationDbContext db, IDocumentNumberService numbers, ILedgerService ledger)
     {
         _db = db;
         _numbers = numbers;
+        _ledger = ledger;
     }
 
     public async Task<IActionResult> Index(string? q, int page = 1, int pageSize = 25)
     {
-        var query = _db.LedgerEntries.AsNoTracking().Include(v => v.Party).Include(v => v.SalesInvoice).AsQueryable();
+        var query = _db.LedgerEntries.AsNoTracking()
+            .Include(v => v.Party)
+            .Include(v => v.SalesInvoice)
+            .Include(v => v.OwnedPurchase)
+            .AsQueryable();
         if (!string.IsNullOrWhiteSpace(q))
         {
             query = query.Where(v =>
                 v.LedgerNumber.Contains(q)
                 || (v.Party != null && v.Party.FullName.Contains(q))
-                || (v.ReferenceNumber != null && v.ReferenceNumber.Contains(q)));
+                || (v.ReferenceNumber != null && v.ReferenceNumber.Contains(q))
+                || (v.OwnedPurchase != null && v.OwnedPurchase.GrnNumber.Contains(q)));
         }
 
         ViewBag.Query = q;
@@ -102,6 +109,30 @@ public class LedgerEntriesController : Controller
             }
         }
 
+        // Settling a purchase only makes sense for money paid out to its vendor.
+        if (entry.OwnedPurchaseId.HasValue && entry.Type != LedgerEntryType.PaymentPaid)
+        {
+            entry.OwnedPurchaseId = null;
+        }
+
+        if (entry.OwnedPurchaseId.HasValue)
+        {
+            var purchase = await _db.OwnedPurchases.AsNoTracking().FirstOrDefaultAsync(p => p.Id == entry.OwnedPurchaseId.Value);
+            if (purchase is null || purchase.VendorId != entry.PartyId)
+            {
+                ModelState.AddModelError(nameof(entry.OwnedPurchaseId), "Selected purchase does not belong to this party.");
+            }
+            else
+            {
+                entry.Head = HeadType.DirectProductHead;
+                var outstanding = (await _ledger.GetPurchaseOutstandingAsync(new[] { purchase.Id })).GetValueOrDefault(purchase.Id);
+                if (entry.Amount > outstanding)
+                {
+                    ModelState.AddModelError(nameof(entry.Amount), $"Amount exceeds the outstanding balance of {outstanding:N2} on this purchase.");
+                }
+            }
+        }
+
         // Bank account only makes sense for an actual bank movement, and a cheque hasn't
         // cleared yet — only an online transfer posts a bank transaction automatically.
         if (entry.Mode != PaymentMode.OnlineBankTransfer)
@@ -165,6 +196,23 @@ public class LedgerEntriesController : Controller
         return Json(result);
     }
 
+    // Live list of a vendor's purchases that still have an outstanding balance, for the
+    // "Against Purchase" picker on the ledger entry form once a party is selected.
+    [HttpGet]
+    public async Task<IActionResult> OutstandingPurchases(int partyId)
+    {
+        var purchases = await _db.OwnedPurchases.AsNoTracking()
+            .Where(p => p.VendorId == partyId)
+            .OrderBy(p => p.PurchaseDate).ThenBy(p => p.Id)
+            .Select(p => new { p.Id, p.GrnNumber })
+            .ToListAsync();
+        var outstanding = await _ledger.GetPurchaseOutstandingAsync(purchases.Select(p => p.Id));
+
+        return Json(purchases
+            .Where(p => outstanding.GetValueOrDefault(p.Id) > 0)
+            .Select(p => new { id = p.Id, label = $"{p.GrnNumber} — due {outstanding[p.Id]:N2}" }));
+    }
+
     [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -186,6 +234,7 @@ public class LedgerEntriesController : Controller
         var entry = await _db.LedgerEntries.AsNoTracking()
             .Include(e => e.Party)
             .Include(e => e.SalesInvoice)
+            .Include(e => e.OwnedPurchase)
             .FirstOrDefaultAsync(e => e.Id == id);
         if (entry is null)
         {
@@ -216,6 +265,10 @@ public class LedgerEntriesController : Controller
                     if (entry.SalesInvoice is not null)
                     {
                         col.Item().Text($"Against Invoice: {entry.SalesInvoice.InvoiceNumber}");
+                    }
+                    if (entry.OwnedPurchase is not null)
+                    {
+                        col.Item().Text($"Against Purchase: {entry.OwnedPurchase.GrnNumber}");
                     }
                     if (!string.IsNullOrWhiteSpace(entry.ReferenceNumber))
                     {

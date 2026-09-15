@@ -1,0 +1,53 @@
+@model DastiEntry
+@{
+    var isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "Add dasti entry" : "Edit dasti entry";
+    var action = isNew ? "Create" : "Edit";
+}
+
+<form asp-action="@action" method="post" class="app-form app-form-narrow"
+      data-confirm-title="@(isNew ? "Add this entry?" : "Save changes to this entry?")"
+      data-confirm="Please make sure the amount and type are correct."
+      data-confirm-ok="@(isNew ? "Yes, add entry" : "Yes, save")">
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-wallet2"></i> Cash entry</div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label asp-for="Date" class="form-label required"></label>
+                <input asp-for="Date" type="date" class="form-control" />
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Type" class="form-label required"></label>
+                <select asp-for="Type" asp-items="Html.GetEnumSelectList<DastiType>()" class="form-select"></select>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Amount" class="form-label required"></label>
+                <input asp-for="Amount" class="form-control" />
+                <span asp-validation-for="Amount" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Name" class="form-label required"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Detail" class="form-label"></label>
+                <textarea asp-for="Detail" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Detail" class="text-danger"></span>
+            </div>
+        </div>
+    </section>
+
+    <div class="form-actions">
+        <a class="btn btn-light" asp-action="Index" data-modal-cancel>Cancel</a>
+        <button class="btn btn-success" type="submit"><i class="bi bi-check2"></i> @(isNew ? "Add entry" : "Save changes")</button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

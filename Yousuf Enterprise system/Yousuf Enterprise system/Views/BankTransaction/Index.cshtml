@@ -6,40 +6,35 @@
     var selected = ViewBag.SelectedAccount as BankAccount;
 }
 
-<form class="row g-2 mb-3 align-items-end" method="get">
-    <div class="col-md-4">
-        <label for="bankAccountId" class="form-label">Bank account</label>
-        <select id="bankAccountId" name="bankAccountId" class="form-select" asp-items="accounts" onchange="this.form.q.value=''; this.form.submit()">
+<div class="list-toolbar">
+    <div class="list-toolbar-actions">
+        <a class="btn btn-success" asp-action="Create" asp-route-bankAccountId="@selected?.Id" data-modal><i class="bi bi-plus-lg"></i> Add transaction</a>
+        @if (selected is not null)
+        {
+            <a class="btn btn-outline-secondary" asp-action="Statement" asp-route-bankAccountId="@selected.Id"><i class="bi bi-file-text"></i> Statement</a>
+        }
+    </div>
+    <form class="list-toolbar-filters" method="get">
+        <select id="bankAccountId" name="bankAccountId" class="form-select" asp-items="accounts" aria-label="Bank account" onchange="this.form.q.value=''; this.form.submit()">
             <option value="">-- Select bank account --</option>
         </select>
-    </div>
-    @if (selected is not null)
-    {
-        <div class="col-md-4">
-            <input class="form-control" name="q" value="@ViewBag.Query" placeholder="Search reference or remarks..." />
-        </div>
-        <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
-    }
-    else
-    {
-        <input type="hidden" name="q" value="" />
-    }
-    <div class="col-auto">
-        <a class="btn btn-success" asp-action="Create" asp-route-bankAccountId="@selected?.Id">Add transaction</a>
-    </div>
-    @if (selected is not null)
-    {
-        <div class="col-auto">
-            <a class="btn btn-outline-secondary" asp-action="Statement" asp-route-bankAccountId="@selected.Id">Statement</a>
-        </div>
-    }
-</form>
+        @if (selected is not null)
+        {
+            <input class="form-control filter-search" name="q" value="@ViewBag.Query" placeholder="Search reference or remarks..." aria-label="Search transactions" />
+            <button class="btn btn-outline-secondary">Search</button>
+        }
+        else
+        {
+            <input type="hidden" name="q" value="" />
+        }
+    </form>
+</div>
 
 @if (!accounts.Any())
 {
     <div class="table-card">
         <div class="p-4 text-center text-muted">
-            No bank accounts yet. <a asp-controller="BankAccounts" asp-action="Create">Add a bank account</a> first.
+            No bank accounts yet. <a asp-controller="BankAccounts" asp-action="Create" data-modal>Add a bank account</a> first.
         </div>
     </div>
 }
@@ -73,15 +68,16 @@ else
                 <tr>
                     <td>@item.TransactionDate.ToString("dd-MMM-yyyy")</td>
                     <td>@item.Type.GetDisplayName()</td>
-                    <td>@item.Amount.ToString("N2")</td>
+                    <td><span class="@(item.Type == TransactionType.Deposit ? "amount-credit" : "amount-debit")">@item.Amount.ToString("N2")</span></td>
                     <td>@item.ReferenceNumber</td>
                     <td>@item.Remarks</td>
                     <td class="text-end">
-                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id" data-modal>Edit</a>
                         @if (User.IsInRole(AppRoles.SuperAdmin))
                         {
-                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
-                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this transaction?');">Delete</button>
+                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline"
+                                  data-confirm-title="Delete this transaction?" data-confirm="This permanently removes it and changes the account's balance." data-confirm-ok="Delete transaction" data-confirm-variant="danger">
+                                <button class="btn btn-sm btn-outline-danger">Delete</button>
                             </form>
                         }
                     </td>

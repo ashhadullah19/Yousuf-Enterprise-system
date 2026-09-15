@@ -3,7 +3,8 @@
     ViewData["Title"] = "Cloud / local backups";
 }
 
-<form asp-action="Run" method="post" class="mb-3">
+<form asp-action="Run" method="post" class="mb-3"
+      data-confirm-title="Run a backup now?" data-confirm="This creates a new local backup archive." data-confirm-ok="Run backup">
     <button class="btn btn-success">Run backup now</button>
 </form>
 <p class="text-muted">Daily local archives are created automatically. Google Drive upload can be added when credentials are available.</p>

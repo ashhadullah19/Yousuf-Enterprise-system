@@ -22,6 +22,11 @@ public class LedgerEntry
     public int? SalesInvoiceId { get; set; }
     public SalesInvoice? SalesInvoice { get; set; }
 
+    // Optional link so a payment to a vendor can settle a specific credit purchase.
+    [Display(Name = "Against Purchase")]
+    public int? OwnedPurchaseId { get; set; }
+    public OwnedPurchase? OwnedPurchase { get; set; }
+
     public LedgerEntryType Type { get; set; }
 
     public HeadType Head { get; set; }

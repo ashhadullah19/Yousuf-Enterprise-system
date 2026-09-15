@@ -42,6 +42,7 @@
                 <a class="nav-link @(IsActive("Reports") ? "active" : "")" asp-controller="Reports" asp-action="Index" title="Reports"><i class="bi bi-bar-chart"></i> <span class="label">Reports</span></a>
                 <a class="nav-link @(IsActive("BankAccounts") ? "active" : "")" asp-controller="BankAccounts" asp-action="Index" title="Bank Accounts"><i class="bi bi-bank"></i> <span class="label">Bank Accounts</span></a>
                 <a class="nav-link @(IsActive("Expenses") ? "active" : "")" asp-controller="Expenses" asp-action="Index" title="Expenses"><i class="bi bi-cash-stack"></i> <span class="label">Expenses</span></a>
+                <a class="nav-link @(IsActive("Dasti") ? "active" : "")" asp-controller="Dasti" asp-action="Index" title="Dasti"><i class="bi bi-wallet2"></i> <span class="label">Dasti</span></a>
                 @if (User.IsInRole(AppRoles.SuperAdmin))
                 {
                     <div class="nav-section"><span class="label">Administration</span></div>
@@ -70,13 +71,23 @@
                 </div>
             </header>
             <main class="app-content">
-                @if (TempData["Message"] is string message)
-                {
-                    <div class="alert alert-success">@message</div>
-                }
                 @RenderBody()
             </main>
         </div>
+
+        @if (TempData["Message"] is string message)
+        {
+            <div class="toast-container app-toast-container position-fixed end-0 p-3">
+                <div class="toast app-toast border-0" role="status" aria-live="polite" aria-atomic="true" data-bs-delay="4500">
+                    <div class="d-flex align-items-center">
+                        <div class="toast-body"><i class="bi bi-check-circle-fill me-2"></i>@message</div>
+                        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <partial name="_AppModals" />
     }
     else
     {

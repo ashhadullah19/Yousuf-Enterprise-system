@@ -36,10 +36,11 @@ public static class Modules
     public const string BankAccounts = "BankAccounts";
     public const string BankTransactions = "BankTransactions";
     public const string Expenses = "Expenses";
+    public const string Dasti = "Dasti";
 
     public static readonly string[] All =
     {
         Dashboard, Parties, Products, OwnedStock, Sales, Ledgers,
-        Reports, BankAccounts, BankTransactions, Expenses
+        Reports, BankAccounts, BankTransactions, Expenses, Dasti
     };
 }

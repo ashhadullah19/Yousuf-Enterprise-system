@@ -1,133 +1,154 @@
 @model SalesInvoice
 @{
     ViewData["Title"] = "Create invoice";
+    ViewData["ModalSize"] = "xl";
 }
 
-<form asp-action="Create" method="post" class="card stat-card p-4">
+<form asp-action="Create" method="post" class="app-form"
+      data-confirm-title="Issue this invoice?"
+      data-confirm="Stock will be deducted and the invoice can't be edited after it's issued."
+      data-confirm-ok="Yes, issue invoice">
     <div asp-validation-summary="All" class="text-danger"></div>
-    <div class="row g-3">
-        <div class="col-md-4">
-            <label asp-for="InvoiceNumber" class="form-label"></label>
-            <input asp-for="InvoiceNumber" class="form-control" readonly />
-        </div>
-        <div class="col-md-4">
-            <label asp-for="InvoiceDate" class="form-label"></label>
-            <input asp-for="InvoiceDate" type="date" class="form-control" />
-        </div>
-        <div class="col-md-4">
-            <label asp-for="BuyerId" class="form-label required"></label>
-            <select asp-for="BuyerId" asp-items="ViewBag.Buyers" class="form-select">
-                <option value="">-- select buyer --</option>
-            </select>
-            <span asp-validation-for="BuyerId" class="text-danger"></span>
-        </div>
-        <div class="col-md-4" id="productRow">
-            <label asp-for="ProductId" class="form-label required"></label>
-            <select asp-for="ProductId" asp-items="ViewBag.Products" class="form-select" id="productSelect">
-                <option value="">-- select product --</option>
-            </select>
-            <span asp-validation-for="ProductId" class="text-danger"></span>
-            <div id="stockBadge" class="small text-muted mt-1"></div>
-        </div>
-        <div class="col-md-4">
-            <label asp-for="StockType" class="form-label"></label>
-            <select asp-for="StockType" asp-items="Html.GetEnumSelectList<StockType>()" class="form-select" id="stockType" data-owned-value="@((int)StockType.OwnedStock)"></select>
-        </div>
-        <div class="col-md-4" id="receiptRow">
-            <label asp-for="ConsignmentReceiptId" class="form-label"></label>
-            <select asp-for="ConsignmentReceiptId" asp-items="ViewBag.Receipts" class="form-select" id="receiptSelect">
-                <option value="">-- select receipt --</option>
-            </select>
-        </div>
-        <div class="col-12" id="allocationSection">
-            <label class="form-label mb-1">Owned stock sources</label>
-            <div class="form-text mb-2">
-                Pick which parties' stock fills this sale. Quantity sold is the total of the rows below,
-                and each row's commission is charged against that party.
-            </div>
-            <div class="border rounded" id="allocationGrid">
-                <partial name="_StockAllocationRows" model="ViewBag.AllocationPicker as Yousuf_Enterprise_system.ViewModels.StockAllocationPickerViewModel ?? new Yousuf_Enterprise_system.ViewModels.StockAllocationPickerViewModel()" />
-            </div>
-        </div>
-        <div class="col-md-3">
-            <label asp-for="QuantitySold" class="form-label required"></label>
-            <input asp-for="QuantitySold" class="form-control" id="quantitySold" />
-            <span asp-validation-for="QuantitySold" class="text-danger"></span>
-            <small class="text-muted" id="quantityHint"></small>
-        </div>
-        <div class="col-md-2">
-            <label asp-for="Unit" class="form-label"></label>
-            <select asp-for="Unit" asp-items="Html.GetEnumSelectList<UnitOfMeasure>()" class="form-select"></select>
-        </div>
-        <div class="col-md-2">
-            <label asp-for="DisplayUnit" class="form-label"></label>
-            <select asp-for="DisplayUnit" asp-items="Html.GetEnumSelectList<UnitOfMeasure>()" class="form-select">
-                <option value="">-- none --</option>
-            </select>
-            <small class="text-muted">Optional — also prints the quantity converted to this unit.</small>
-        </div>
-        <div class="col-md-3">
-            <label asp-for="RatePerUnit" class="form-label required"></label>
-            <input asp-for="RatePerUnit" class="form-control" />
-            <span asp-validation-for="RatePerUnit" class="text-danger"></span>
-        </div>
-        @* Owned-stock sales record commission per source party in the grid above, so the single
-           invoice-level agent cut only applies to consignment sales now. *@
-        <div class="col-md-3" id="agentRow">
-            <label asp-for="AgentId" class="form-label"></label>
-            <select asp-for="AgentId" asp-items="ViewBag.Agents" class="form-select">
-                <option value="">-- none --</option>
-            </select>
-            <small class="text-muted">Who earns this commission — tracked on their own ledger.</small>
-        </div>
-        <div class="col-md-3" id="agentPercentageRow">
-            <label asp-for="AgentCommissionPercentage" class="form-label"></label>
-            <input asp-for="AgentCommissionPercentage" class="form-control" />
-            <small class="text-muted">Commission amount is calculated automatically on save.</small>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label d-block">&nbsp;</label>
-            <div class="form-check">
-                <input asp-for="ApplyGst" class="form-check-input" />
-                <label asp-for="ApplyGst" class="form-check-label"></label>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <label asp-for="GstPercentage" class="form-label"></label>
-            <input asp-for="GstPercentage" class="form-control" />
-        </div>
-        <div class="col-md-6">
-            <label asp-for="ExtraChargesDescription" class="form-label"></label>
-            <input asp-for="ExtraChargesDescription" class="form-control" placeholder="e.g. Conveyance, Labour" />
-        </div>
-        <div class="col-md-3">
-            <label asp-for="ExtraChargesAmount" class="form-label"></label>
-            <input asp-for="ExtraChargesAmount" class="form-control" />
-        </div>
-    </div>
 
-    <hr class="my-4" />
-    <h6 class="text-muted mb-3">Payment</h6>
-    <div class="row g-3">
-        <div class="col-md-4">
-            <label asp-for="PaymentType" class="form-label"></label>
-            <select asp-for="PaymentType" asp-items="Html.GetEnumSelectList<PaymentType>()" class="form-select" id="paymentType" data-online-value="@((int)PaymentType.Online)" data-credit-value="@((int)PaymentType.Credit)"></select>
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-receipt"></i> Invoice</div>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label asp-for="InvoiceNumber" class="form-label"></label>
+                <input asp-for="InvoiceNumber" class="form-control" readonly />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="InvoiceDate" class="form-label"></label>
+                <input asp-for="InvoiceDate" type="date" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="BuyerId" class="form-label required"></label>
+                <select asp-for="BuyerId" asp-items="ViewBag.Buyers" class="form-select">
+                    <option value="">-- select buyer --</option>
+                </select>
+                <span asp-validation-for="BuyerId" class="text-danger"></span>
+            </div>
+            <div class="col-md-3" id="productRow">
+                <label asp-for="ProductId" class="form-label required"></label>
+                <select asp-for="ProductId" asp-items="ViewBag.Products" class="form-select" id="productSelect">
+                    <option value="">-- select product --</option>
+                </select>
+                <span asp-validation-for="ProductId" class="text-danger"></span>
+                <div id="stockBadge" class="small text-muted mt-1"></div>
+            </div>
+            @* <div class="col-md-4">
+                <label asp-for="StockType" class="form-label"></label>
+                <select asp-for="StockType" asp-items="Html.GetEnumSelectList<StockType>()" class="form-select" id="stockType" data-owned-value="@((int)StockType.OwnedStock)"></select>
+            </div> *@
+            <div class="col-md-4" id="receiptRow">
+                <label asp-for="ConsignmentReceiptId" class="form-label"></label>
+                <select asp-for="ConsignmentReceiptId" asp-items="ViewBag.Receipts" class="form-select" id="receiptSelect">
+                    <option value="">-- select receipt --</option>
+                </select>
+            </div>
         </div>
-        <div class="col-md-4" id="bankRow">
-            <label asp-for="BankAccountId" class="form-label required"></label>
-            <select asp-for="BankAccountId" asp-items="ViewBag.BankAccounts" class="form-select">
-                <option value="">-- select account --</option>
-            </select>
-        </div>
-        <div class="col-md-4" id="dueDateRow">
-            <label asp-for="DueDate" class="form-label required"></label>
-            <input asp-for="DueDate" type="date" class="form-control" />
-        </div>
-    </div>
+    </section>
 
-    <div class="mt-4">
-        <button class="btn btn-success">Issue invoice</button>
-        <a class="btn btn-link" asp-action="Index">Cancel</a>
+    <section class="form-section" id="allocationSection">
+        <div class="form-section-title"><i class="bi bi-boxes"></i> Owned stock sources</div>
+        <div class="form-text mb-2">
+            Pick which parties' stock fills this sale. Quantity sold is the total of the rows below,
+            and each row's commission is charged against that party.
+        </div>
+        <div class="border rounded" id="allocationGrid">
+            <partial name="_StockAllocationRows" model="ViewBag.AllocationPicker as Yousuf_Enterprise_system.ViewModels.StockAllocationPickerViewModel ?? new Yousuf_Enterprise_system.ViewModels.StockAllocationPickerViewModel()" />
+        </div>
+    </section>
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-calculator"></i> Quantity &amp; price</div>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label asp-for="QuantitySold" class="form-label required"></label>
+                <input asp-for="QuantitySold" class="form-control" id="quantitySold" />
+                <span asp-validation-for="QuantitySold" class="text-danger"></span>
+                <small class="text-muted" id="quantityHint"></small>
+            </div>
+            <div class="col-md-2">
+                <label asp-for="Unit" class="form-label"></label>
+                <select asp-for="Unit" asp-items="Html.GetEnumSelectList<UnitOfMeasure>()" class="form-select"></select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="DisplayUnit" class="form-label"></label>
+                <select asp-for="DisplayUnit" asp-items="Html.GetEnumSelectList<UnitOfMeasure>()" class="form-select">
+                    <option value="">-- none --</option>
+                </select>
+                <small class="text-muted">Optional — also prints the quantity converted to this unit.</small>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="RatePerUnit" class="form-label required"></label>
+                <input asp-for="RatePerUnit" class="form-control" />
+                <span asp-validation-for="RatePerUnit" class="text-danger"></span>
+            </div>
+            @* Owned-stock sales record commission per source party in the grid above, so the single
+               invoice-level agent cut only applies to consignment sales now. *@
+            <div class="col-md-4" id="agentRow">
+                <label asp-for="AgentId" class="form-label"></label>
+                <select asp-for="AgentId" asp-items="ViewBag.Agents" class="form-select">
+                    <option value="">-- none --</option>
+                </select>
+                <small class="text-muted">Who earns this commission — tracked on their own ledger.</small>
+            </div>
+            <div class="col-md-4" id="agentPercentageRow">
+                <label asp-for="AgentCommissionPercentage" class="form-label"></label>
+                <input asp-for="AgentCommissionPercentage" class="form-control" />
+                <small class="text-muted">Commission amount is calculated automatically on save.</small>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-percent"></i> GST &amp; extra charges</div>
+        <div class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <div class="form-check form-switch mb-2">
+                    <input asp-for="ApplyGst" class="form-check-input" />
+                    <label asp-for="ApplyGst" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label asp-for="GstPercentage" class="form-label"></label>
+                <input asp-for="GstPercentage" class="form-control" />
+            </div>
+            <div class="col-md-5">
+                <label asp-for="ExtraChargesDescription" class="form-label"></label>
+                <input asp-for="ExtraChargesDescription" class="form-control" placeholder="e.g. Conveyance, Labour" />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="ExtraChargesAmount" class="form-label"></label>
+                <input asp-for="ExtraChargesAmount" class="form-control" />
+            </div>
+        </div>
+    </section>
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-wallet2"></i> Payment</div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label asp-for="PaymentType" class="form-label"></label>
+                <select asp-for="PaymentType" asp-items="Html.GetEnumSelectList<PaymentType>()" class="form-select" id="paymentType" data-online-value="@((int)PaymentType.Online)" data-credit-value="@((int)PaymentType.Credit)"></select>
+            </div>
+            <div class="col-md-4" id="bankRow">
+                <label asp-for="BankAccountId" class="form-label required"></label>
+                <select asp-for="BankAccountId" asp-items="ViewBag.BankAccounts" class="form-select">
+                    <option value="">-- select account --</option>
+                </select>
+            </div>
+            <div class="col-md-4" id="dueDateRow">
+                <label asp-for="DueDate" class="form-label required"></label>
+                <input asp-for="DueDate" type="date" class="form-control" />
+            </div>
+        </div>
+    </section>
+
+    <div class="form-actions">
+        <a class="btn btn-light" asp-action="Index" data-modal-cancel>Cancel</a>
+        <button class="btn btn-success" type="submit"><i class="bi bi-receipt"></i> Issue invoice</button>
     </div>
 </form>
 
@@ -135,9 +156,10 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         function isOwnedStock() {
-            // The select posts the enum's numeric value, not its name.
+            // The stock type picker is currently hidden, and without it every sale is owned stock.
+            // When shown, it posts the enum's numeric value, not its name.
             const el = document.getElementById('stockType');
-            return el.value === el.dataset.ownedValue;
+            return !el || el.value === el.dataset.ownedValue;
         }
 
         function toggleReceipt() {
@@ -163,11 +185,15 @@
             if (!isOwnedStock()) return;
             const productId = document.getElementById('productSelect').value || 0;
             const grid = document.getElementById('allocationGrid');
+            grid.innerHTML = '<div class="text-muted small p-3"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading available stock...</div>';
             try {
                 const res = await fetch(`/SalesInvoices/StockAllocationRows?productId=${productId}`);
+                // A redirect here means the session expired (it lands on the login page), so don't
+                // paste that page into the grid.
+                if (!res.ok || res.redirected) throw new Error(res.statusText);
                 grid.innerHTML = await res.text();
             } catch {
-                grid.innerHTML = '<div class="text-danger small p-3">Could not load stock list.</div>';
+                grid.innerHTML = '<div class="text-danger small p-3">Could not load the stock list. Refresh the page and try again.</div>';
             }
             wireAllocationRows();
             recalcAllocations();
@@ -233,12 +259,14 @@
                     : 'Select at least one stock source above.';
             }
         }
+
         function togglePaymentFields() {
             const el = document.getElementById('paymentType');
             const type = el.value;
             document.getElementById('bankRow').style.display = type === el.dataset.onlineValue ? '' : 'none';
             document.getElementById('dueDateRow').style.display = type === el.dataset.creditValue ? '' : 'none';
         }
+
         // Owned-stock availability is shown per source in the allocation grid now, so this
         // badge/max only applies to consignment sales.
         async function refreshStockBadge() {
@@ -262,7 +290,8 @@
                 badge.textContent = '';
             }
         }
-        document.getElementById('stockType').addEventListener('change', () => { toggleReceipt(); loadAllocationRows(); });
+
+        document.getElementById('stockType')?.addEventListener('change', () => { toggleReceipt(); loadAllocationRows(); });
         document.getElementById('paymentType').addEventListener('change', togglePaymentFields);
         document.getElementById('productSelect').addEventListener('change', loadAllocationRows);
         document.getElementById('receiptSelect').addEventListener('change', refreshStockBadge);

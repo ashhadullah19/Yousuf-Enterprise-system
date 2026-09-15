@@ -1,3 +1,6 @@
 @{
-    Layout = "_Layout";
+    // Forms opened in a popup are fetched with this header and rendered without the page chrome.
+    Layout = Context.Request.Headers.ContainsKey(Yousuf_Enterprise_system.Filters.ModalRequestFilter.HeaderName)
+        ? "_ModalLayout"
+        : "_Layout";
 }

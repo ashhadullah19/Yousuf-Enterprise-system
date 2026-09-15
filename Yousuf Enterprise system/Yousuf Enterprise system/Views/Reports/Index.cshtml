@@ -1,40 +1,330 @@
+@model Yousuf_Enterprise_system.ViewModels.ReportsViewModel
 @{
     ViewData["Title"] = "Reports";
+    var invariant = System.Globalization.CultureInfo.InvariantCulture;
+
+    static string Compact(decimal value)
+    {
+        var abs = Math.Abs(value);
+        return abs >= 1_000_000 ? (value / 1_000_000m).ToString("0.#") + "M"
+            : abs >= 1_000 ? (value / 1_000m).ToString("0.#") + "K"
+            : value.ToString("0");
+    }
+
+    // Rounds the chart's top gridline up to a readable value (e.g. 83,400 -> 100K).
+    static decimal NiceCeiling(decimal max)
+    {
+        if (max <= 0) return 0;
+        var magnitude = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double)max)));
+        foreach (var step in new[] { 1m, 2m, 2.5m, 5m, 10m })
+        {
+            if (max <= step * magnitude) return step * magnitude;
+        }
+        return 10 * magnitude;
+    }
+
+    static int Percent(decimal part, decimal whole) => whole <= 0 ? 0 : (int)Math.Round(part / whole * 100);
+    static string? SignClass(decimal value) => value > 0 ? "amount-credit" : value < 0 ? "amount-debit" : null;
+
+    var chartMax = NiceCeiling(Model.Monthly.Max(m => m.Sales));
+    var presets = new[] { ("month", "This month"), ("30d", "Last 30 days"), ("year", "This year"), ("all", "All time") };
+
+    var kpis = new[]
+    {
+        (Label: "Sales", Value: Model.Sales, Icon: "bi-receipt", Tone: "blue", Hint: $"{Model.InvoiceCount} invoice{(Model.InvoiceCount == 1 ? "" : "s")}", ValueClass: (string?)null),
+        (Label: "Gross profit", Value: Model.GrossProfit, Icon: "bi-graph-up-arrow", Tone: "green", Hint: Model.MarginPercent is decimal margin ? $"{margin:0.0}% margin on subtotal" : "No sales in this period", ValueClass: SignClass(Model.GrossProfit)),
+        (Label: "Expenses", Value: Model.Expenses, Icon: "bi-cash-stack", Tone: "orange", Hint: "Recorded in this period", ValueClass: null),
+        (Label: "Net profit", Value: Model.NetProfit, Icon: "bi-piggy-bank", Tone: "teal", Hint: "Gross profit minus expenses", ValueClass: SignClass(Model.NetProfit))
+    };
 }
 
+<div class="report-toolbar">
+    <div class="period-pills" role="group" aria-label="Report period">
+        @foreach (var (key, label) in presets)
+        {
+            <a class="period-pill @(Model.Period == key ? "active" : "")" asp-action="Index" asp-route-period="@key">@label</a>
+        }
+    </div>
+    <form method="get" class="period-custom">
+        <input type="date" name="from" class="form-control form-control-sm" aria-label="From date" value="@(Model.Period == "custom" ? Model.From?.ToString("yyyy-MM-dd") : null)" />
+        <span class="text-muted small">to</span>
+        <input type="date" name="to" class="form-control form-control-sm" aria-label="To date" value="@(Model.Period == "custom" ? Model.To?.ToString("yyyy-MM-dd") : null)" />
+        <button class="btn btn-sm @(Model.Period == "custom" ? "btn-success" : "btn-outline-secondary")">Apply</button>
+    </form>
+</div>
+<p class="report-period-label">Showing <strong>@Model.PeriodLabel</strong></p>
+
+<div class="row g-3 mb-3">
+    @foreach (var kpi in kpis)
+    {
+        <div class="col-sm-6 col-xl-3">
+            <div class="kpi-card" data-tone="@kpi.Tone">
+                <div class="kpi-icon"><i class="bi @kpi.Icon"></i></div>
+                <div class="kpi-body">
+                    <div class="kpi-label">@kpi.Label</div>
+                    <div class="kpi-value @kpi.ValueClass" title="@kpi.Value.ToString("N2")">@kpi.Value.ToString("N2")</div>
+                    <div class="kpi-hint">@kpi.Hint</div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-8">
+        <section class="report-panel h-100">
+            <header class="report-panel-header">
+                <h2>Monthly sales</h2>
+                <span class="text-muted small">Last 12 months · hover a bar for details</span>
+            </header>
+            @if (chartMax == 0)
+            {
+                <div class="report-empty">No sales in the last 12 months.</div>
+            }
+            else
+            {
+                <div class="column-chart" id="monthlyChart">
+                    <div class="column-chart-grid" aria-hidden="true">
+                        @foreach (var fraction in new[] { 1m, 0.5m, 0m })
+                        {
+                            <div class="grid-line" style="bottom:@((fraction * 100).ToString("0", invariant))%"><span>@Compact(chartMax * fraction)</span></div>
+                        }
+                    </div>
+                    <div class="column-chart-plot" role="img" aria-label="Monthly sales for the last 12 months. Full figures are in the table below.">
+                        @foreach (var month in Model.Monthly)
+                        {
+                            var height = month.Sales / chartMax * 100;
+                            <div class="column" tabindex="0"
+                                 data-month="@month.Month.ToString("MMMM yyyy")"
+                                 data-sales="@month.Sales.ToString("N2")"
+                                 data-profit="@month.Profit.ToString("N2")"
+                                 data-count="@month.Count">
+                                <div class="column-bar" style="height:@height.ToString("0.##", invariant)%"></div>
+                            </div>
+                        }
+                    </div>
+                    <div class="column-chart-labels" aria-hidden="true">
+                        @foreach (var month in Model.Monthly)
+                        {
+                            <span>@month.Month.ToString("MMM")</span>
+                        }
+                    </div>
+                    <div class="chart-tooltip" hidden></div>
+                </div>
+                <details class="mt-3">
+                    <summary class="small text-muted">View as table</summary>
+                    <div class="table-responsive mt-2">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Month</th><th class="text-end">Sales</th><th class="text-end">Profit</th><th class="text-end">Invoices</th></tr></thead>
+                            <tbody>
+                                @foreach (var month in Model.Monthly)
+                                {
+                                    <tr>
+                                        <td>@month.Month.ToString("MMM yyyy")</td>
+                                        <td class="text-end">@month.Sales.ToString("N2")</td>
+                                        <td class="text-end">@month.Profit.ToString("N2")</td>
+                                        <td class="text-end">@month.Count</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            }
+        </section>
+    </div>
+    <div class="col-lg-4">
+        <section class="report-panel h-100">
+            <header class="report-panel-header">
+                <h2>Sales mix</h2>
+                <span class="text-muted small">By subtotal</span>
+            </header>
+            @if (Model.Subtotal <= 0)
+            {
+                <div class="report-empty">No sales in this period.</div>
+            }
+            else
+            {
+                var mix = new[]
+                {
+                    ("Stock type", new[] { ("Owned stock", Model.OwnedSales), ("Consignment", Model.ConsignmentSales) }),
+                    ("Tax", new[] { ("GST", Model.GstSales), ("Non-GST", Model.NonGstSales) })
+                };
+                foreach (var (group, parts) in mix)
+                {
+                    <div class="share-group-label">@group</div>
+                    foreach (var (label, amount) in parts)
+                    {
+                        var share = Percent(amount, Model.Subtotal);
+                        <div class="share-row">
+                            <div class="rank-row"><span class="rank-name">@label</span><span class="rank-value">@share%</span></div>
+                            <div class="share-track"><div class="share-fill" style="width:@share%"></div></div>
+                            <div class="small text-muted">@amount.ToString("N2")</div>
+                        </div>
+                    }
+                }
+            }
+        </section>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-4">
+        <section class="report-panel h-100">
+            <header class="report-panel-header"><h2>Top buyers</h2><span class="text-muted small">By sales</span></header>
+            @if (!Model.TopBuyers.Any())
+            {
+                <div class="report-empty">No sales in this period.</div>
+            }
+            else
+            {
+                <ol class="rank-list">
+                    @foreach (var row in Model.TopBuyers)
+                    {
+                        <li>
+                            <div class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N2")</span></div>
+                            <div class="share-track"><div class="share-fill" style="width:@Percent(row.Amount, Model.TopBuyers[0].Amount)%"></div></div>
+                            <div class="small text-muted">@row.Count invoice@(row.Count == 1 ? "" : "s")</div>
+                        </li>
+                    }
+                </ol>
+            }
+        </section>
+    </div>
+    <div class="col-lg-4">
+        <section class="report-panel h-100">
+            <header class="report-panel-header"><h2>Top products</h2><span class="text-muted small">By subtotal</span></header>
+            @if (!Model.TopProducts.Any())
+            {
+                <div class="report-empty">No sales in this period.</div>
+            }
+            else
+            {
+                <ol class="rank-list">
+                    @foreach (var row in Model.TopProducts)
+                    {
+                        <li>
+                            <div class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N2")</span></div>
+                            <div class="share-track"><div class="share-fill" style="width:@Percent(row.Amount, Model.TopProducts[0].Amount)%"></div></div>
+                            <div class="small text-muted">@row.Count invoice@(row.Count == 1 ? "" : "s")</div>
+                        </li>
+                    }
+                </ol>
+            }
+        </section>
+    </div>
+    <div class="col-lg-4">
+        <section class="report-panel h-100">
+            <header class="report-panel-header"><h2>Outstanding</h2><span class="text-muted small">As of today</span></header>
+            <div class="outstanding-block">
+                <div class="rank-row"><span class="share-group-label mb-0">They owe us</span><span class="rank-value amount-credit">@Model.TotalReceivable.ToString("N2")</span></div>
+                @if (!Model.TopReceivables.Any())
+                {
+                    <div class="small text-muted py-2">Nothing outstanding.</div>
+                }
+                <ul class="rank-list">
+                    @foreach (var row in Model.TopReceivables)
+                    {
+                        <li class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N2")</span></li>
+                    }
+                </ul>
+            </div>
+            <div class="outstanding-block">
+                <div class="rank-row"><span class="share-group-label mb-0">We owe them</span><span class="rank-value amount-debit">@Model.TotalPayable.ToString("N2")</span></div>
+                @if (!Model.TopPayables.Any())
+                {
+                    <div class="small text-muted py-2">Nothing outstanding.</div>
+                }
+                <ul class="rank-list">
+                    @foreach (var row in Model.TopPayables)
+                    {
+                        <li class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N2")</span></li>
+                    }
+                </ul>
+            </div>
+        </section>
+    </div>
+</div>
+
+<h2 class="report-section-title">Detailed reports</h2>
 <div class="row g-3">
     <div class="col-md-4">
-        <div class="card stat-card p-3">
-            <h2 class="h6">Party ledger</h2>
-            <a asp-action="PartyLedger">Open statement</a>
-        </div>
+        <a class="report-tool" asp-action="PartyLedger">
+            <div class="kpi-icon"><i class="bi bi-journal-text"></i></div>
+            <div>
+                <div class="report-tool-title">Party ledger</div>
+                <div class="report-tool-desc">Statement for one party, with receivable and payable running balances.</div>
+            </div>
+        </a>
     </div>
     <div class="col-md-4">
-        <div class="card stat-card p-3">
-            <h2 class="h6">Stock summary</h2>
-            <a asp-action="Stock">Owned vs consignment</a>
-        </div>
+        <a class="report-tool" asp-action="Stock">
+            <div class="kpi-icon"><i class="bi bi-boxes"></i></div>
+            <div>
+                <div class="report-tool-title">Stock summary</div>
+                <div class="report-tool-desc">Owned and consignment stock on hand for every product.</div>
+            </div>
+        </a>
     </div>
     <div class="col-md-4">
-        <div class="card stat-card p-3">
-            <h2 class="h6">Excel export</h2>
-            <a asp-action="Export" asp-route-type="parties">Parties</a> ·
-            <a asp-action="Export" asp-route-type="products">Products</a> ·
-            <a asp-action="Export" asp-route-type="invoices">Invoices</a> ·
-            <a asp-action="Export" asp-route-type="stock">Stock</a>
+        <div class="report-tool">
+            <div class="kpi-icon"><i class="bi bi-file-earmark-spreadsheet"></i></div>
+            <div>
+                <div class="report-tool-title">Excel export</div>
+                <div class="report-tool-desc">
+                    <a asp-action="Export" asp-route-type="parties">Parties</a> ·
+                    <a asp-action="Export" asp-route-type="products">Products</a> ·
+                    <a asp-action="Export" asp-route-type="invoices">Invoices</a> ·
+                    <a asp-action="Export" asp-route-type="stock">Stock</a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="card stat-card p-4 mt-3" style="max-width:640px;">
-    <h2 class="h6">Bulk Excel import (both at once)</h2>
-    <p class="small text-muted">
-        One workbook with a "Parties" sheet (Name, Type, Phone) and/or a "Products" sheet (Name, UOM, Description).
-        To import just one with the full field set (bank details, tax info, etc.), use the Import button on the
-        <a asp-controller="Parties" asp-action="Index">Parties</a> or <a asp-controller="Products" asp-action="Index">Products</a> page instead.
-    </p>
-    <form asp-action="Import" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" class="form-control mb-2" accept=".xlsx" />
-        <button class="btn btn-outline-success">Import masters</button>
-    </form>
-</div>
+@section Scripts {
+    <script>
+        (function () {
+            const chart = document.getElementById('monthlyChart');
+            if (!chart) return;
+            const tip = chart.querySelector('.chart-tooltip');
+
+            function show(column) {
+                tip.replaceChildren();
+                const title = document.createElement('div');
+                title.className = 'chart-tooltip-title';
+                title.textContent = column.dataset.month;
+                tip.appendChild(title);
+                [['Sales', column.dataset.sales], ['Profit', column.dataset.profit], ['Invoices', column.dataset.count]].forEach(([label, value]) => {
+                    const row = document.createElement('div');
+                    row.className = 'chart-tooltip-row';
+                    const name = document.createElement('span');
+                    name.textContent = label;
+                    const amount = document.createElement('strong');
+                    amount.textContent = value;
+                    row.append(name, amount);
+                    tip.appendChild(row);
+                });
+                tip.hidden = false;
+
+                const chartBox = chart.getBoundingClientRect();
+                const box = column.getBoundingClientRect();
+                const left = box.left - chartBox.left + box.width / 2 - tip.offsetWidth / 2;
+                tip.style.left = Math.max(0, Math.min(left, chart.clientWidth - tip.offsetWidth)) + 'px';
+                column.classList.add('is-active');
+            }
+
+            function hide(column) {
+                tip.hidden = true;
+                column.classList.remove('is-active');
+            }
+
+            chart.querySelectorAll('.column').forEach(column => {
+                column.addEventListener('mouseenter', () => show(column));
+                column.addEventListener('mouseleave', () => hide(column));
+                column.addEventListener('focus', () => show(column));
+                column.addEventListener('blur', () => hide(column));
+            });
+        })();
+    </script>
+}

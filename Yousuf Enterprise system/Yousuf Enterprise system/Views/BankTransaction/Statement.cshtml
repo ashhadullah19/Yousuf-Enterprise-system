@@ -15,29 +15,22 @@
     </div>
 </div>
 
-<form class="row g-2 mb-3" method="get">
-    <input type="hidden" name="bankAccountId" value="@account.Id" />
-    <div class="col-auto">
-        <label class="form-label">From</label>
-        <input type="date" class="form-control" name="from" value="@ViewBag.From" />
-    </div>
-    <div class="col-auto">
-        <label class="form-label">To</label>
-        <input type="date" class="form-control" name="to" value="@ViewBag.To" />
-    </div>
-    <div class="col-auto align-self-end">
-        <button class="btn btn-outline-secondary">Filter</button>
-    </div>
-    <div class="col-auto align-self-end ms-auto">
+<div class="list-toolbar">
+    <div class="list-toolbar-actions">
         <a class="btn btn-outline-danger"
            asp-action="StatementPdf"
            asp-route-bankAccountId="@account.Id"
            asp-route-from="@ViewBag.From"
-           asp-route-to="@ViewBag.To">
-            Download PDF
-        </a>
+           asp-route-to="@ViewBag.To"><i class="bi bi-file-earmark-pdf"></i> Download PDF</a>
     </div>
-</form>
+    <form class="list-toolbar-filters" method="get">
+        <input type="hidden" name="bankAccountId" value="@account.Id" />
+        <input type="date" class="form-control" name="from" value="@ViewBag.From" aria-label="From date" title="From" />
+        <span class="filter-label">to</span>
+        <input type="date" class="form-control" name="to" value="@ViewBag.To" aria-label="To date" title="To" />
+        <button class="btn btn-outline-secondary">Filter</button>
+    </form>
+</div>
 
 <table class="table table-striped bg-white">
     <thead>
@@ -60,8 +53,8 @@
                 <td>@t.Type</td>
                 <td>@t.ReferenceNumber</td>
                 <td>@t.Remarks</td>
-                <td class="text-end">@(t.Type == TransactionType.Deposit ? t.Amount.ToString("N2") : "")</td>
-                <td class="text-end">@(t.Type == TransactionType.Withdrawal ? t.Amount.ToString("N2") : "")</td>
+                <td class="text-end">@if (t.Type == TransactionType.Deposit) { <span class="amount-credit">@t.Amount.ToString("N2")</span> }</td>
+                <td class="text-end">@if (t.Type == TransactionType.Withdrawal) { <span class="amount-debit">@t.Amount.ToString("N2")</span> }</td>
                 <td class="text-end">@row.RunningBalance.ToString("N2")</td>
             </tr>
         }

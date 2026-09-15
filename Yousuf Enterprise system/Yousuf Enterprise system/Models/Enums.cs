@@ -58,6 +58,14 @@ public enum PaymentMode
     [Display(Name = "Online Bank Transfer")]
     OnlineBankTransfer = 3
 }
+public enum DastiType
+{
+    [Display(Name = "Cash Deposit")]
+    CashDeposit = 1,
+    [Display(Name = "Cash Withdrawal")]
+    CashWithdrawal = 2
+}
+
 public enum PaymentType
 {
     Cash,

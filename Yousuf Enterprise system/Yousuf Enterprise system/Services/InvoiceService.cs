@@ -16,17 +16,6 @@ public class InvoiceCalculationResult
     public decimal ProfitAmount { get; set; }
 }
 
-// One vendor's slice of a specific owned-stock sale, resolved via FIFO against purchase
-// history. Used to split that sale's cost/commission across whichever vendor(s) actually
-// supplied the stock, without the invoice itself needing to show more than one vendor.
-public class VendorAllocation
-{
-    public int VendorId { get; set; }
-    public string VendorName { get; set; } = string.Empty;
-    public decimal Quantity { get; set; }
-    public decimal Cost { get; set; }
-}
-
 // A single owned-stock purchase (GRN) with however much of it is still unsold, so a sale can be
 // filled by picking specific lots — each with its own vendor, purchase rate and commission.
 public class OwnedStockLot
@@ -47,7 +36,6 @@ public interface IInvoiceService
     Task<decimal> OwnedStockOnHandAsync(int productId, int? excludeInvoiceId = null);
     Task<List<(string VendorName, decimal RemainingQty)>> OwnedStockByVendorAsync(int productId);
     Task<List<OwnedStockLot>> AvailableLotsAsync(int productId, int? excludeInvoiceId = null);
-    Task<List<VendorAllocation>> GetSaleVendorAllocationAsync(SalesInvoice invoice);
     Task<decimal> ConsignmentRemainingAsync(int receiptId, int? excludeInvoiceId = null);
     Task<decimal> AverageCostAsync(int productId);
     Task ApplyAndValidateAsync(SalesInvoice invoice);
@@ -156,67 +144,6 @@ public class InvoiceService : IInvoiceService
             result.ProfitAmount = Math.Round(
                 consignmentCommissionRevenue - result.AgentCommissionAmount - invoice.ExtraChargesAmount,
                 2);
-        }
-
-        return result;
-    }
-
-    // Resolves which vendor(s) actually supplied the stock behind a specific owned-stock sale,
-    // via the same FIFO-against-purchase-history logic as OwnedStockByVendorAsync, but scoped
-    // to just this sale's quantity (skipping past whatever earlier sales already consumed).
-    // Lets cost/commission be split per vendor even though the invoice itself stays one buyer,
-    // one product, one quantity.
-    public async Task<List<VendorAllocation>> GetSaleVendorAllocationAsync(SalesInvoice invoice)
-    {
-        var purchases = await _db.OwnedPurchases.AsNoTracking()
-            .Where(p => p.ProductId == invoice.ProductId)
-            .OrderBy(p => p.PurchaseDate).ThenBy(p => p.Id)
-            .Select(p => new { p.VendorId, VendorName = p.Vendor!.FullName, p.Quantity, p.RatePerUnit })
-            .ToListAsync();
-
-        var priorQuery = _db.SalesInvoices.AsNoTracking()
-            .Where(s => s.ProductId == invoice.ProductId && s.StockType == StockType.OwnedStock
-                && (s.InvoiceDate < invoice.InvoiceDate
-                    || (s.InvoiceDate == invoice.InvoiceDate && (invoice.Id == 0 || s.Id < invoice.Id))));
-        if (invoice.Id != 0)
-        {
-            priorQuery = priorQuery.Where(s => s.Id != invoice.Id);
-        }
-
-        var priorSold = await priorQuery.SumAsync(s => (decimal?)s.QuantitySold) ?? 0;
-
-        var toSkip = priorSold;
-        var toAllocate = invoice.QuantitySold;
-        var result = new List<VendorAllocation>();
-
-        foreach (var purchase in purchases)
-        {
-            var available = purchase.Quantity;
-            if (toSkip > 0)
-            {
-                var skip = Math.Min(toSkip, available);
-                available -= skip;
-                toSkip -= skip;
-            }
-
-            if (available <= 0 || toAllocate <= 0)
-            {
-                continue;
-            }
-
-            var take = Math.Min(available, toAllocate);
-            result.Add(new VendorAllocation
-            {
-                VendorId = purchase.VendorId,
-                VendorName = purchase.VendorName,
-                Quantity = Math.Round(take, 4),
-                Cost = Math.Round(take * purchase.RatePerUnit, 2)
-            });
-            toAllocate -= take;
-            if (toAllocate <= 0)
-            {
-                break;
-            }
         }
 
         return result;

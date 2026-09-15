@@ -3,41 +3,61 @@
     ViewData["Title"] = "System settings";
 }
 
-<form asp-action="Index" method="post" enctype="multipart/form-data" class="card stat-card p-4" style="max-width:720px;">
+<form asp-action="Index" method="post" enctype="multipart/form-data" class="app-form app-form-narrow"
+      data-confirm-title="Save settings?"
+      data-confirm="These details are used on invoices and forms from now on."
+      data-confirm-ok="Yes, save settings">
     <div asp-validation-summary="All" class="text-danger"></div>
     <input type="hidden" asp-for="Id" />
-    <div class="mb-3">
-        <label asp-for="CompanyName" class="form-label required"></label>
-        <input asp-for="CompanyName" class="form-control" />
-        <span asp-validation-for="CompanyName" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="Address" class="form-label"></label>
-        <textarea asp-for="Address" class="form-control"></textarea>
-    </div>
-    <div class="mb-3">
-        <label asp-for="ContactNumbers" class="form-label"></label>
-        <input asp-for="ContactNumbers" class="form-control" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="DefaultGstPercentage" class="form-label"></label>
-        <input asp-for="DefaultGstPercentage" class="form-control" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="BagWeightKg" class="form-label"></label>
-        <input asp-for="BagWeightKg" class="form-control" />
-        <div class="form-text">Used on Owned Purchase to show the KG equivalent of the Bags count.</div>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Logo</label>
-        <input type="file" name="logo" class="form-control" accept=".png,.jpg,.jpeg,.gif,.svg,.webp" />
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-building"></i> Company</div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="CompanyName" class="form-label required"></label>
+                <input asp-for="CompanyName" class="form-control" />
+                <span asp-validation-for="CompanyName" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="ContactNumbers" class="form-label"></label>
+                <input asp-for="ContactNumbers" class="form-control" />
+            </div>
+            <div class="col-12">
+                <label asp-for="Address" class="form-label"></label>
+                <textarea asp-for="Address" class="form-control" rows="2"></textarea>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-sliders"></i> Defaults</div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="DefaultGstPercentage" class="form-label"></label>
+                <input asp-for="DefaultGstPercentage" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label asp-for="BagWeightKg" class="form-label"></label>
+                <input asp-for="BagWeightKg" class="form-control" />
+                <div class="form-text">Used on Owned Purchase to show the KG equivalent of the Bags count.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-image"></i> Branding</div>
+        <label class="form-label" for="logo">Logo</label>
+        <input type="file" id="logo" name="logo" class="form-control" accept=".png,.jpg,.jpeg,.gif,.svg,.webp" />
         <div class="form-text">PNG, JPG, GIF, SVG or WEBP.</div>
         @if (!string.IsNullOrEmpty(Model.LogoPath))
         {
-            <img src="~/@Model.LogoPath?v=@DateTime.Now.Ticks" alt="Logo" class="mt-2" style="max-height:80px;" />
+            <img src="~/@Model.LogoPath?v=@DateTime.Now.Ticks" alt="Current logo" class="mt-2" style="max-height:80px;" />
         }
+    </section>
+
+    <div class="form-actions">
+        <button class="btn btn-success" type="submit"><i class="bi bi-check2"></i> Save settings</button>
     </div>
-    <button class="btn btn-success">Save settings</button>
 </form>
 
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,57 +1,42 @@
 @model Yousuf_Enterprise_system.ViewModels.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
+
+    static string? SignClass(decimal value) => value > 0 ? "amount-credit" : value < 0 ? "amount-debit" : null;
+
+    var cards = new[]
+    {
+        (Label: "Owned stock value", Value: Model.OwnedStockValue, Icon: "bi-boxes", Tone: "teal", Hint: "Remaining stock at average cost", ValueClass: (string?)null),
+        (Label: "Receivables", Value: Model.Receivables, Icon: "bi-arrow-down-left-circle", Tone: "green", Hint: "Owed to you by parties", ValueClass: null),
+        (Label: "Payables", Value: Model.Payables, Icon: "bi-arrow-up-right-circle", Tone: "red", Hint: "You owe to parties", ValueClass: null),
+        (Label: "Today's cash flow", Value: Model.TodayCashFlow, Icon: "bi-activity", Tone: "blue", Hint: "Received minus paid today", ValueClass: SignClass(Model.TodayCashFlow)),
+        (Label: "Commission receivable", Value: Model.CommissionReceivable, Icon: "bi-hourglass-split", Tone: "amber", Hint: "Accrued, still outstanding", ValueClass: null),
+        (Label: "Commission received", Value: Model.CommissionReceived, Icon: "bi-check2-circle", Tone: "purple", Hint: "Settled so far", ValueClass: null),
+        (Label: "Profit", Value: Model.TotalProfit, Icon: "bi-graph-up-arrow", Tone: "green", Hint: "Across all sales", ValueClass: SignClass(Model.TotalProfit)),
+        (Label: "Expenses", Value: Model.TotalExpenses, Icon: "bi-cash-stack", Tone: "orange", Hint: "All recorded expenses", ValueClass: null)
+    };
 }
 
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card stat-card p-3">
-            <div class="text-muted">Owned stock value</div>
-            <div class="fs-4 fw-semibold">@Model.OwnedStockValue.ToString("N2")</div>
+    @foreach (var card in cards)
+    {
+        <div class="col-sm-6 col-xl-3">
+            <div class="kpi-card" data-tone="@card.Tone">
+                <div class="kpi-icon"><i class="bi @card.Icon"></i></div>
+                <div class="kpi-body">
+                    <div class="kpi-label">@card.Label</div>
+                    <div class="kpi-value @card.ValueClass" title="@card.Value.ToString("N2")">@card.Value.ToString("N2")</div>
+                    <div class="kpi-hint">@card.Hint</div>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stat-card p-3">
-            <div class="text-muted">Receivables</div>
-            <div class="fs-4 fw-semibold">@Model.Receivables.ToString("N2")</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stat-card p-3">
-            <div class="text-muted">Payables</div>
-            <div class="fs-4 fw-semibold">@Model.Payables.ToString("N2")</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stat-card p-3">
-            <div class="text-muted">Today cash flow</div>
-            <div class="fs-4 fw-semibold">@Model.TodayCashFlow.ToString("N2")</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stat-card p-3">
-            <div class="text-muted">Commission (receivable + received)</div>
-            <div class="fs-4 fw-semibold">@Model.TotalCommission.ToString("N2")</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stat-card p-3">
-            <div class="text-muted">Profit</div>
-            <div class="fs-4 fw-semibold">@Model.TotalProfit.ToString("N2")</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stat-card p-3">
-            <div class="text-muted">Expenses</div>
-            <div class="fs-4 fw-semibold">@Model.TotalExpenses.ToString("N2")</div>
-        </div>
-    </div>
+    }
 </div>
 
 <div class="row g-3 mb-3">
     <div class="col-12">
         <div class="card stat-card">
-            <div class="card-header">Payment reminders</div>
+            <div class="card-header">Customer payments due <span class="text-muted small">· credit sales</span></div>
             <div class="card-body p-0">
                 <table class="table mb-0">
                     <thead><tr><th>Invoice</th><th>Buyer</th><th>Due date</th><th>Amount due</th><th></th><th></th></tr></thead>
@@ -69,7 +54,43 @@
                                 <td>@r.AmountDue.ToString("N2")</td>
                                 <td>@r.Status</td>
                                 <td>
-                                    <form asp-controller="SalesInvoices" asp-action="DismissReminder" asp-route-id="@r.InvoiceId" method="post" class="m-0">
+                                    <form asp-controller="SalesInvoices" asp-action="DismissReminder" asp-route-id="@r.InvoiceId" method="post" class="m-0"
+                                          data-confirm-title="Dismiss the reminder for @r.InvoiceNumber?" data-confirm="It won't appear on the dashboard again, even if the invoice is still unpaid." data-confirm-ok="Dismiss">
+                                        <button class="btn btn-sm btn-outline-secondary" type="submit" title="Dismiss this reminder">Dismiss</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-12">
+        <div class="card stat-card">
+            <div class="card-header">Supplier payments due <span class="text-muted small">· credit purchases</span></div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>GRN</th><th>Vendor</th><th>Due date</th><th>Amount due</th><th></th><th></th></tr></thead>
+                    <tbody>
+                        @if (!Model.PurchaseReminders.Any())
+                        {
+                            <tr><td colspan="6" class="text-muted">No upcoming or overdue supplier payments.</td></tr>
+                        }
+                        @foreach (var r in Model.PurchaseReminders)
+                        {
+                            <tr class="@(r.IsOverdue ? "table-danger" : "table-warning")">
+                                <td><a asp-controller="OwnedPurchases" asp-action="Index" asp-route-q="@r.GrnNumber">@r.GrnNumber</a></td>
+                                <td>@r.VendorName</td>
+                                <td>@r.DueDate.ToString("dd-MMM-yyyy")</td>
+                                <td>@r.AmountDue.ToString("N2")</td>
+                                <td>@r.Status</td>
+                                <td>
+                                    <form asp-controller="OwnedPurchases" asp-action="DismissReminder" asp-route-id="@r.PurchaseId" method="post" class="m-0"
+                                          data-confirm-title="Dismiss the reminder for @r.GrnNumber?" data-confirm="It won't appear on the dashboard again, even if the purchase is still unpaid." data-confirm-ok="Dismiss">
                                         <button class="btn btn-sm btn-outline-secondary" type="submit" title="Dismiss this reminder">Dismiss</button>
                                     </form>
                                 </td>

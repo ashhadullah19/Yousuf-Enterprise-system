@@ -23,6 +23,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<DastiEntry> DastiEntries => Set<DastiEntry>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -78,6 +79,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(v => v.SalesInvoice)
             .WithMany()
             .HasForeignKey(v => v.SalesInvoiceId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<LedgerEntry>()
+            .HasOne(v => v.OwnedPurchase)
+            .WithMany()
+            .HasForeignKey(v => v.OwnedPurchaseId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.Entity<LedgerEntry>()
             .HasOne(v => v.BankAccount)

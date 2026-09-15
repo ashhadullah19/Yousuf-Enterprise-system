@@ -14,6 +14,18 @@ public class PaymentReminder
     public string Status { get; set; } = string.Empty;
 }
 
+// A credit purchase whose payment to the vendor is due tomorrow, today, or overdue.
+public class PurchasePaymentReminder
+{
+    public int PurchaseId { get; set; }
+    public string GrnNumber { get; set; } = string.Empty;
+    public string VendorName { get; set; } = string.Empty;
+    public DateTime DueDate { get; set; }
+    public decimal AmountDue { get; set; }
+    public bool IsOverdue { get; set; }
+    public string Status { get; set; } = string.Empty;
+}
+
 public class ChequeReminder
 {
     public int LedgerEntryId { get; set; }
@@ -31,7 +43,8 @@ public class DashboardViewModel
     public decimal Receivables { get; set; }
     public decimal Payables { get; set; }
     public decimal TodayCashFlow { get; set; }
-    public decimal TotalCommission { get; set; }
+    public decimal CommissionReceivable { get; set; }
+    public decimal CommissionReceived { get; set; }
     public decimal TotalProfit { get; set; }
     public decimal TotalExpenses { get; set; }
     public List<ProductStockAlert> LowStock { get; set; } = new();
@@ -39,6 +52,7 @@ public class DashboardViewModel
 
     // NEW
     public List<PaymentReminder> PaymentReminders { get; set; } = new();
+    public List<PurchasePaymentReminder> PurchaseReminders { get; set; } = new();
     public List<ChequeReminder> ChequeReminders { get; set; } = new();
 }
 

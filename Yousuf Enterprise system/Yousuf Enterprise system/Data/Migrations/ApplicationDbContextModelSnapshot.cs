@@ -373,6 +373,37 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.ToTable("ConsignmentReceipts");
                 });
 
+            modelBuilder.Entity("Yousuf_Enterprise_system.Models.DastiEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Detail")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DastiEntries");
+                });
+
             modelBuilder.Entity("Yousuf_Enterprise_system.Models.Expense", b =>
                 {
                     b.Property<int>("Id")
@@ -456,6 +487,9 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.Property<int>("Mode")
                         .HasColumnType("int");
 
+                    b.Property<int?>("OwnedPurchaseId")
+                        .HasColumnType("int");
+
                     b.Property<int>("PartyId")
                         .HasColumnType("int");
 
@@ -476,6 +510,8 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BankAccountId");
+
+                    b.HasIndex("OwnedPurchaseId");
 
                     b.HasIndex("PartyId");
 
@@ -528,6 +564,9 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.Property<string>("Remarks")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("ReminderDismissed")
+                        .HasColumnType("bit");
 
                     b.Property<decimal>("TotalProductCost")
                         .HasColumnType("decimal(18,2)");
@@ -962,6 +1001,11 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                         .HasForeignKey("BankAccountId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Yousuf_Enterprise_system.Models.OwnedPurchase", "OwnedPurchase")
+                        .WithMany()
+                        .HasForeignKey("OwnedPurchaseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Yousuf_Enterprise_system.Models.Party", "Party")
                         .WithMany()
                         .HasForeignKey("PartyId")
@@ -974,6 +1018,8 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("BankAccount");
+
+                    b.Navigation("OwnedPurchase");
 
                     b.Navigation("Party");
 

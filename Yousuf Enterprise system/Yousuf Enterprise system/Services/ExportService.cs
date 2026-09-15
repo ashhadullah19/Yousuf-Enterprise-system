@@ -11,7 +11,6 @@ public interface IExportService
     Task<byte[]> ExportProductsAsync();
     Task<byte[]> ExportInvoicesAsync();
     Task<byte[]> ExportStockAsync();
-    Task<(int Parties, int Products)> ImportMastersAsync(Stream excelStream);
     Task<int> ImportPartiesAsync(Stream excelStream);
     Task<int> ImportProductsAsync(Stream excelStream);
     byte[] PartiesTemplate();
@@ -109,92 +108,8 @@ public class ExportService : IExportService
         return Save(workbook);
     }
 
-    public async Task<(int Parties, int Products)> ImportMastersAsync(Stream excelStream)
-    {
-        using var workbook = new XLWorkbook(excelStream);
-        var partiesAdded = 0;
-        var productsAdded = 0;
-
-        if (workbook.TryGetWorksheet("Parties", out var partySheet))
-        {
-            var used = partySheet.RangeUsed();
-            if (used is not null)
-            {
-                var existingPartyNames = (await _db.Parties.Select(p => p.FullName).ToListAsync())
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
-                var seenPartyNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                foreach (var row in used.RowsUsed().Skip(1))
-                {
-                    var name = row.Cell(1).GetString().Trim();
-                    if (string.IsNullOrWhiteSpace(name))
-                    {
-                        continue;
-                    }
-
-                    if (existingPartyNames.Contains(name) || !seenPartyNames.Add(name))
-                    {
-                        continue;
-                    }
-
-                    Enum.TryParse<PartyType>(row.Cell(2).GetString(), true, out var type);
-                    if (type == 0)
-                    {
-                        type = PartyType.Both;
-                    }
-
-                    _db.Parties.Add(new Party
-                    {
-                        FullName = name,
-                        Type = type,
-                        PrimaryContact = row.Cell(3).GetString(),
-                    });
-                    partiesAdded++;
-                }
-            }
-        }
-
-        if (workbook.TryGetWorksheet("Products", out var productSheet))
-        {
-            var used = productSheet.RangeUsed();
-            if (used is not null)
-            {
-                var existingProductNames = (await _db.Products.Select(p => p.Name).ToListAsync())
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
-                var seenProductNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                foreach (var row in used.RowsUsed().Skip(1))
-                {
-                    var name = row.Cell(1).GetString().Trim();
-                    if (string.IsNullOrWhiteSpace(name) || existingProductNames.Contains(name) || !seenProductNames.Add(name))
-                    {
-                        continue;
-                    }
-
-                    Enum.TryParse<UnitOfMeasure>(row.Cell(2).GetString(), true, out var uom);
-                    if (uom == 0)
-                    {
-                        uom = UnitOfMeasure.KG;
-                    }
-
-                    _db.Products.Add(new Product
-                    {
-                        Name = name,
-                        Uom = uom,
-                        Description = row.Cell(3).GetString(),
-                        IsActive = true
-                    });
-                    productsAdded++;
-                }
-            }
-        }
-
-        await _db.SaveChangesAsync();
-        return (partiesAdded, productsAdded);
-    }
-
     // Reads the first worksheet's header row and matches columns by name (case-insensitive),
-    // so each page's import doesn't depend on a fixed sheet name like the combined importer does.
+    // so imports don't depend on a fixed sheet name or column order.
     private static Dictionary<string, int> ReadHeaders(ClosedXML.Excel.IXLWorksheet sheet)
     {
         var columns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);

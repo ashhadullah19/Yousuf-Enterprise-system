@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Yousuf_Enterprise_system.Data;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.Services;
+using Yousuf_Enterprise_system.ViewModels;
 
 namespace Yousuf_Enterprise_system.Controllers;
 
@@ -24,7 +25,155 @@ public class ReportsController : Controller
         _invoices = invoices;
     }
 
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index(string? period, DateTime? from, DateTime? to)
+    {
+        var today = DateTime.Today;
+        if (from.HasValue || to.HasValue)
+        {
+            period = "custom";
+        }
+
+        DateTime? start = null;
+        DateTime? end = null;
+        switch (period)
+        {
+            case "month":
+                start = new DateTime(today.Year, today.Month, 1);
+                end = today;
+                break;
+            case "30d":
+                start = today.AddDays(-29);
+                end = today;
+                break;
+            case "all":
+                break;
+            case "custom":
+                start = from?.Date;
+                end = to?.Date;
+                if (start > end)
+                {
+                    (start, end) = (end, start);
+                }
+                break;
+            default:
+                period = "year";
+                start = new DateTime(today.Year, 1, 1);
+                end = today;
+                break;
+        }
+
+        var invoices = _db.SalesInvoices.AsNoTracking();
+        var expenses = _db.Expenses.AsNoTracking();
+        if (start.HasValue)
+        {
+            var startDate = start.Value;
+            invoices = invoices.Where(i => i.InvoiceDate >= startDate);
+            expenses = expenses.Where(e => e.ExpenseDate >= startDate);
+        }
+        if (end.HasValue)
+        {
+            var endExclusive = end.Value.AddDays(1);
+            invoices = invoices.Where(i => i.InvoiceDate < endExclusive);
+            expenses = expenses.Where(e => e.ExpenseDate < endExclusive);
+        }
+
+        var model = new ReportsViewModel
+        {
+            Period = period!,
+            PeriodLabel = BuildPeriodLabel(period!, start, end),
+            From = start,
+            To = end,
+            Sales = await invoices.SumAsync(i => (decimal?)i.GrandTotalAmount) ?? 0,
+            Subtotal = await invoices.SumAsync(i => (decimal?)i.SubtotalAmount) ?? 0,
+            GrossProfit = await invoices.SumAsync(i => (decimal?)i.ProfitAmount) ?? 0,
+            InvoiceCount = await invoices.CountAsync(),
+            OwnedSales = await invoices.Where(i => i.StockType == StockType.OwnedStock).SumAsync(i => (decimal?)i.SubtotalAmount) ?? 0,
+            GstSales = await invoices.Where(i => i.ApplyGst).SumAsync(i => (decimal?)i.SubtotalAmount) ?? 0,
+            Expenses = await expenses.SumAsync(e => (decimal?)e.Amount) ?? 0
+        };
+
+        // Names are looked up ignoring the soft-delete filter so a deleted party or product's
+        // past sales still count toward the rankings instead of silently dropping out.
+        var buyerTotals = await invoices
+            .GroupBy(i => i.BuyerId)
+            .Select(g => new { Id = g.Key, Amount = g.Sum(i => i.GrandTotalAmount), Count = g.Count() })
+            .OrderByDescending(x => x.Amount)
+            .Take(5)
+            .ToListAsync();
+        var buyerIds = buyerTotals.Select(b => b.Id).ToList();
+        var buyerNames = await _db.Parties.IgnoreQueryFilters().AsNoTracking()
+            .Where(p => buyerIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, p => p.FullName);
+        model.TopBuyers = buyerTotals
+            .Select(b => new RankedAmount { Name = buyerNames.GetValueOrDefault(b.Id, "Unknown"), Amount = b.Amount, Count = b.Count })
+            .ToList();
+
+        var productTotals = await invoices
+            .GroupBy(i => i.ProductId)
+            .Select(g => new { Id = g.Key, Amount = g.Sum(i => i.SubtotalAmount), Count = g.Count() })
+            .OrderByDescending(x => x.Amount)
+            .Take(5)
+            .ToListAsync();
+        var productIds = productTotals.Select(p => p.Id).ToList();
+        var productNames = await _db.Products.IgnoreQueryFilters().AsNoTracking()
+            .Where(p => productIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, p => p.Name);
+        model.TopProducts = productTotals
+            .Select(p => new RankedAmount { Name = productNames.GetValueOrDefault(p.Id, "Unknown"), Amount = p.Amount, Count = p.Count })
+            .ToList();
+
+        var firstMonth = new DateTime(today.Year, today.Month, 1).AddMonths(-11);
+        var monthlyRaw = await _db.SalesInvoices.AsNoTracking()
+            .Where(i => i.InvoiceDate >= firstMonth)
+            .GroupBy(i => new { i.InvoiceDate.Year, i.InvoiceDate.Month })
+            .Select(g => new
+            {
+                g.Key.Year,
+                g.Key.Month,
+                Sales = g.Sum(i => i.GrandTotalAmount),
+                Profit = g.Sum(i => i.ProfitAmount),
+                Count = g.Count()
+            })
+            .ToListAsync();
+        model.Monthly = Enumerable.Range(0, 12)
+            .Select(offset => firstMonth.AddMonths(offset))
+            .Select(month =>
+            {
+                var row = monthlyRaw.FirstOrDefault(r => r.Year == month.Year && r.Month == month.Month);
+                return new MonthlySales { Month = month, Sales = row?.Sales ?? 0, Profit = row?.Profit ?? 0, Count = row?.Count ?? 0 };
+            })
+            .ToList();
+
+        var balances = await _ledger.GetAllPartyBalancesAsync();
+        var partyNames = await _db.Parties.AsNoTracking().ToDictionaryAsync(p => p.Id, p => p.FullName);
+        model.TotalReceivable = Math.Round(balances.Values.Sum(b => b.Receivable), 2);
+        model.TotalPayable = Math.Round(balances.Values.Sum(b => b.Payable), 2);
+        model.TopReceivables = balances
+            .Where(b => b.Value.Receivable > 0 && partyNames.ContainsKey(b.Key))
+            .OrderByDescending(b => b.Value.Receivable)
+            .Take(5)
+            .Select(b => new RankedAmount { Name = partyNames[b.Key], Amount = b.Value.Receivable })
+            .ToList();
+        model.TopPayables = balances
+            .Where(b => b.Value.Payable > 0 && partyNames.ContainsKey(b.Key))
+            .OrderByDescending(b => b.Value.Payable)
+            .Take(5)
+            .Select(b => new RankedAmount { Name = partyNames[b.Key], Amount = b.Value.Payable })
+            .ToList();
+
+        return View(model);
+    }
+
+    private static string BuildPeriodLabel(string period, DateTime? start, DateTime? end) => period switch
+    {
+        "month" => $"This month ({start:dd MMM} – {end:dd MMM yyyy})",
+        "30d" => $"Last 30 days ({start:dd MMM} – {end:dd MMM yyyy})",
+        "year" => $"This year ({start:dd MMM} – {end:dd MMM yyyy})",
+        "all" => "All time",
+        _ when start.HasValue && end.HasValue => $"{start:dd MMM yyyy} – {end:dd MMM yyyy}",
+        _ when start.HasValue => $"From {start:dd MMM yyyy}",
+        _ => $"Up to {end:dd MMM yyyy}"
+    };
 
     public async Task<IActionResult> PartyLedger(int? partyId, DateTime? from, DateTime? to)
     {
@@ -38,11 +187,7 @@ public class ReportsController : Controller
         }
 
         var lines = await _ledger.GetPartyLedgerAsync(partyId.Value, from, to);
-        ViewBag.DuesBalance = lines.Where(l => l.Head == HeadType.DirectProductHead).Sum(l => l.Debit - l.Credit);
-        var commissionLines = lines.Where(l => l.Head == HeadType.CommissionHead).ToList();
-        ViewBag.CommissionAccrued = commissionLines.Sum(l => l.Credit);
-        ViewBag.CommissionReceived = commissionLines.Sum(l => l.Debit);
-        ViewBag.CommissionReceivable = ViewBag.CommissionAccrued - ViewBag.CommissionReceived;
+        ViewBag.Balance = PartyCommissionBalance.FromLedger(lines);
         return View(lines);
     }
 
@@ -71,20 +216,5 @@ public class ReportsController : Controller
             _ => (await _export.ExportStockAsync(), "stock.xlsx")
         };
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", name);
-    }
-
-    [ModulePermission(Modules.Reports, edit: true)]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Import(IFormFile file)
-    {
-        if (file is { Length: > 0 })
-        {
-            await using var stream = file.OpenReadStream();
-            var result = await _export.ImportMastersAsync(stream);
-            TempData["Message"] = $"Imported {result.Parties} parties and {result.Products} products.";
-        }
-
-        return RedirectToAction(nameof(Index));
     }
 }

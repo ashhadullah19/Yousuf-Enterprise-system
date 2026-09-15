@@ -3,95 +3,153 @@
     ViewData["Title"] = "Add ledger entry";
 }
 
-<form asp-action="Create" method="post" class="card stat-card p-4">
+<form asp-action="Create" method="post" class="app-form"
+      data-confirm-title="Post this ledger entry?"
+      data-confirm="Ledger entries can't be edited once they're posted."
+      data-confirm-ok="Yes, post entry">
     <div asp-validation-summary="All" class="text-danger"></div>
-    <div class="row g-3">
-        <div class="col-md-4">
-            <label asp-for="LedgerNumber" class="form-label"></label>
-            <input asp-for="LedgerNumber" class="form-control" readonly />
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-journal-text"></i> Entry</div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label asp-for="LedgerNumber" class="form-label"></label>
+                <input asp-for="LedgerNumber" class="form-control" readonly />
+            </div>
+            <div class="col-md-4">
+                <label asp-for="LedgerDate" class="form-label"></label>
+                <input asp-for="LedgerDate" type="date" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label asp-for="PartyId" class="form-label required"></label>
+                <select asp-for="PartyId" asp-items="ViewBag.Parties" class="form-select" id="partySelect">
+                    <option value="">-- select party --</option>
+                </select>
+                <span asp-validation-for="PartyId" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Type" class="form-label"></label>
+                <select asp-for="Type" asp-items="Html.GetEnumSelectList<LedgerEntryType>()" class="form-select" id="entryType"></select>
+            </div>
+            <div class="col-md-4" id="invoiceRow">
+                <label asp-for="SalesInvoiceId" class="form-label"></label>
+                <select asp-for="SalesInvoiceId" class="form-select" id="invoiceSelect">
+                    <option value="">-- none --</option>
+                </select>
+                <span asp-validation-for="SalesInvoiceId" class="text-danger"></span>
+                <small class="text-muted">Only for "Payment Received" — settles the selected invoice's outstanding due.</small>
+            </div>
+            <div class="col-md-4" id="purchaseRow">
+                <label asp-for="OwnedPurchaseId" class="form-label"></label>
+                <select asp-for="OwnedPurchaseId" class="form-select" id="purchaseSelect">
+                    <option value="">-- none --</option>
+                </select>
+                <span asp-validation-for="OwnedPurchaseId" class="text-danger"></span>
+                <small class="text-muted">Only for "Payment Paid" — settles the selected purchase and clears its payment reminder.</small>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Head" class="form-label"></label>
+                <select asp-for="Head" asp-items="Html.GetEnumSelectList<HeadType>()" class="form-select" id="headSelect"></select>
+                <small class="text-muted" id="contraHeadNote" style="display:none;">Contra adjustment always applies to Direct Product.</small>
+            </div>
         </div>
-        <div class="col-md-4">
-            <label asp-for="LedgerDate" class="form-label"></label>
-            <input asp-for="LedgerDate" type="date" class="form-control" />
+    </section>
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-cash-coin"></i> Payment details</div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label asp-for="Mode" class="form-label"></label>
+                <select asp-for="Mode" asp-items="Html.GetEnumSelectList<PaymentMode>()" class="form-select" id="modeSelect" data-online-value="@((int)PaymentMode.OnlineBankTransfer)" data-cheque-value="@((int)PaymentMode.Cheque)"></select>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Amount" class="form-label required"></label>
+                <input asp-for="Amount" class="form-control" />
+                <span asp-validation-for="Amount" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="ReferenceNumber" class="form-label"></label>
+                <input asp-for="ReferenceNumber" class="form-control" />
+            </div>
+            <div class="col-md-4" id="bankAccountRow">
+                <label asp-for="BankAccountId" class="form-label"></label>
+                <select asp-for="BankAccountId" asp-items="ViewBag.BankAccounts" class="form-select">
+                    <option value="">-- select account --</option>
+                </select>
+                <small class="text-muted">Posts a matching entry to that account's Bank Transactions.</small>
+            </div>
+            <div class="col-md-4" id="chequeDateRow">
+                <label asp-for="ChequeDate" class="form-label"></label>
+                <input asp-for="ChequeDate" type="date" class="form-control" />
+                <small class="text-muted">Shows as a dashboard reminder ahead of this date.</small>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="BankName" class="form-label"></label>
+                <input asp-for="BankName" class="form-control" />
+            </div>
+            <div class="col-12">
+                <label asp-for="Remarks" class="form-label"></label>
+                <textarea asp-for="Remarks" class="form-control" rows="2"></textarea>
+                <div class="form-text">Contra adjustment posts only after Super Admin approval (unless you are Super Admin).</div>
+            </div>
         </div>
-        <div class="col-md-4">
-            <label asp-for="PartyId" class="form-label required"></label>
-            <select asp-for="PartyId" asp-items="ViewBag.Parties" class="form-select" id="partySelect">
-                <option value="">-- select party --</option>
-            </select>
-            <span asp-validation-for="PartyId" class="text-danger"></span>
-        </div>
-        <div class="col-md-4">
-            <label asp-for="Type" class="form-label"></label>
-            <select asp-for="Type" asp-items="Html.GetEnumSelectList<LedgerEntryType>()" class="form-select" id="entryType"></select>
-        </div>
-        <div class="col-md-4" id="invoiceRow">
-            <label asp-for="SalesInvoiceId" class="form-label"></label>
-            <select asp-for="SalesInvoiceId" class="form-select" id="invoiceSelect">
-                <option value="">-- none --</option>
-            </select>
-            <span asp-validation-for="SalesInvoiceId" class="text-danger"></span>
-            <small class="text-muted">Only shown for "Payment Received" — settles the selected invoice's outstanding due.</small>
-        </div>
-        <div class="col-md-4">
-            <label asp-for="Head" class="form-label"></label>
-            <select asp-for="Head" asp-items="Html.GetEnumSelectList<HeadType>()" class="form-select" id="headSelect"></select>
-            <small class="text-muted" id="contraHeadNote" style="display:none;">Contra adjustment always applies to Direct Product.</small>
-        </div>
-        <div class="col-md-4">
-            <label asp-for="Mode" class="form-label"></label>
-            <select asp-for="Mode" asp-items="Html.GetEnumSelectList<PaymentMode>()" class="form-select" id="modeSelect" data-online-value="@((int)PaymentMode.OnlineBankTransfer)" data-cheque-value="@((int)PaymentMode.Cheque)"></select>
-        </div>
-        <div class="col-md-4">
-            <label asp-for="Amount" class="form-label required"></label>
-            <input asp-for="Amount" class="form-control" />
-            <span asp-validation-for="Amount" class="text-danger"></span>
-        </div>
-        <div class="col-md-4">
-            <label asp-for="ReferenceNumber" class="form-label"></label>
-            <input asp-for="ReferenceNumber" class="form-control" />
-        </div>
-        <div class="col-md-4" id="bankAccountRow">
-            <label asp-for="BankAccountId" class="form-label"></label>
-            <select asp-for="BankAccountId" asp-items="ViewBag.BankAccounts" class="form-select">
-                <option value="">-- select account --</option>
-            </select>
-            <small class="text-muted">Posts a matching entry to that account's Bank Transactions.</small>
-        </div>
-        <div class="col-md-4" id="chequeDateRow">
-            <label asp-for="ChequeDate" class="form-label"></label>
-            <input asp-for="ChequeDate" type="date" class="form-control" />
-            <small class="text-muted">Shows as a dashboard reminder ahead of this date.</small>
-        </div>
-        <div class="col-md-4">
-            <label asp-for="BankName" class="form-label"></label>
-            <input asp-for="BankName" class="form-control" />
-        </div>
-        <div class="col-12">
-            <label asp-for="Remarks" class="form-label"></label>
-            <textarea asp-for="Remarks" class="form-control"></textarea>
-        </div>
+    </section>
+
+    <div class="form-actions">
+        <a class="btn btn-light" asp-action="Index" data-modal-cancel>Cancel</a>
+        <button class="btn btn-success" type="submit"><i class="bi bi-check2"></i> Post entry</button>
     </div>
-    <p class="small text-muted mt-3">Contra adjustment posts only after Super Admin approval (unless you are Super Admin).</p>
-    <button class="btn btn-success">Save</button>
-    <a class="btn btn-link" asp-action="Index">Cancel</a>
 </form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
         const selectedInvoiceId = "@Model.SalesInvoiceId";
+        const selectedPurchaseId = "@Model.OwnedPurchaseId";
+        const loadTokens = {};
 
-        function toggleInvoiceRow() {
+        // Changing party and type in quick succession starts overlapping loads; only the latest
+        // one per list may fill it, otherwise each appends its results and entries appear twice.
+        async function loadOptions(selectId, url, selectedId) {
+            const request = (loadTokens[selectId] || 0) + 1;
+            loadTokens[selectId] = request;
+            const partyId = document.getElementById('partySelect').value;
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">-- none --</option>';
+            if (!partyId) return;
+            try {
+                const res = await fetch(`${url}?partyId=${partyId}`);
+                const items = await res.json();
+                if (request !== loadTokens[selectId]) return;
+                select.innerHTML = '<option value="">-- none --</option>';
+                for (const item of items) {
+                    const opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = item.label;
+                    if (String(item.id) === selectedId) opt.selected = true;
+                    select.appendChild(opt);
+                }
+            } catch { /* ignore */ }
+        }
+
+        function toggleTypeRows() {
             const typeValue = document.getElementById('entryType').value;
             const isReceived = typeValue === '@((int)LedgerEntryType.PaymentReceived)';
+            const isPaid = typeValue === '@((int)LedgerEntryType.PaymentPaid)';
             const isContra = typeValue === '@((int)LedgerEntryType.ContraAdjustment)';
 
             document.getElementById('invoiceRow').style.display = isReceived ? '' : 'none';
-            if (!isReceived) {
-                document.getElementById('invoiceSelect').value = '';
+            if (isReceived) {
+                loadOptions('invoiceSelect', '/LedgerEntries/OutstandingInvoices', selectedInvoiceId);
             } else {
-                loadOutstandingInvoices();
+                document.getElementById('invoiceSelect').value = '';
+            }
+
+            document.getElementById('purchaseRow').style.display = isPaid ? '' : 'none';
+            if (isPaid) {
+                loadOptions('purchaseSelect', '/LedgerEntries/OutstandingPurchases', selectedPurchaseId);
+            } else {
+                document.getElementById('purchaseSelect').value = '';
             }
 
             // Contra netting only ever applies to Direct Product (dues) — lock the Head field.
@@ -103,34 +161,16 @@
             }
         }
 
-        async function loadOutstandingInvoices() {
-            const partyId = document.getElementById('partySelect').value;
-            const select = document.getElementById('invoiceSelect');
-            select.innerHTML = '<option value="">-- none --</option>';
-            if (!partyId) return;
-            try {
-                const res = await fetch(`/LedgerEntries/OutstandingInvoices?partyId=${partyId}`);
-                const invoices = await res.json();
-                for (const inv of invoices) {
-                    const opt = document.createElement('option');
-                    opt.value = inv.id;
-                    opt.textContent = inv.label;
-                    if (String(inv.id) === selectedInvoiceId) opt.selected = true;
-                    select.appendChild(opt);
-                }
-            } catch { /* ignore */ }
-        }
-
         function toggleModeFields() {
             const el = document.getElementById('modeSelect');
             document.getElementById('bankAccountRow').style.display = el.value === el.dataset.onlineValue ? '' : 'none';
             document.getElementById('chequeDateRow').style.display = el.value === el.dataset.chequeValue ? '' : 'none';
         }
 
-        document.getElementById('entryType').addEventListener('change', toggleInvoiceRow);
-        document.getElementById('partySelect').addEventListener('change', loadOutstandingInvoices);
+        document.getElementById('entryType').addEventListener('change', toggleTypeRows);
+        document.getElementById('partySelect').addEventListener('change', toggleTypeRows);
         document.getElementById('modeSelect').addEventListener('change', toggleModeFields);
-        toggleInvoiceRow();
+        toggleTypeRows();
         toggleModeFields();
     </script>
 }

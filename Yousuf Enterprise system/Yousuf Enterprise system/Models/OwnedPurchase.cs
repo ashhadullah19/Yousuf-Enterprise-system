@@ -50,6 +50,9 @@ public class OwnedPurchase
     [Display(Name = "Due Date"), DataType(DataType.Date)]
     public DateTime? DueDate { get; set; }
 
+    // Lets a supplier payment reminder be hidden from the dashboard without settling the purchase.
+    public bool ReminderDismissed { get; set; }
+
     [StringLength(1000)]
     public string? Remarks { get; set; }
 

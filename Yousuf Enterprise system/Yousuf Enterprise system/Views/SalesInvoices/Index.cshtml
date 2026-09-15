@@ -4,25 +4,25 @@
     var amountPaid = ViewBag.AmountPaid as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
 }
 
-<form class="row g-2 mb-3" method="get">
-    <div class="col-md-4"><input class="form-control" name="q" value="@ViewBag.Query" placeholder="Invoice, buyer, product..." /></div>
-    <div class="col-md-2">
-        <select name="gst" class="form-select" onchange="this.form.submit()">
+<div class="list-toolbar">
+    <div class="list-toolbar-actions">
+        <a class="btn btn-success" asp-action="Create" data-modal><i class="bi bi-plus-lg"></i> Create invoice</a>
+    </div>
+    <form class="list-toolbar-filters" method="get">
+        <div class="form-check mb-0">
+            <input class="form-check-input" type="checkbox" id="overdueOnly" name="overdueOnly" value="true"
+            @(ViewBag.OverdueOnly == true ? "checked" : "") onchange="this.form.submit()" />
+            <label class="form-check-label" for="overdueOnly">Overdue only</label>
+        </div>
+        <select name="gst" class="form-select" onchange="this.form.submit()" aria-label="Tax">
             <option value="">All tax</option>
             <option value="true" selected="@(ViewBag.Gst is true)">GST</option>
             <option value="false" selected="@(ViewBag.Gst is false)">Non-GST</option>
         </select>
-    </div>
-    <div class="col-md-2 d-flex align-items-center">
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="overdueOnly" value="true"
-            @(ViewBag.OverdueOnly == true ? "checked" : "") onchange="this.form.submit()" />
-            <label class="form-check-label">Overdue only</label>
-        </div>
-    </div>
-    <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
-    <div class="col-auto"><a class="btn btn-success" asp-action="Create">Create invoice</a></div>
-</form>
+        <input class="form-control filter-search" name="q" value="@ViewBag.Query" placeholder="Invoice, buyer, product..." aria-label="Search invoices" />
+        <button class="btn btn-outline-secondary">Search</button>
+    </form>
+</div>
 
 <div class="table-card">
 <table class="table table-striped">
