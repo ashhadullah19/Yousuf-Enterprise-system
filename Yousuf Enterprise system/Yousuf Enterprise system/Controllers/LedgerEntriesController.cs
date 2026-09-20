@@ -68,6 +68,9 @@ public class LedgerEntriesController : Controller
             // it to Commission would post equal Debit+Credit to that head, corrupting the
             // Accrued/Received split there, so it's always forced to Direct Product.
             entry.Head = HeadType.DirectProductHead;
+            // No money actually moves for a contra — it's a paper netting, not a cash/cheque/bank
+            // transfer — so Mode is forced regardless of what the (hidden, for this type) form field posted.
+            entry.Mode = PaymentMode.Cash;
             entry.ApprovedByAdmin = User.IsInRole(AppRoles.SuperAdmin);
             var party = await _db.Parties.AsNoTracking().FirstOrDefaultAsync(p => p.Id == entry.PartyId);
             if (party is null || party.Type != PartyType.Both)

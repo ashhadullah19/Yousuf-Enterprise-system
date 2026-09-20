@@ -18,7 +18,14 @@ body.app-body {
 .app-sidebar {
   width: 250px;
   flex-shrink: 0;
-  background: #14332b;
+  /* Same photo and green wash as the sign-in page; darker at the top and bottom so the
+     brand and the last links stay readable while the picture shows through the middle. */
+  background-color: #14332b;
+  background-image:
+    linear-gradient(180deg, rgba(20, 51, 43, 0.97) 0%, rgba(20, 72, 63, 0.88) 45%, rgba(20, 51, 43, 0.97) 100%),
+    url("/images/login.webp");
+  background-size: cover;
+  background-position: 62% center;
   color: #fff;
   height: 100vh;
   padding: 1.25rem 0.75rem;
@@ -87,7 +94,10 @@ html.sidebar-collapsed .app-sidebar .label {
 html.sidebar-collapsed .app-sidebar .brand {
   padding-left: 0;
   padding-right: 0;
+  padding-bottom: 1rem;
   justify-content: center;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 html.sidebar-collapsed .sidebar-toggle {
@@ -139,14 +149,36 @@ html.sidebar-collapsed .app-sidebar .nav-section {
 }
 
 .app-sidebar .nav-link:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
 .app-sidebar .nav-link.active {
-  background: #2f6f5e;
+  background: rgba(47, 111, 94, 0.85);
+  box-shadow: inset 3px 0 0 #7fd1b9, 0 4px 12px rgba(0, 0, 0, 0.18);
   color: #fff;
   font-weight: 600;
+}
+
+.app-sidebar .nav-link.active i {
+  opacity: 1;
+  color: #b9efdc;
+}
+
+.sidebar-mark {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: #2f6f5e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .app-main {
@@ -180,16 +212,293 @@ html.sidebar-collapsed .app-sidebar .nav-section {
   padding: 1.5rem;
 }
 
+/* Sign-in page: brand panel (photo under a green wash) beside a clean form. */
 .auth-shell {
   min-height: 100vh;
   width: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-image: linear-gradient(160deg, rgba(10, 20, 30, 0.55), rgba(10, 20, 30, 0.55)), url("/images/login.webp");
+  background: #fff;
+}
+
+.auth-split {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.auth-brand {
+  flex: 1 1 52%;
+  position: relative;
+  display: none;
+  color: #fff;
+  background-image:
+    linear-gradient(155deg, rgba(20, 51, 43, 0.94) 0%, rgba(20, 90, 82, 0.86) 60%, rgba(20, 128, 122, 0.78) 100%),
+    url("/images/login.webp");
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
+}
+
+.auth-brand-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+  height: 100%;
+  padding: 2.5rem 3rem;
+}
+
+.auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.01em;
+}
+
+.auth-mark {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.7rem;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: #2f6f5e;
+  box-shadow: 0 6px 16px rgba(20, 51, 43, 0.25);
+}
+
+.auth-hero h1 {
+  max-width: 26rem;
+  margin: 0 0 0.9rem;
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.auth-hero p {
+  max-width: 26rem;
+  margin: 0 0 1.75rem;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.auth-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.auth-points li {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.auth-points i {
+  flex-shrink: 0;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.6rem;
+  font-size: 1.05rem;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.auth-foot {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.auth-panel {
+  flex: 1 1 48%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  background: #f4f6f8;
+}
+
+.auth-form-wrap {
+  width: 100%;
+  max-width: 26rem;
+  padding: 2rem 1.75rem;
+  background: #fff;
+  border: 1px solid #eef1f2;
+  border-radius: 1rem;
+  box-shadow: 0 12px 32px rgba(20, 51, 43, 0.1);
+}
+
+.auth-logo-compact {
+  margin-bottom: 1.5rem;
+  color: #1f2d28;
+}
+
+.auth-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #1f2d28;
+}
+
+.auth-subtitle {
+  margin: 0 0 1.5rem;
+  color: #6b7871;
+}
+
+.auth-field {
+  margin-bottom: 1.1rem;
+}
+
+.auth-field .form-label {
+  margin-bottom: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #3d4c46;
+}
+
+.auth-field .input-group-text {
+  color: #7c8a84;
+  background: #f7f9f8;
+  border-color: #dfe5e2;
+}
+
+.auth-field .form-control {
+  padding: 0.6rem 0.75rem;
+  border-color: #dfe5e2;
+}
+
+.auth-field .form-control:focus {
+  border-color: #2f6f5e;
+  box-shadow: 0 0 0 0.2rem rgba(47, 111, 94, 0.18);
+}
+
+.auth-field .input-group:focus-within .input-group-text,
+.auth-field .input-group:focus-within .auth-toggle {
+  border-color: #2f6f5e;
+  color: #2f6f5e;
+}
+
+.auth-toggle {
+  color: #7c8a84;
+  background: #f7f9f8;
+  border: 1px solid #dfe5e2;
+  border-left: 0;
+}
+
+.auth-toggle:hover {
+  color: #1f2d28;
+  background: #eef1f2;
+}
+
+.auth-remember {
+  margin-bottom: 1.4rem;
+  font-size: 0.9rem;
+  color: #4a5a55;
+}
+
+.auth-remember .form-check-input:checked {
+  background-color: #2f6f5e;
+  border-color: #2f6f5e;
+}
+
+.auth-submit {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: #2f6f5e;
+  border: 0;
+  border-radius: 0.6rem;
+  box-shadow: 0 6px 16px rgba(47, 111, 94, 0.28);
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-submit:hover:not(:disabled) {
+  color: #fff;
+  background: #14332b;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(20, 51, 43, 0.3);
+}
+
+.auth-submit:disabled {
+  color: #fff;
+  background: #2f6f5e;
+  opacity: 0.85;
+}
+
+.auth-submit-spinner {
+  display: none;
+  margin-left: 0.5rem;
+}
+
+.auth-submit.is-loading .auth-submit-spinner {
+  display: inline-block;
+}
+
+.auth-error {
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.6rem;
+  font-size: 0.88rem;
+  color: #b02a37;
+  background: rgba(220, 53, 69, 0.09);
+  border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.auth-error.validation-summary-valid {
+  display: none;
+}
+
+.auth-error ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.auth-demo {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eef1f2;
+  font-size: 0.82rem;
+}
+
+.auth-demo summary {
+  cursor: pointer;
+  color: #6b7871;
+}
+
+.auth-demo div {
+  margin-top: 0.6rem;
+}
+
+@media (min-width: 992px) {
+  .auth-brand {
+    display: block;
+  }
+
+  .auth-panel {
+    background: #fff;
+  }
+
+  .auth-form-wrap {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .auth-logo-compact {
+    display: none;
+  }
 }
 
 .stat-card {
@@ -277,6 +586,229 @@ html.sidebar-collapsed .app-sidebar .nav-section {
 .kpi-card[data-tone="amber"] { --kpi-accent: #d98a00; --kpi-soft: rgba(217, 138, 0, 0.14); }
 .kpi-card[data-tone="purple"] { --kpi-accent: #6f42c1; --kpi-soft: rgba(111, 66, 193, 0.12); }
 .kpi-card[data-tone="orange"] { --kpi-accent: #e8590c; --kpi-soft: rgba(232, 89, 12, 0.12); }
+
+/* Dashboard reminder cards: a header with a count, then one row per pending item. The row's
+   left stripe and pill carry urgency (overdue / today / soon); the header tone is per panel. */
+.reminder-panel {
+  --rem-accent: #d98a00;
+  --rem-soft: rgba(217, 138, 0, 0.14);
+  height: 100%;
+  background: #fff;
+  border: 1px solid #eef1f2;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 24px rgba(20, 51, 43, 0.08);
+  overflow: hidden;
+}
+
+.reminder-panel[data-tone="green"] { --rem-accent: #198754; --rem-soft: rgba(25, 135, 84, 0.12); }
+.reminder-panel[data-tone="red"] { --rem-accent: #dc3545; --rem-soft: rgba(220, 53, 69, 0.12); }
+.reminder-panel[data-tone="blue"] { --rem-accent: #0d6efd; --rem-soft: rgba(13, 110, 253, 0.12); }
+
+.reminder-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #eef1f2;
+}
+
+.reminder-header-icon {
+  flex-shrink: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  color: var(--rem-accent);
+  background: var(--rem-soft);
+}
+
+.reminder-header-text {
+  min-width: 0;
+  flex: 1;
+  line-height: 1.25;
+}
+
+.reminder-header-text h2 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #1f2d28;
+}
+
+.reminder-header-text span {
+  font-size: 0.75rem;
+  color: #8a978f;
+}
+
+.reminder-count {
+  min-width: 1.6rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--rem-accent);
+  background: var(--rem-soft);
+}
+
+.reminder-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.75rem 1rem;
+  color: #8a978f;
+  font-size: 0.9rem;
+}
+
+.reminder-empty i {
+  font-size: 1.3rem;
+  color: #198754;
+}
+
+.reminder-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem 0;
+}
+
+.reminder-item {
+  --state: #d98a00;
+  --state-soft: rgba(217, 138, 0, 0.14);
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0.8rem 1.25rem 0.8rem 1.4rem;
+  transition: background 0.15s ease;
+}
+
+.reminder-item + .reminder-item {
+  border-top: 1px solid #f1f4f3;
+}
+
+.reminder-item::before {
+  content: "";
+  position: absolute;
+  inset: 0.65rem auto 0.65rem 0;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--state);
+}
+
+.reminder-item:hover {
+  background: #f8faf9;
+}
+
+.reminder-item.is-overdue { --state: #dc3545; --state-soft: rgba(220, 53, 69, 0.12); }
+.reminder-item.is-today { --state: #e8590c; --state-soft: rgba(232, 89, 12, 0.12); }
+.reminder-item.is-soon { --state: #d98a00; --state-soft: rgba(217, 138, 0, 0.14); }
+.reminder-item.is-neutral { --state: #14807a; --state-soft: rgba(20, 128, 122, 0.12); }
+
+.reminder-panel[data-tone="orange"] { --rem-accent: #e8590c; --rem-soft: rgba(232, 89, 12, 0.12); }
+
+.reminder-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--rem-accent);
+}
+
+.reminder-link:hover {
+  text-decoration: underline;
+}
+
+.reminder-main {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.reminder-title {
+  font-weight: 600;
+  color: #1f2d28;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reminder-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  font-size: 0.78rem;
+  color: #6b7871;
+}
+
+.reminder-meta a {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.reminder-meta a:hover {
+  text-decoration: underline;
+}
+
+.reminder-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #b7c1bc;
+}
+
+.reminder-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  margin-left: auto;
+}
+
+.reminder-amount {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #1f2d28;
+  font-variant-numeric: tabular-nums;
+}
+
+.reminder-pill {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--state);
+  background: var(--state-soft);
+}
+
+.reminder-dismiss-form {
+  margin: 0;
+}
+
+.reminder-dismiss {
+  width: 1.9rem;
+  height: 1.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #9aa6a0;
+  font-size: 0.8rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.reminder-dismiss:hover,
+.reminder-dismiss:focus-visible {
+  background: #eef1f2;
+  color: #1f2d28;
+}
 
 /* List page toolbar: search on the left, actions on the right. */
 .list-toolbar {
@@ -1138,6 +1670,12 @@ a.report-tool:hover {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
     text-align: left;
+  }
+
+  html.sidebar-collapsed .app-sidebar .brand {
+    flex-direction: row;
+    gap: 0.5rem;
+    padding-bottom: 1.5rem;
   }
 
   .sidebar-toggle {

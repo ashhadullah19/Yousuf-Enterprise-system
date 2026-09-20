@@ -14,7 +14,7 @@
     <p>@(Model.ApplyGst ? "GST Invoice" : "Non-GST Invoice") · @Model.InvoiceDate.ToString("dd-MMM-yyyy")</p>
     <p>Buyer: @Model.Buyer?.FullName</p>
     <p>
-        Product: @Model.Product?.Name · Qty @Model.QuantitySold.ToString("N4") @Model.Unit at @Model.RatePerUnit.ToString("N2")
+        Product: @Model.Product?.Name · Net weight @Model.QuantitySold.ToString("N4") @Model.Unit at @Model.RatePerUnit.ToString("N2")
         @if (Model.DisplayUnit.HasValue)
         {
             <text>(= @(((decimal)ViewBag.ConvertedQuantity).ToString("N4")) @Model.DisplayUnit)</text>
@@ -23,7 +23,11 @@
     <p>Subtotal: @Model.SubtotalAmount.ToString("N2")</p>
     @if (!string.IsNullOrWhiteSpace(Model.ExtraChargesDescription) || Model.ExtraChargesAmount > 0)
     {
-        <p>@(Model.ExtraChargesDescription ?? "Extra charges"): @Model.ExtraChargesAmount.ToString("N2")</p>
+        <p>
+            Extra charges@(string.IsNullOrWhiteSpace(Model.ExtraChargesDescription) ? "" : $" ({Model.ExtraChargesDescription})"):
+            @Model.ExtraChargesAmount.ToString("N2")
+            <span class="text-muted small">— paid by the buyer, added to the grand total</span>
+        </p>
     }
     <p>GST (@Model.GstPercentage.ToString("N2")%): @Model.GstAmount.ToString("N2")</p>
     <p class="fw-semibold">Grand total: @Model.GrandTotalAmount.ToString("N2") <span class="@settleClass">@settleStatus</span></p>
@@ -39,7 +43,7 @@
                     <tr>
                         <th>Party</th>
                         <th>GRN</th>
-                        <th class="text-end">Qty</th>
+                        <th class="text-end">Net weight</th>
                         <th class="text-end">Purchase rate</th>
                         <th class="text-end">Cost</th>
                         <th class="text-end">Comm. %</th>
@@ -85,7 +89,16 @@
     {
         <p>Agent commission (@Model.AgentCommissionPercentage.ToString("N2")%): @Model.AgentCommissionAmount.ToString("N2") @(Model.Agent is not null ? $"— {Model.Agent.FullName}" : "")</p>
     }
-    <p class="fw-semibold">Profit: @Model.ProfitAmount.ToString("N2")</p>
+    @if (Model.ExtraChargesAmount > 0)
+    {
+        <p>Extra charges (recovered from buyer): @Model.ExtraChargesAmount.ToString("N2") <span class="text-muted small">— not deducted from profit</span></p>
+    }
+    <p class="fw-semibold">Profit: @Model.ProfitAmount.ToString("N2")
+        @if (Model.StockType == StockType.OwnedStock)
+        {
+            <span class="text-muted small fw-normal">= subtotal @Model.SubtotalAmount.ToString("N2") − cost of goods @Model.CostOfGoodsSold.ToString("N2")</span>
+        }
+    </p>
 
     <hr />
     <p>Payment type: @Model.PaymentType.GetDisplayName()</p>

@@ -4,35 +4,116 @@
     Layout = "_Layout";
 }
 
-<div class="card shadow" style="width: 420px; max-width: 92vw;">
-    <div class="card-body p-4">
-        <h1 class="h4 mb-1">Yousuf Enterprise</h1>
-        <p class="text-muted">Inventory, ledger & commission ERP</p>
-        <form asp-action="Login" method="post">
-            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
-            <div asp-validation-summary="All" class="text-danger"></div>
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" autocomplete="username" />
+<div class="auth-split">
+    <aside class="auth-brand">
+        <div class="auth-brand-inner">
+            <div class="auth-logo">
+                <span class="auth-mark">YT</span>
+                <span class="auth-logo-text">YT Enterprise</span>
             </div>
-            <div class="mb-3">
-                <label asp-for="Password" class="form-label"></label>
-                <input asp-for="Password" class="form-control" autocomplete="current-password" />
+
+            <div class="auth-hero">
+                <h1>Your whole trading business, in one place.</h1>
+                <p>Stock, sales, ledgers and commission — always up to date and easy to follow.</p>
+                <ul class="auth-points">
+                    <li><i class="bi bi-boxes"></i><span>Owned and consignment stock, tracked lot by lot</span></li>
+                    <li><i class="bi bi-receipt"></i><span>Invoices, GST and payment reminders</span></li>
+                    <li><i class="bi bi-journal-text"></i><span>Party ledgers, commission and bank balances</span></li>
+                </ul>
             </div>
-            <div class="form-check mb-3">
-                <input asp-for="RememberMe" class="form-check-input" />
-                <label asp-for="RememberMe" class="form-check-label"></label>
+
+            <div class="auth-foot">&copy; @DateTime.Now.Year YT Enterprise</div>
+        </div>
+    </aside>
+
+    <section class="auth-panel">
+        <div class="auth-form-wrap">
+            <div class="auth-logo auth-logo-compact">
+                <span class="auth-mark">YT</span>
+                <span class="auth-logo-text">YT Enterprise</span>
             </div>
-            <button class="btn btn-success w-100" type="submit">Sign in</button>
-        </form>
-        <hr />
-        <p class="small text-muted mb-0">
-            Super Admin: <code>admin@yousuf.local</code> / <code>Admin@12345</code><br />
-            Accountant: <code>accountant@yousuf.local</code> / <code>Accountant@123</code>
-        </p>
-    </div>
+
+            <h2 class="auth-title">Welcome back</h2>
+            <p class="auth-subtitle">Sign in to your account to continue.</p>
+
+            <form asp-action="Login" method="post" id="loginForm" novalidate>
+                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                <div asp-validation-summary="All" class="auth-error"></div>
+
+                <div class="auth-field">
+                    <label asp-for="Email" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Email" class="form-control" autocomplete="username" placeholder="you@company.com" autofocus />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="Password" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input asp-for="Password" class="form-control" autocomplete="current-password" placeholder="Enter your password" id="passwordInput" />
+                        <button class="btn auth-toggle" type="button" id="togglePassword" aria-label="Show password" title="Show password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="form-check auth-remember">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label"></label>
+                </div>
+
+                <button class="btn auth-submit" type="submit" id="loginSubmit">
+                    <span class="auth-submit-label">Sign in</span>
+                    <span class="spinner-border spinner-border-sm auth-submit-spinner" aria-hidden="true"></span>
+                </button>
+            </form>
+
+            <details class="auth-demo">
+                <summary>Demo accounts</summary>
+                <div class="small text-muted">
+                    Super Admin: <code>admin@yousuf.local</code> / <code>Admin@12345</code><br />
+                    Accountant: <code>accountant@yousuf.local</code> / <code>Accountant@123</code>
+                </div>
+            </details>
+        </div>
+    </section>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const input = document.getElementById('passwordInput');
+            const toggle = document.getElementById('togglePassword');
+            toggle.addEventListener('click', function () {
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                toggle.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+                const label = show ? 'Hide password' : 'Show password';
+                toggle.setAttribute('aria-label', label);
+                toggle.title = label;
+                input.focus();
+            });
+
+            // Shows progress and blocks a double submit once the form has passed validation.
+            const form = document.getElementById('loginForm');
+            form.addEventListener('submit', function () {
+                if (window.jQuery && jQuery.fn.valid && !jQuery(form).valid()) return;
+                const button = document.getElementById('loginSubmit');
+                button.classList.add('is-loading');
+                setTimeout(function () { button.disabled = true; }, 0);
+            });
+
+            // Coming back via the browser's back button restores the page with the button still locked.
+            window.addEventListener('pageshow', function () {
+                const button = document.getElementById('loginSubmit');
+                button.disabled = false;
+                button.classList.remove('is-loading');
+            });
+        })();
+    </script>
 }

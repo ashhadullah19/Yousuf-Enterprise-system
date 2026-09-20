@@ -163,13 +163,15 @@ public class LedgerService : ILedgerService
         foreach (var group in purchases.GroupBy(p => p.ProductId))
         {
             var qty = group.Sum(p => p.Quantity);
-            var cost = group.Sum(p => p.GrandTotalAmount);
+            // Product cost only: freight/labour is a charge on the purchase, not part of what the
+            // stock itself is worth, and spreading it per unit is what produced fractional values.
+            var cost = group.Sum(p => p.Quantity * p.RatePerUnit);
             var avg = qty == 0 ? 0 : cost / qty;
             var soldQty = sold.FirstOrDefault(s => s.ProductId == group.Key)?.Qty ?? 0;
             value += Math.Max(0, qty - soldQty) * avg;
         }
 
-        return Math.Round(value, 2);
+        return Math.Round(value, 0, MidpointRounding.AwayFromZero);
     }
 
     // Company's own revenue from reselling consignment stock (the cut kept before paying the
@@ -445,6 +447,18 @@ public class LedgerService : ILedgerService
                 Side = DuesSide.Payable,
                 Debit = commission.CommissionAmount
             });
+
+            // Also tracked under the Commission head so it counts toward commission on the
+            // dashboard/party ledger. It only accrues here (Credit), so it shows as receivable
+            // until a Commission-head ledger entry records it as received.
+            lines.Add(new PartyLedgerLine
+            {
+                Date = commission.InvoiceDate,
+                Document = commission.InvoiceNumber,
+                Description = $"Commission accrued on invoice {commission.InvoiceNumber}",
+                Head = HeadType.CommissionHead,
+                Credit = commission.CommissionAmount
+            });
         }
 
         if (partyPurchases.Count > 0)
@@ -470,6 +484,15 @@ public class LedgerService : ILedgerService
                         Side = DuesSide.Payable,
                         Debit = commissionShare
                     });
+
+                    lines.Add(new PartyLedgerLine
+                    {
+                        Date = sale.InvoiceDate,
+                        Document = sale.InvoiceNumber,
+                        Description = $"Commission accrued on invoice {sale.InvoiceNumber}",
+                        Head = HeadType.CommissionHead,
+                        Credit = commissionShare
+                    });
                 }
             }
         }
@@ -490,6 +513,13 @@ public class LedgerService : ILedgerService
 
             switch (entry.Type)
             {
+                case LedgerEntryType.PaymentReceived when !isDues:
+                    // Commission is accrued as a Credit, so money settling it (received from the
+                    // party) is a Debit — same as a payout — rather than adding to what's accrued.
+                    var commissionReceived = Line(viaMode, DuesSide.None);
+                    commissionReceived.Debit = entry.Amount;
+                    lines.Add(commissionReceived);
+                    break;
                 case LedgerEntryType.PaymentReceived:
                     // Money in settles what this party owes us; it never changes what we owe them.
                     var received = Line(viaMode, DuesSide.Receivable);

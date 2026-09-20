@@ -50,14 +50,14 @@ public class InvoiceService : IInvoiceService
         _db = db;
     }
 
-    // Weighted average purchase cost per unit, derived from Owned Purchases.
-    // Consignment stock has no cost basis to Yousuf Enterprise, so this only
-    // applies to Owned Stock sales.
+    // Weighted average LANDED purchase cost per unit (purchase rate plus its share of that
+    // purchase's freight/labour), derived from Owned Purchases. Consignment stock has no cost
+    // basis to Yousuf Enterprise, so this only applies to Owned Stock sales.
     public async Task<decimal> AverageCostAsync(int productId)
     {
         var purchases = await _db.OwnedPurchases
             .Where(p => p.ProductId == productId)
-            .Select(p => new { p.Quantity, p.RatePerUnit })
+            .Select(p => new { p.Quantity, p.RatePerUnit, p.FreightLabourCharges })
             .ToListAsync();
 
         if (purchases.Count == 0 || purchases.Sum(p => p.Quantity) == 0)
@@ -66,7 +66,7 @@ public class InvoiceService : IInvoiceService
         }
 
         var totalQty = purchases.Sum(p => p.Quantity);
-        var totalCost = purchases.Sum(p => p.Quantity * p.RatePerUnit);
+        var totalCost = purchases.Sum(p => p.Quantity * p.RatePerUnit + p.FreightLabourCharges);
         return Math.Round(totalCost / totalQty, 4);
     }
 
@@ -95,9 +95,9 @@ public class InvoiceService : IInvoiceService
             result.GstAmount = 0;
         }
 
-        // Extra charges are an internal cost (conveyance/labour) — they reduce
-        // profit but are NOT billed to the buyer, so they don't touch GrandTotal.
-        result.GrandTotal = result.Subtotal + result.GstAmount;
+        // Extra charges (conveyance/labour) are billed straight through to the buyer, so they're
+        // added to what they owe — they're a pass-through, not a cost that eats into profit.
+        result.GrandTotal = result.Subtotal + result.GstAmount + invoice.ExtraChargesAmount;
 
         if (invoice.StockType == StockType.OwnedStock)
         {
@@ -120,7 +120,9 @@ public class InvoiceService : IInvoiceService
 
             // Owned-stock commission is a vendor-side concession, not a cut of the sale price —
             // it comes out of what's owed to the vendor(s) who supplied the stock, not profit.
-            result.ProfitAmount = Math.Round(result.Subtotal - result.CostOfGoodsSold - invoice.ExtraChargesAmount, 2);
+            // Extra charges are billed to and recovered from the buyer (see GrandTotal above),
+            // so they don't reduce profit either.
+            result.ProfitAmount = Math.Round(result.Subtotal - result.CostOfGoodsSold, 2);
         }
         else
         {
@@ -140,10 +142,10 @@ public class InvoiceService : IInvoiceService
                 consignmentCommissionPct = receipt?.AgreedCommissionPercentage ?? 0;
             }
 
+            // Extra charges are billed to and recovered from the buyer (see GrandTotal above),
+            // so they don't reduce profit here either.
             var consignmentCommissionRevenue = Math.Round(result.Subtotal * consignmentCommissionPct / 100m, 2);
-            result.ProfitAmount = Math.Round(
-                consignmentCommissionRevenue - result.AgentCommissionAmount - invoice.ExtraChargesAmount,
-                2);
+            result.ProfitAmount = Math.Round(consignmentCommissionRevenue - result.AgentCommissionAmount, 2);
         }
 
         return result;
@@ -167,6 +169,7 @@ public class InvoiceService : IInvoiceService
                 p.PurchaseDate,
                 p.Quantity,
                 p.RatePerUnit,
+                p.FreightLabourCharges,
                 p.Unit
             })
             .ToListAsync();
@@ -216,6 +219,11 @@ public class InvoiceService : IInvoiceService
                 continue;
             }
 
+            // Landed cost: purchase rate plus this lot's own share of its freight/labour charge,
+            // spread evenly over the quantity it bought — not just the negotiated rate — so COGS
+            // (and everything derived from it: profit, commission basis) reflects the true cost.
+            var landedRate = purchase.RatePerUnit;
+
             lots.Add(new OwnedStockLot
             {
                 OwnedPurchaseId = purchase.Id,
@@ -223,7 +231,7 @@ public class InvoiceService : IInvoiceService
                 VendorId = purchase.VendorId,
                 VendorName = purchase.VendorName,
                 PurchaseDate = purchase.PurchaseDate,
-                RatePerUnit = purchase.RatePerUnit,
+                RatePerUnit = landedRate,
                 AvailableQuantity = Math.Round(remaining, 4),
                 Unit = purchase.Unit
             });

@@ -56,7 +56,7 @@ public class InvoicePdfService : IInvoicePdfService
                         table.Header(h =>
                         {
                             h.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text("Product");
-                            h.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text("Qty");
+                            h.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text("Net Weight");
                             h.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text("Rate");
                             h.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text("Amount");
                         });
@@ -67,6 +67,10 @@ public class InvoicePdfService : IInvoicePdfService
                     });
 
                     col.Item().AlignRight().PaddingTop(8).Text($"Subtotal: {invoice.SubtotalAmount:N2}");
+                    if (invoice.ExtraChargesAmount > 0)
+                    {
+                        col.Item().AlignRight().Text($"{invoice.ExtraChargesDescription ?? "Extra charges"}: {invoice.ExtraChargesAmount:N2}");
+                    }
                     col.Item().AlignRight().Text($"GST ({invoice.GstPercentage:N2}%): {invoice.GstAmount:N2}");
                     col.Item().AlignRight().Text($"Grand Total: {invoice.GrandTotalAmount:N2}").Bold();
 

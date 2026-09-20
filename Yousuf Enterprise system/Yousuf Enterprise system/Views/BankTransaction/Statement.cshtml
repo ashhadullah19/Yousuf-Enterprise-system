@@ -10,6 +10,10 @@
         <small class="text-muted">A/C: @account.AccountNumber</small>
     </div>
     <div class="text-end">
+        @if (!string.IsNullOrEmpty(ViewBag.From as string))
+        {
+            <div class="text-muted small">Opening Balance: @(((decimal)ViewBag.OpeningBalance).ToString("N2"))</div>
+        }
         <div class="text-muted">Closing Balance</div>
         <h4 class="mb-0">@(((decimal)ViewBag.ClosingBalance).ToString("N2"))</h4>
     </div>

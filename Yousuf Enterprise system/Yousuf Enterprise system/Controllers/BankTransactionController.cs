@@ -46,6 +46,12 @@ public class BankTransactionController : Controller
             return View(new PagedResult<BankTransaction>());
         }
 
+        // Balances come from the account's full history so a row's balance stays right even when
+        // the list is searched or paged.
+        var history = await BuildRunningRowsAsync(selected.Id);
+        ViewBag.Balances = history.ToDictionary(r => r.Transaction.Id, r => r.RunningBalance);
+        ViewBag.CurrentBalance = history.LastOrDefault()?.RunningBalance ?? 0m;
+
         var query = _db.BankTransactions.AsNoTracking()
             .Where(t => t.BankAccountId == selected.Id);
 
@@ -143,37 +149,51 @@ public class BankTransactionController : Controller
             return NotFound();
         }
 
-        var query = _db.BankTransactions.AsNoTracking()
-            .Where(t => t.BankAccountId == bankAccountId);
-
-        if (from.HasValue) query = query.Where(t => t.TransactionDate >= from.Value);
-        if (to.HasValue) query = query.Where(t => t.TransactionDate <= to.Value);
-
-        // Compute running balance chronologically (oldest first), then reverse for display
-        var chronological = await query
-            .OrderBy(t => t.TransactionDate).ThenBy(t => t.Id)
-            .ToListAsync();
-
-        decimal running = 0;
-        var rows = new List<StatementRow>();
-        foreach (var t in chronological)
-        {
-            running += t.Type == TransactionType.Deposit ? t.Amount : -t.Amount;
-            rows.Add(new StatementRow
-            {
-                Transaction = t,
-                RunningBalance = running
-            });
-        }
-
-        rows.Reverse(); // recent first
+        var (rows, opening, closing) = await BuildStatementAsync(bankAccountId, from, to);
 
         ViewBag.Account = account;
         ViewBag.From = from?.ToString("yyyy-MM-dd");
         ViewBag.To = to?.ToString("yyyy-MM-dd");
-        ViewBag.ClosingBalance = running;
+        ViewBag.OpeningBalance = opening;
+        ViewBag.ClosingBalance = closing;
 
         return View(rows);
+    }
+
+    // Every transaction on the account, oldest first, each carrying the balance after it posted.
+    private async Task<List<StatementRow>> BuildRunningRowsAsync(int bankAccountId)
+    {
+        var all = await _db.BankTransactions.AsNoTracking()
+            .Where(t => t.BankAccountId == bankAccountId)
+            .OrderBy(t => t.TransactionDate).ThenBy(t => t.Id)
+            .ToListAsync();
+
+        decimal running = 0;
+        var rows = new List<StatementRow>(all.Count);
+        foreach (var t in all)
+        {
+            running += t.Type == TransactionType.Deposit ? t.Amount : -t.Amount;
+            rows.Add(new StatementRow { Transaction = t, RunningBalance = running });
+        }
+
+        return rows;
+    }
+
+    // Balances come from the full history, so a date-filtered statement still starts from the
+    // real opening balance instead of zero.
+    private async Task<(List<StatementRow> Rows, decimal Opening, decimal Closing)> BuildStatementAsync(
+        int bankAccountId, DateTime? from, DateTime? to)
+    {
+        var all = await BuildRunningRowsAsync(bankAccountId);
+        var upToEnd = to.HasValue ? all.Where(r => r.Transaction.TransactionDate <= to.Value).ToList() : all;
+        var inRange = from.HasValue ? upToEnd.Where(r => r.Transaction.TransactionDate >= from.Value).ToList() : upToEnd.ToList();
+        var opening = from.HasValue
+            ? all.LastOrDefault(r => r.Transaction.TransactionDate < from.Value)?.RunningBalance ?? 0m
+            : 0m;
+        var closing = upToEnd.LastOrDefault()?.RunningBalance ?? 0m;
+
+        inRange.Reverse(); // recent first
+        return (inRange, opening, closing);
     }
 
     public async Task<IActionResult> StatementPdf(int bankAccountId, DateTime? from, DateTime? to)
@@ -181,19 +201,8 @@ public class BankTransactionController : Controller
         var account = await _db.BankAccounts.FindAsync(bankAccountId);
         if (account is null) return NotFound();
 
-        var query = _db.BankTransactions.AsNoTracking()
-            .Where(t => t.BankAccountId == bankAccountId);
-        if (from.HasValue) query = query.Where(t => t.TransactionDate >= from.Value);
-        if (to.HasValue) query = query.Where(t => t.TransactionDate <= to.Value);
-
-        var chronological = await query.OrderBy(t => t.TransactionDate).ThenBy(t => t.Id).ToListAsync();
-
-        decimal running = 0;
-        var rows = chronological.Select(t =>
-        {
-            running += t.Type == TransactionType.Deposit ? t.Amount : -t.Amount;
-            return (t, Balance: running);
-        }).Reverse().ToList();
+        var (statementRows, opening, closing) = await BuildStatementAsync(bankAccountId, from, to);
+        var rows = statementRows.Select(r => (t: r.Transaction, Balance: r.RunningBalance)).ToList();
 
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
@@ -202,8 +211,15 @@ public class BankTransactionController : Controller
             container.Page(page =>
             {
                 page.Margin(30);
-                page.Header().Text($"{account.BankName} - {account.AccountTitle} ({account.AccountNumber})")
-                    .SemiBold().FontSize(14);
+                page.Header().Column(col =>
+                {
+                    col.Item().Text($"{account.BankName} - {account.AccountTitle} ({account.AccountNumber})")
+                        .SemiBold().FontSize(14);
+                    if (from.HasValue)
+                    {
+                        col.Item().Text($"Opening Balance ({from.Value:dd-MMM-yyyy}): {opening:N2}");
+                    }
+                });
 
                 page.Content().Table(table =>
                 {
@@ -234,7 +250,7 @@ public class BankTransactionController : Controller
                     }
                 });
 
-                page.Footer().AlignRight().Text($"Closing Balance: {running:N2}").SemiBold();
+                page.Footer().AlignRight().Text($"Closing Balance: {closing:N2}").SemiBold();
             });
         }).GeneratePdf();
 

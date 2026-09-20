@@ -4,6 +4,8 @@
     ViewData["Title"] = "Bank Transactions";
     var accounts = ViewBag.BankAccounts as List<SelectListItem> ?? new List<SelectListItem>();
     var selected = ViewBag.SelectedAccount as BankAccount;
+    var balances = ViewBag.Balances as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
+    var currentBalance = ViewBag.CurrentBalance as decimal? ?? 0m;
 }
 
 <div class="list-toolbar">
@@ -46,6 +48,17 @@ else if (selected is null)
 }
 else
 {
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <div class="fw-semibold">@selected.BankName - @selected.AccountTitle</div>
+            <small class="text-muted">A/C: @selected.AccountNumber</small>
+        </div>
+        <div class="text-end">
+            <div class="text-muted small">Current balance</div>
+            <div class="h4 mb-0 @(currentBalance < 0 ? "amount-debit" : "")">@currentBalance.ToString("N2")</div>
+        </div>
+    </div>
+
     <div class="table-card">
     <table class="table table-striped">
         <thead>
@@ -53,6 +66,7 @@ else
                 <th>Date</th>
                 <th>Type</th>
                 <th>Amount</th>
+                <th class="text-end">Balance</th>
                 <th>Reference</th>
                 <th>Remarks</th>
                 <th></th>
@@ -61,7 +75,7 @@ else
         <tbody>
             @if (!Model.Items.Any())
             {
-                <tr class="empty-row"><td colspan="6">@(string.IsNullOrWhiteSpace(ViewBag.Query as string) ? "No transactions for this account yet." : "No transactions match your search.")</td></tr>
+                <tr class="empty-row"><td colspan="7">@(string.IsNullOrWhiteSpace(ViewBag.Query as string) ? "No transactions for this account yet." : "No transactions match your search.")</td></tr>
             }
             @foreach (var item in Model.Items)
             {
@@ -69,6 +83,7 @@ else
                     <td>@item.TransactionDate.ToString("dd-MMM-yyyy")</td>
                     <td>@item.Type.GetDisplayName()</td>
                     <td><span class="@(item.Type == TransactionType.Deposit ? "amount-credit" : "amount-debit")">@item.Amount.ToString("N2")</span></td>
+                    <td class="text-end">@balances.GetValueOrDefault(item.Id).ToString("N2")</td>
                     <td>@item.ReferenceNumber</td>
                     <td>@item.Remarks</td>
                     <td class="text-end">

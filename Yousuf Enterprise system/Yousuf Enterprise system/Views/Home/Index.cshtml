@@ -1,12 +1,69 @@
-@model Yousuf_Enterprise_system.ViewModels.DashboardViewModel
+@using Yousuf_Enterprise_system.ViewModels
+@model DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
 
     static string? SignClass(decimal value) => value > 0 ? "amount-credit" : value < 0 ? "amount-debit" : null;
 
+    var customerPanel = new ReminderPanelViewModel
+    {
+        Title = "Customer payments due",
+        Subtitle = "Credit sales",
+        Icon = "bi-person-lines-fill",
+        Tone = "green",
+        EmptyText = "No upcoming or overdue customer payments.",
+        Items = Model.PaymentReminders.Select(r => new ReminderItem
+        {
+            Title = r.BuyerName,
+            Reference = r.InvoiceNumber,
+            ReferenceUrl = Url.Action("Details", "SalesInvoices", new { id = r.InvoiceId }),
+            DueDate = r.DueDate,
+            Amount = r.AmountDue,
+            DismissUrl = Url.Action("DismissReminder", "SalesInvoices", new { id = r.InvoiceId }),
+            DismissTitle = $"Dismiss the reminder for {r.InvoiceNumber}?",
+            DismissMessage = "It won't appear on the dashboard again, even if the invoice is still unpaid."
+        }).ToList()
+    };
+
+    var supplierPanel = new ReminderPanelViewModel
+    {
+        Title = "Supplier payments due",
+        Subtitle = "Credit purchases",
+        Icon = "bi-truck",
+        Tone = "red",
+        EmptyText = "No upcoming or overdue supplier payments.",
+        Items = Model.PurchaseReminders.Select(r => new ReminderItem
+        {
+            Title = r.VendorName,
+            Reference = r.GrnNumber,
+            ReferenceUrl = Url.Action("Index", "OwnedPurchases", new { q = r.GrnNumber }),
+            DueDate = r.DueDate,
+            Amount = r.AmountDue,
+            DismissUrl = Url.Action("DismissReminder", "OwnedPurchases", new { id = r.PurchaseId }),
+            DismissTitle = $"Dismiss the reminder for {r.GrnNumber}?",
+            DismissMessage = "It won't appear on the dashboard again, even if the purchase is still unpaid."
+        }).ToList()
+    };
+
+    var chequePanel = new ReminderPanelViewModel
+    {
+        Title = "Cheque reminders",
+        Subtitle = "Upcoming and overdue cheques",
+        Icon = "bi-bank",
+        Tone = "blue",
+        EmptyText = "No upcoming or overdue cheques.",
+        Items = Model.ChequeReminders.Select(c => new ReminderItem
+        {
+            Title = c.PartyName,
+            Reference = c.LedgerNumber,
+            DueDate = c.ChequeDate,
+            Amount = c.Amount
+        }).ToList()
+    };
+
     var cards = new[]
     {
-        (Label: "Owned stock value", Value: Model.OwnedStockValue, Icon: "bi-boxes", Tone: "teal", Hint: "Remaining stock at average cost", ValueClass: (string?)null),
+        (Label: "Owned stock value", Value: Model.OwnedStockValue, Icon: "bi-boxes", Tone: "teal", Hint: "Remaining stock at average purchase rate", ValueClass: (string?)null),
         (Label: "Receivables", Value: Model.Receivables, Icon: "bi-arrow-down-left-circle", Tone: "green", Hint: "Owed to you by parties", ValueClass: null),
         (Label: "Payables", Value: Model.Payables, Icon: "bi-arrow-up-right-circle", Tone: "red", Hint: "You owe to parties", ValueClass: null),
         (Label: "Today's cash flow", Value: Model.TodayCashFlow, Icon: "bi-activity", Tone: "blue", Hint: "Received minus paid today", ValueClass: SignClass(Model.TodayCashFlow)),
@@ -20,12 +77,13 @@
 <div class="row g-3 mb-4">
     @foreach (var card in cards)
     {
+        var format = card.Label == "Owned stock value" ? "N0" : "N2";
         <div class="col-sm-6 col-xl-3">
             <div class="kpi-card" data-tone="@card.Tone">
                 <div class="kpi-icon"><i class="bi @card.Icon"></i></div>
                 <div class="kpi-body">
                     <div class="kpi-label">@card.Label</div>
-                    <div class="kpi-value @card.ValueClass" title="@card.Value.ToString("N2")">@card.Value.ToString("N2")</div>
+                    <div class="kpi-value @card.ValueClass" title="@card.Value.ToString(format)">@card.Value.ToString(format)</div>
                     <div class="kpi-hint">@card.Hint</div>
                 </div>
             </div>
@@ -34,147 +92,105 @@
 </div>
 
 <div class="row g-3 mb-3">
-    <div class="col-12">
-        <div class="card stat-card">
-            <div class="card-header">Customer payments due <span class="text-muted small">· credit sales</span></div>
-            <div class="card-body p-0">
-                <table class="table mb-0">
-                    <thead><tr><th>Invoice</th><th>Buyer</th><th>Due date</th><th>Amount due</th><th></th><th></th></tr></thead>
-                    <tbody>
-                        @if (!Model.PaymentReminders.Any())
-                        {
-                            <tr><td colspan="6" class="text-muted">No upcoming or overdue payments.</td></tr>
-                        }
-                        @foreach (var r in Model.PaymentReminders)
-                        {
-                            <tr class="@(r.IsOverdue ? "table-danger" : "table-warning")">
-                                <td><a asp-controller="SalesInvoices" asp-action="Details" asp-route-id="@r.InvoiceId">@r.InvoiceNumber</a></td>
-                                <td>@r.BuyerName</td>
-                                <td>@r.DueDate.ToString("dd-MMM-yyyy")</td>
-                                <td>@r.AmountDue.ToString("N2")</td>
-                                <td>@r.Status</td>
-                                <td>
-                                    <form asp-controller="SalesInvoices" asp-action="DismissReminder" asp-route-id="@r.InvoiceId" method="post" class="m-0"
-                                          data-confirm-title="Dismiss the reminder for @r.InvoiceNumber?" data-confirm="It won't appear on the dashboard again, even if the invoice is still unpaid." data-confirm-ok="Dismiss">
-                                        <button class="btn btn-sm btn-outline-secondary" type="submit" title="Dismiss this reminder">Dismiss</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="col-xl-6">
+        <partial name="_ReminderPanel" model="customerPanel" />
     </div>
-</div>
-
-<div class="row g-3 mb-3">
-    <div class="col-12">
-        <div class="card stat-card">
-            <div class="card-header">Supplier payments due <span class="text-muted small">· credit purchases</span></div>
-            <div class="card-body p-0">
-                <table class="table mb-0">
-                    <thead><tr><th>GRN</th><th>Vendor</th><th>Due date</th><th>Amount due</th><th></th><th></th></tr></thead>
-                    <tbody>
-                        @if (!Model.PurchaseReminders.Any())
-                        {
-                            <tr><td colspan="6" class="text-muted">No upcoming or overdue supplier payments.</td></tr>
-                        }
-                        @foreach (var r in Model.PurchaseReminders)
-                        {
-                            <tr class="@(r.IsOverdue ? "table-danger" : "table-warning")">
-                                <td><a asp-controller="OwnedPurchases" asp-action="Index" asp-route-q="@r.GrnNumber">@r.GrnNumber</a></td>
-                                <td>@r.VendorName</td>
-                                <td>@r.DueDate.ToString("dd-MMM-yyyy")</td>
-                                <td>@r.AmountDue.ToString("N2")</td>
-                                <td>@r.Status</td>
-                                <td>
-                                    <form asp-controller="OwnedPurchases" asp-action="DismissReminder" asp-route-id="@r.PurchaseId" method="post" class="m-0"
-                                          data-confirm-title="Dismiss the reminder for @r.GrnNumber?" data-confirm="It won't appear on the dashboard again, even if the purchase is still unpaid." data-confirm-ok="Dismiss">
-                                        <button class="btn btn-sm btn-outline-secondary" type="submit" title="Dismiss this reminder">Dismiss</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="col-xl-6">
+        <partial name="_ReminderPanel" model="supplierPanel" />
     </div>
-</div>
-
-<div class="row g-3 mb-3">
     <div class="col-12">
-        <div class="card stat-card">
-            <div class="card-header">Cheque reminders</div>
-            <div class="card-body p-0">
-                <table class="table mb-0">
-                    <thead><tr><th>Ledger #</th><th>Party</th><th>Cheque date</th><th>Amount</th><th></th></tr></thead>
-                    <tbody>
-                        @if (!Model.ChequeReminders.Any())
-                        {
-                            <tr><td colspan="5" class="text-muted">No upcoming or overdue cheques.</td></tr>
-                        }
-                        @foreach (var c in Model.ChequeReminders)
-                        {
-                            <tr class="@(c.IsOverdue ? "table-danger" : "table-warning")">
-                                <td>@c.LedgerNumber</td>
-                                <td>@c.PartyName</td>
-                                <td>@c.ChequeDate.ToString("dd-MMM-yyyy")</td>
-                                <td>@c.Amount.ToString("N2")</td>
-                                <td>@c.Status</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <partial name="_ReminderPanel" model="chequePanel" />
     </div>
 </div>
 
 <div class="row g-3">
     <div class="col-lg-5">
-        <div class="card stat-card">
-            <div class="card-header">Low stock alerts (owned)</div>
-            <div class="card-body p-0">
-                <table class="table mb-0">
-                    <thead><tr><th>Product</th><th>On hand</th><th>Alert</th></tr></thead>
-                    <tbody>
-                    @if (!Model.LowStock.Any())
-                    {
-                        <tr><td colspan="3" class="text-muted">No alerts.</td></tr>
-                    }
+        <section class="reminder-panel" data-tone="orange">
+            <header class="reminder-header">
+                <span class="reminder-header-icon"><i class="bi bi-exclamation-triangle"></i></span>
+                <div class="reminder-header-text">
+                    <h2>Low stock alerts</h2>
+                    <span>Owned stock at or below its alert level</span>
+                </div>
+                @if (Model.LowStock.Any())
+                {
+                    <span class="reminder-count" title="@Model.LowStock.Count products">@Model.LowStock.Count</span>
+                }
+            </header>
+
+            @if (!Model.LowStock.Any())
+            {
+                <div class="reminder-empty">
+                    <i class="bi bi-check2-circle"></i>
+                    <span>All products are above their alert level.</span>
+                </div>
+            }
+            else
+            {
+                <ul class="reminder-list">
                     @foreach (var item in Model.LowStock)
                     {
-                        <tr>
-                            <td>@item.ProductName</td>
-                            <td>@item.OnHand.ToString("N4")</td>
-                            <td>@item.AlertQty.ToString("N4")</td>
-                        </tr>
+                        var outOfStock = item.OnHand <= 0;
+                        <li class="reminder-item @(outOfStock ? "is-overdue" : "is-soon")">
+                            <div class="reminder-main">
+                                <div class="reminder-title">@item.ProductName</div>
+                                <div class="reminder-meta">Alert at @item.AlertQty.ToString("#,0.####")</div>
+                            </div>
+                            <div class="reminder-side">
+                                <div class="reminder-amount">@item.OnHand.ToString("#,0.####")</div>
+                                <span class="reminder-pill">@(outOfStock ? "Out of stock" : "Low stock")</span>
+                            </div>
+                        </li>
                     }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                </ul>
+            }
+        </section>
     </div>
     <div class="col-lg-7">
-        <div class="card stat-card">
-            <div class="card-header">Recent invoices</div>
-            <div class="card-body p-0">
-                <table class="table mb-0">
-                    <thead><tr><th>Invoice</th><th>Buyer</th><th>Total</th></tr></thead>
-                    <tbody>
+        <section class="reminder-panel" data-tone="green">
+            <header class="reminder-header">
+                <span class="reminder-header-icon"><i class="bi bi-receipt"></i></span>
+                <div class="reminder-header-text">
+                    <h2>Recent invoices</h2>
+                    <span>Latest sales</span>
+                </div>
+                <a class="reminder-link" asp-controller="SalesInvoices" asp-action="Index">View all <i class="bi bi-arrow-right"></i></a>
+            </header>
+
+            @if (!Model.RecentInvoices.Any())
+            {
+                <div class="reminder-empty">
+                    <i class="bi bi-receipt"></i>
+                    <span>No invoices yet.</span>
+                </div>
+            }
+            else
+            {
+                <ul class="reminder-list">
                     @foreach (var invoice in Model.RecentInvoices)
                     {
-                        <tr>
-                            <td><a asp-controller="SalesInvoices" asp-action="Details" asp-route-id="@invoice.Id">@invoice.InvoiceNumber</a></td>
-                            <td>@invoice.Buyer?.FullName</td>
-                            <td>@invoice.GrandTotalAmount.ToString("N2")</td>
-                        </tr>
+                        <li class="reminder-item is-neutral">
+                            <div class="reminder-main">
+                                <div class="reminder-title">@invoice.Buyer?.FullName</div>
+                                <div class="reminder-meta">
+                                    <a asp-controller="SalesInvoices" asp-action="Details" asp-route-id="@invoice.Id">@invoice.InvoiceNumber</a>
+                                    <span class="reminder-dot" aria-hidden="true"></span>
+                                    <span><i class="bi bi-calendar-event"></i> @invoice.InvoiceDate.ToString("dd MMM yyyy")</span>
+                                    @if (invoice.Product is not null)
+                                    {
+                                        <span class="reminder-dot" aria-hidden="true"></span>
+                                        <span>@invoice.Product.Name</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="reminder-side">
+                                <div class="reminder-amount">@invoice.GrandTotalAmount.ToString("N2")</div>
+                                <span class="reminder-pill">@invoice.PaymentType</span>
+                            </div>
+                        </li>
                     }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                </ul>
+            }
+        </section>
     </div>
 </div>

@@ -37,6 +37,29 @@ public class ChequeReminder
     public bool IsOverdue { get; set; }
 }
 
+// One row in a dashboard reminder card (customer payment, supplier payment or cheque).
+public class ReminderItem
+{
+    public string Title { get; set; } = string.Empty;
+    public string Reference { get; set; } = string.Empty;
+    public string? ReferenceUrl { get; set; }
+    public DateTime DueDate { get; set; }
+    public decimal Amount { get; set; }
+    public string? DismissUrl { get; set; }
+    public string? DismissTitle { get; set; }
+    public string? DismissMessage { get; set; }
+}
+
+public class ReminderPanelViewModel
+{
+    public string Title { get; set; } = string.Empty;
+    public string Subtitle { get; set; } = string.Empty;
+    public string Icon { get; set; } = "bi-bell";
+    public string Tone { get; set; } = "amber";
+    public string EmptyText { get; set; } = string.Empty;
+    public List<ReminderItem> Items { get; set; } = new();
+}
+
 public class DashboardViewModel
 {
     public decimal OwnedStockValue { get; set; }

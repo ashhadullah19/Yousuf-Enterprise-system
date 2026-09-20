@@ -58,9 +58,10 @@
     <section class="form-section">
         <div class="form-section-title"><i class="bi bi-cash-coin"></i> Payment details</div>
         <div class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-4" id="modeRow">
                 <label asp-for="Mode" class="form-label"></label>
-                <select asp-for="Mode" asp-items="Html.GetEnumSelectList<PaymentMode>()" class="form-select" id="modeSelect" data-online-value="@((int)PaymentMode.OnlineBankTransfer)" data-cheque-value="@((int)PaymentMode.Cheque)"></select>
+                <select asp-for="Mode" asp-items="Html.GetEnumSelectList<PaymentMode>()" class="form-select" id="modeSelect" data-online-value="@((int)PaymentMode.OnlineBankTransfer)" data-cheque-value="@((int)PaymentMode.Cheque)" data-cash-value="@((int)PaymentMode.Cash)"></select>
+                <small class="text-muted" id="contraModeNote" style="display:none;">Not applicable — a contra adjustment doesn't move money through any payment mode.</small>
             </div>
             <div class="col-md-4">
                 <label asp-for="Amount" class="form-label required"></label>
@@ -159,6 +160,18 @@
             if (isContra) {
                 headSelect.value = '@((int)HeadType.DirectProductHead)';
             }
+
+            // A contra adjustment just nets two balances against each other — no cash, cheque or
+            // bank transfer actually happens, so "Mode" (and its cheque/bank fields) don't apply.
+            // Left enabled (not disabled) so the forced Cash value still posts — the server also
+            // forces it independently, same as it does for Head above.
+            const modeSelect = document.getElementById('modeSelect');
+            document.getElementById('modeRow').style.display = isContra ? 'none' : '';
+            document.getElementById('contraModeNote').style.display = isContra ? '' : 'none';
+            if (isContra) {
+                modeSelect.value = modeSelect.dataset.cashValue;
+            }
+            toggleModeFields();
         }
 
         function toggleModeFields() {

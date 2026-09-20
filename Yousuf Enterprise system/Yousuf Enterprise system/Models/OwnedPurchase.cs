@@ -21,7 +21,7 @@ public class OwnedPurchase
     public int ProductId { get; set; }
     public Product? Product { get; set; }
 
-    [Display(Name = "Quantity (Net Weight)"), Range(0.0001, double.MaxValue, ErrorMessage = "Quantity must be greater than 0.")]
+    [Display(Name = "Net Weight"), Range(0.0001, double.MaxValue, ErrorMessage = "Net weight must be greater than 0.")]
     public decimal Quantity { get; set; }
 
     public UnitOfMeasure Unit { get; set; } = UnitOfMeasure.KG;
@@ -40,7 +40,7 @@ public class OwnedPurchase
     [Display(Name = "Packing Type")]
     public PackingType? PackingType { get; set; }
 
-    [Display(Name = "Packing Count"), Range(0, int.MaxValue, ErrorMessage = "Packing count can't be negative.")]
+    [Display(Name = "Quantity"), Range(0, int.MaxValue, ErrorMessage = "Quantity can't be negative.")]
     public int? PackingCount { get; set; }
 
     [Display(Name = "Rate Per Unit"), Range(0.0001, double.MaxValue, ErrorMessage = "Rate must be greater than 0."), Column(TypeName = "decimal(18,4)")]

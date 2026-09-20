@@ -1,0 +1,69 @@
+@model Yousuf_Enterprise_system.ViewModels.ReminderPanelViewModel
+@{
+    var today = DateTime.Today;
+}
+
+<section class="reminder-panel" data-tone="@Model.Tone">
+    <header class="reminder-header">
+        <span class="reminder-header-icon"><i class="bi @Model.Icon"></i></span>
+        <div class="reminder-header-text">
+            <h2>@Model.Title</h2>
+            <span>@Model.Subtitle</span>
+        </div>
+        @if (Model.Items.Any())
+        {
+            <span class="reminder-count" title="@Model.Items.Count pending">@Model.Items.Count</span>
+        }
+    </header>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="reminder-empty">
+            <i class="bi bi-check2-circle"></i>
+            <span>@Model.EmptyText</span>
+        </div>
+    }
+    else
+    {
+        <ul class="reminder-list">
+            @foreach (var item in Model.Items)
+            {
+                var daysLate = (today - item.DueDate.Date).Days;
+                var (state, label) = daysLate > 0
+                    ? ("is-overdue", $"Overdue · {daysLate} day{(daysLate == 1 ? "" : "s")}")
+                    : daysLate == 0
+                        ? ("is-today", "Due today")
+                        : ("is-soon", "Due tomorrow");
+
+                <li class="reminder-item @state">
+                    <div class="reminder-main">
+                        <div class="reminder-title">@item.Title</div>
+                        <div class="reminder-meta">
+                            @if (!string.IsNullOrEmpty(item.ReferenceUrl))
+                            {
+                                <a href="@item.ReferenceUrl">@item.Reference</a>
+                            }
+                            else
+                            {
+                                <span>@item.Reference</span>
+                            }
+                            <span class="reminder-dot" aria-hidden="true"></span>
+                            <span><i class="bi bi-calendar-event"></i> @item.DueDate.ToString("dd MMM yyyy")</span>
+                        </div>
+                    </div>
+                    <div class="reminder-side">
+                        <div class="reminder-amount">@item.Amount.ToString("N2")</div>
+                        <span class="reminder-pill">@label</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(item.DismissUrl))
+                    {
+                        <form method="post" action="@item.DismissUrl" asp-antiforgery="true" class="reminder-dismiss-form"
+                              data-confirm-title="@item.DismissTitle" data-confirm="@item.DismissMessage" data-confirm-ok="Dismiss">
+                            <button class="reminder-dismiss" type="submit" title="Dismiss this reminder" aria-label="Dismiss this reminder"><i class="bi bi-x-lg"></i></button>
+                        </form>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</section>

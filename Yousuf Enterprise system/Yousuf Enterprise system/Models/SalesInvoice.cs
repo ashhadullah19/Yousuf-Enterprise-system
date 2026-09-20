@@ -28,7 +28,7 @@ public class SalesInvoice
     public int ProductId { get; set; }
     public Product? Product { get; set; }
 
-    [Display(Name = "Quantity Sold"), Range(0.0001, double.MaxValue, ErrorMessage = "Quantity must be greater than 0."), Column(TypeName = "decimal(18,4)")]
+    [Display(Name = "Net Weight"), Range(0.0001, double.MaxValue, ErrorMessage = "Net weight must be greater than 0."), Column(TypeName = "decimal(18,4)")]
     public decimal QuantitySold { get; set; }
 
     // The unit the buyer actually negotiated in (kg, maund, bag, etc.) — independent of the
