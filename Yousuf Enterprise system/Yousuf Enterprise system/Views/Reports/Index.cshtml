@@ -62,7 +62,7 @@
                 <div class="kpi-icon"><i class="bi @kpi.Icon"></i></div>
                 <div class="kpi-body">
                     <div class="kpi-label">@kpi.Label</div>
-                    <div class="kpi-value @kpi.ValueClass" title="@kpi.Value.ToString("N2")">@kpi.Value.ToString("N2")</div>
+                    <div class="kpi-value @kpi.ValueClass" title="@kpi.Value.ToString("N0")">@kpi.Value.ToString("N0")</div>
                     <div class="kpi-hint">@kpi.Hint</div>
                 </div>
             </div>
@@ -96,8 +96,8 @@
                             var height = month.Sales / chartMax * 100;
                             <div class="column" tabindex="0"
                                  data-month="@month.Month.ToString("MMMM yyyy")"
-                                 data-sales="@month.Sales.ToString("N2")"
-                                 data-profit="@month.Profit.ToString("N2")"
+                                 data-sales="@month.Sales.ToString("N0")"
+                                 data-profit="@month.Profit.ToString("N0")"
                                  data-count="@month.Count">
                                 <div class="column-bar" style="height:@height.ToString("0.##", invariant)%"></div>
                             </div>
@@ -121,8 +121,8 @@
                                 {
                                     <tr>
                                         <td>@month.Month.ToString("MMM yyyy")</td>
-                                        <td class="text-end">@month.Sales.ToString("N2")</td>
-                                        <td class="text-end">@month.Profit.ToString("N2")</td>
+                                        <td class="text-end">@month.Sales.ToString("N0")</td>
+                                        <td class="text-end">@month.Profit.ToString("N0")</td>
                                         <td class="text-end">@month.Count</td>
                                     </tr>
                                 }
@@ -159,7 +159,7 @@
                         <div class="share-row">
                             <div class="rank-row"><span class="rank-name">@label</span><span class="rank-value">@share%</span></div>
                             <div class="share-track"><div class="share-fill" style="width:@share%"></div></div>
-                            <div class="small text-muted">@amount.ToString("N2")</div>
+                            <div class="small text-muted">@amount.ToString("N0")</div>
                         </div>
                     }
                 }
@@ -182,7 +182,7 @@
                     @foreach (var row in Model.TopBuyers)
                     {
                         <li>
-                            <div class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N2")</span></div>
+                            <div class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N0")</span></div>
                             <div class="share-track"><div class="share-fill" style="width:@Percent(row.Amount, Model.TopBuyers[0].Amount)%"></div></div>
                             <div class="small text-muted">@row.Count invoice@(row.Count == 1 ? "" : "s")</div>
                         </li>
@@ -204,7 +204,7 @@
                     @foreach (var row in Model.TopProducts)
                     {
                         <li>
-                            <div class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N2")</span></div>
+                            <div class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N0")</span></div>
                             <div class="share-track"><div class="share-fill" style="width:@Percent(row.Amount, Model.TopProducts[0].Amount)%"></div></div>
                             <div class="small text-muted">@row.Count invoice@(row.Count == 1 ? "" : "s")</div>
                         </li>
@@ -217,7 +217,7 @@
         <section class="report-panel h-100">
             <header class="report-panel-header"><h2>Outstanding</h2><span class="text-muted small">As of today</span></header>
             <div class="outstanding-block">
-                <div class="rank-row"><span class="share-group-label mb-0">They owe us</span><span class="rank-value amount-credit">@Model.TotalReceivable.ToString("N2")</span></div>
+                <div class="rank-row"><span class="share-group-label mb-0">They owe us</span><span class="rank-value amount-credit">@Model.TotalReceivable.ToString("N0")</span></div>
                 @if (!Model.TopReceivables.Any())
                 {
                     <div class="small text-muted py-2">Nothing outstanding.</div>
@@ -225,12 +225,12 @@
                 <ul class="rank-list">
                     @foreach (var row in Model.TopReceivables)
                     {
-                        <li class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N2")</span></li>
+                        <li class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N0")</span></li>
                     }
                 </ul>
             </div>
             <div class="outstanding-block">
-                <div class="rank-row"><span class="share-group-label mb-0">We owe them</span><span class="rank-value amount-debit">@Model.TotalPayable.ToString("N2")</span></div>
+                <div class="rank-row"><span class="share-group-label mb-0">We owe them</span><span class="rank-value amount-debit">@Model.TotalPayable.ToString("N0")</span></div>
                 @if (!Model.TopPayables.Any())
                 {
                     <div class="small text-muted py-2">Nothing outstanding.</div>
@@ -238,7 +238,7 @@
                 <ul class="rank-list">
                     @foreach (var row in Model.TopPayables)
                     {
-                        <li class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N2")</span></li>
+                        <li class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N0")</span></li>
                     }
                 </ul>
             </div>

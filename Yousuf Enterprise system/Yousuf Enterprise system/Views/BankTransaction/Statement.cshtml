@@ -12,10 +12,10 @@
     <div class="text-end">
         @if (!string.IsNullOrEmpty(ViewBag.From as string))
         {
-            <div class="text-muted small">Opening Balance: @(((decimal)ViewBag.OpeningBalance).ToString("N2"))</div>
+            <div class="text-muted small">Opening Balance: @(((decimal)ViewBag.OpeningBalance).ToString("N0"))</div>
         }
         <div class="text-muted">Closing Balance</div>
-        <h4 class="mb-0">@(((decimal)ViewBag.ClosingBalance).ToString("N2"))</h4>
+        <h4 class="mb-0">@(((decimal)ViewBag.ClosingBalance).ToString("N0"))</h4>
     </div>
 </div>
 
@@ -57,9 +57,9 @@
                 <td>@t.Type</td>
                 <td>@t.ReferenceNumber</td>
                 <td>@t.Remarks</td>
-                <td class="text-end">@if (t.Type == TransactionType.Deposit) { <span class="amount-credit">@t.Amount.ToString("N2")</span> }</td>
-                <td class="text-end">@if (t.Type == TransactionType.Withdrawal) { <span class="amount-debit">@t.Amount.ToString("N2")</span> }</td>
-                <td class="text-end">@row.RunningBalance.ToString("N2")</td>
+                <td class="text-end">@if (t.Type == TransactionType.Deposit) { <span class="amount-credit">@t.Amount.ToString("N0")</span> }</td>
+                <td class="text-end">@if (t.Type == TransactionType.Withdrawal) { <span class="amount-debit">@t.Amount.ToString("N0")</span> }</td>
+                <td class="text-end">@row.RunningBalance.ToString("N0")</td>
             </tr>
         }
     </tbody>

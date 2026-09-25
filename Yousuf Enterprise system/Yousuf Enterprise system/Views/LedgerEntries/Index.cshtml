@@ -31,7 +31,7 @@
             <td>@item.Head.GetDisplayName()</td>
             <td>@item.Mode.GetDisplayName()</td>
             <td>@(item.SalesInvoice?.InvoiceNumber ?? item.OwnedPurchase?.GrnNumber ?? "-")</td>
-            <td><span class="@(item.Type == LedgerEntryType.PaymentReceived ? "amount-credit" : item.Type == LedgerEntryType.PaymentPaid ? "amount-debit" : null)">@item.Amount.ToString("N2")</span></td>
+            <td><span class="@(item.Type == LedgerEntryType.PaymentReceived ? "amount-credit" : item.Type == LedgerEntryType.PaymentPaid ? "amount-debit" : null)">@item.Amount.ToString("N0")</span></td>
             <td>
                 @if (item.Type == LedgerEntryType.ContraAdjustment && !item.ApprovedByAdmin)
                 {

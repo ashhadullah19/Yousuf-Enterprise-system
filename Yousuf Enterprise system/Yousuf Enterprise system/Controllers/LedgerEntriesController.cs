@@ -107,7 +107,7 @@ public class LedgerEntriesController : Controller
                 var outstanding = invoice.GrandTotalAmount - alreadyPaid;
                 if (entry.Amount > outstanding)
                 {
-                    ModelState.AddModelError(nameof(entry.Amount), $"Amount exceeds the outstanding due of {outstanding:N2} on this invoice.");
+                    ModelState.AddModelError(nameof(entry.Amount), $"Amount exceeds the outstanding due of {outstanding:N0} on this invoice.");
                 }
             }
         }
@@ -131,7 +131,7 @@ public class LedgerEntriesController : Controller
                 var outstanding = (await _ledger.GetPurchaseOutstandingAsync(new[] { purchase.Id })).GetValueOrDefault(purchase.Id);
                 if (entry.Amount > outstanding)
                 {
-                    ModelState.AddModelError(nameof(entry.Amount), $"Amount exceeds the outstanding balance of {outstanding:N2} on this purchase.");
+                    ModelState.AddModelError(nameof(entry.Amount), $"Amount exceeds the outstanding balance of {outstanding:N0} on this purchase.");
                 }
             }
         }
@@ -192,7 +192,7 @@ public class LedgerEntriesController : Controller
             var due = invoice.GrandTotalAmount - paid;
             if (due > 0)
             {
-                result.Add(new { id = invoice.Id, label = $"{invoice.InvoiceNumber} — due {due:N2}" });
+                result.Add(new { id = invoice.Id, label = $"{invoice.InvoiceNumber} — due {due:N0}" });
             }
         }
 
@@ -213,7 +213,25 @@ public class LedgerEntriesController : Controller
 
         return Json(purchases
             .Where(p => outstanding.GetValueOrDefault(p.Id) > 0)
-            .Select(p => new { id = p.Id, label = $"{p.GrnNumber} — due {outstanding[p.Id]:N2}" }));
+            .Select(p => new { id = p.Id, label = $"{p.GrnNumber} — due {outstanding[p.Id]:N0}" }));
+    }
+
+    // Marks a cheque as cleared at the bank so it stops nagging on the dashboard — the payment
+    // itself was already recorded the moment this ledger entry was posted, so this doesn't touch
+    // any balance, it only affects whether the reminder keeps showing.
+    [ModulePermission(Modules.Ledgers, edit: true)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ClearCheque(int id)
+    {
+        var entry = await _db.LedgerEntries.FindAsync(id);
+        if (entry is not null)
+        {
+            entry.ChequeCleared = true;
+            await _db.SaveChangesAsync();
+        }
+
+        return RedirectToAction("Index", "Home");
     }
 
     [Authorize(Roles = AppRoles.SuperAdmin)]
@@ -285,7 +303,7 @@ public class LedgerEntriesController : Controller
                     {
                         col.Item().Text($"Remarks: {entry.Remarks}");
                     }
-                    col.Item().PaddingTop(12).Text($"Amount: {entry.Amount:N2}").FontSize(16).Bold();
+                    col.Item().PaddingTop(12).Text($"Amount: {entry.Amount:N0}").FontSize(16).Bold();
                 });
             });
         }).GeneratePdf();

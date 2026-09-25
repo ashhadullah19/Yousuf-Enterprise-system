@@ -50,6 +50,12 @@ public class LedgerEntry
     [Display(Name = "Cheque Date"), DataType(DataType.Date)]
     public DateTime? ChequeDate { get; set; }
 
+    // The ledger entry itself already recorded the payment the moment it was posted — this only
+    // tracks whether the actual paper cheque has since cleared at the bank, so the dashboard
+    // reminder can be marked done instead of nagging forever once it's no longer relevant.
+    [Display(Name = "Cheque Cleared")]
+    public bool ChequeCleared { get; set; }
+
     [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than 0."), Column(TypeName = "decimal(18,2)")]
     public decimal Amount { get; set; }
 

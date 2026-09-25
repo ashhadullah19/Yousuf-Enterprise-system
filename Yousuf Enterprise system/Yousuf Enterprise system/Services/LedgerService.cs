@@ -58,12 +58,23 @@ public class PartyCommissionBalance
     }
 }
 
+// One party with commission still owed back to the company, for the dashboard reminder.
+public class CommissionReminderRow
+{
+    public int PartyId { get; set; }
+    public string PartyName { get; set; } = string.Empty;
+    public decimal Outstanding { get; set; }
+    public DateTime OldestAccrualDate { get; set; }
+    public int PendingEntryCount { get; set; }
+}
+
 public interface ILedgerService
 {
     Task<IReadOnlyList<PartyLedgerLine>> GetPartyLedgerAsync(int partyId, DateTime? from = null, DateTime? to = null);
     Task<decimal> TodayCashFlowAsync();
     Task<decimal> OwnedStockValueAsync();
     Task<Dictionary<int, PartyCommissionBalance>> GetAllPartyBalancesAsync();
+    Task<List<CommissionReminderRow>> GetCommissionRemindersAsync();
     Task<Dictionary<int, decimal>> GetPurchaseOutstandingAsync(IEnumerable<int> purchaseIds);
     Task<decimal> GetConsignmentCommissionRevenueAsync();
     Task<decimal> GetTotalProfitAsync();
@@ -106,8 +117,70 @@ public class LedgerService : ILedgerService
         return parties.ToDictionary(id => id, id => PartyCommissionBalance.FromLedger(BuildPartyLines(data, id)));
     }
 
-    // What's still owed on each purchase: its total, less payments recorded against it and any
-    // commission deducted on sales drawn from that lot.
+    // Every party with commission still outstanding (accrued but not yet collected back from
+    // them) — owned-stock vendors and consignment/legacy agents alike, since both post to the
+    // same Commission head. "Oldest" is the earliest still-unsettled accrual, used to show how
+    // long it's been pending; it assumes receipts settle the oldest accruals first (no per-line
+    // link exists between a receipt and the accrual it settles, so this is the same FIFO
+    // assumption the rest of the ledger already makes for owned-stock cost).
+    public async Task<List<CommissionReminderRow>> GetCommissionRemindersAsync()
+    {
+        var parties = await _db.Parties.AsNoTracking()
+            .Select(p => new { p.Id, p.FullName })
+            .ToListAsync();
+        var data = await LoadLedgerDataAsync();
+
+        var rows = new List<CommissionReminderRow>();
+        foreach (var party in parties)
+        {
+            var lines = BuildPartyLines(data, party.Id);
+            var balance = PartyCommissionBalance.FromLedger(lines);
+            if (balance.CommissionReceivable <= 0)
+            {
+                continue;
+            }
+
+            var accruals = lines.Where(l => l.Head == HeadType.CommissionHead && l.Credit > 0)
+                .OrderBy(l => l.Date)
+                .ToList();
+            if (accruals.Count == 0)
+            {
+                continue;
+            }
+
+            // How many receipts back from the end are already settled, so the oldest STILL
+            // outstanding accrual (not just the oldest ever) is what drives the "pending since".
+            var alreadyReceived = balance.CommissionReceived;
+            var oldestOutstanding = accruals[0].Date;
+            foreach (var accrual in accruals)
+            {
+                if (alreadyReceived >= accrual.Credit)
+                {
+                    alreadyReceived -= accrual.Credit;
+                    continue;
+                }
+
+                oldestOutstanding = accrual.Date;
+                break;
+            }
+
+            rows.Add(new CommissionReminderRow
+            {
+                PartyId = party.Id,
+                PartyName = party.FullName,
+                Outstanding = balance.CommissionReceivable,
+                OldestAccrualDate = oldestOutstanding,
+                PendingEntryCount = accruals.Count
+            });
+        }
+
+        return rows.OrderBy(r => r.OldestAccrualDate).ToList();
+    }
+
+    // What's still owed on each purchase: its total, less payments recorded against it. Commission
+    // is NOT deducted here — the vendor is paid in full, and commission is collected back from
+    // them separately (see the Commission head lines in BuildPartyLines), so it must never reduce
+    // what shows as owed on the purchase itself.
     public async Task<Dictionary<int, decimal>> GetPurchaseOutstandingAsync(IEnumerable<int> purchaseIds)
     {
         var ids = purchaseIds.Distinct().ToList();
@@ -127,15 +200,9 @@ public class LedgerService : ILedgerService
             .Select(g => new { Id = g.Key, Amount = g.Sum(e => e.Amount) })
             .ToDictionaryAsync(x => x.Id, x => x.Amount);
 
-        var commission = await _db.SalesInvoiceAllocations.AsNoTracking()
-            .Where(a => ids.Contains(a.OwnedPurchaseId))
-            .GroupBy(a => a.OwnedPurchaseId)
-            .Select(g => new { Id = g.Key, Amount = g.Sum(a => a.CommissionAmount) })
-            .ToDictionaryAsync(x => x.Id, x => x.Amount);
-
         return totals.ToDictionary(
             t => t.Id,
-            t => Math.Round(t.GrandTotalAmount - paid.GetValueOrDefault(t.Id) - commission.GetValueOrDefault(t.Id), 2));
+            t => Math.Round(t.GrandTotalAmount - paid.GetValueOrDefault(t.Id), 2));
     }
 
     public async Task<decimal> TodayCashFlowAsync()
@@ -152,7 +219,10 @@ public class LedgerService : ILedgerService
 
     public async Task<decimal> OwnedStockValueAsync()
     {
-        var purchases = await _db.OwnedPurchases.AsNoTracking().ToListAsync();
+        var purchases = await _db.OwnedPurchases.AsNoTracking()
+            .OrderBy(p => p.PurchaseDate).ThenBy(p => p.Id)
+            .Select(p => new { p.ProductId, p.Quantity, p.RatePerUnit })
+            .ToListAsync();
         var sold = await _db.SalesInvoices.AsNoTracking()
             .Where(s => s.StockType == StockType.OwnedStock)
             .GroupBy(s => s.ProductId)
@@ -162,13 +232,18 @@ public class LedgerService : ILedgerService
         decimal value = 0;
         foreach (var group in purchases.GroupBy(p => p.ProductId))
         {
-            var qty = group.Sum(p => p.Quantity);
-            // Product cost only: freight/labour is a charge on the purchase, not part of what the
-            // stock itself is worth, and spreading it per unit is what produced fractional values.
-            var cost = group.Sum(p => p.Quantity * p.RatePerUnit);
-            var avg = qty == 0 ? 0 : cost / qty;
-            var soldQty = sold.FirstOrDefault(s => s.ProductId == group.Key)?.Qty ?? 0;
-            value += Math.Max(0, qty - soldQty) * avg;
+            // Deplete this product's lots oldest-first against what's been sold (same FIFO order
+            // AvailableLotsAsync uses), then value whatever remains in each lot at that lot's own
+            // purchase rate — not a blended average, since lots from different vendors/dates can
+            // carry different rates.
+            var toConsume = sold.FirstOrDefault(s => s.ProductId == group.Key)?.Qty ?? 0;
+            foreach (var lot in group)
+            {
+                var consumed = Math.Min(lot.Quantity, toConsume);
+                var remaining = lot.Quantity - consumed;
+                toConsume -= consumed;
+                value += remaining * lot.RatePerUnit;
+            }
         }
 
         return Math.Round(value, 0, MidpointRounding.AwayFromZero);
@@ -432,25 +507,15 @@ public class LedgerService : ILedgerService
             });
         }
 
-        // Owned-stock commission comes out of the vendor's payable, not the company's profit
-        // (see InvoiceService.CalculateAsync). Sales that picked their source lots explicitly
-        // already carry a per-lot commission, so this party's share is read straight off the
-        // rows drawn from their own purchases — no FIFO guesswork needed.
+        // Owned-stock commission is cash the vendor owes back separately — it is NOT netted off
+        // their payable (the vendor is still paid the full purchase price; see
+        // GetPurchaseOutstandingAsync). It only accrues here (Credit) under the Commission head,
+        // so it shows as receivable until a Commission-head "Payment Received" ledger entry
+        // against this vendor records it as actually collected. Sales that picked their source
+        // lots explicitly already carry a per-lot commission, so this party's share is read
+        // straight off the rows drawn from their own purchases — no FIFO guesswork needed.
         foreach (var commission in data.AllocationCommissions.Where(a => a.VendorId == partyId))
         {
-            lines.Add(new PartyLedgerLine
-            {
-                Date = commission.InvoiceDate,
-                Document = commission.InvoiceNumber,
-                Description = $"Commission deducted from purchase cost (invoice {commission.InvoiceNumber})",
-                Head = HeadType.DirectProductHead,
-                Side = DuesSide.Payable,
-                Debit = commission.CommissionAmount
-            });
-
-            // Also tracked under the Commission head so it counts toward commission on the
-            // dashboard/party ledger. It only accrues here (Credit), so it shows as receivable
-            // until a Commission-head ledger entry records it as received.
             lines.Add(new PartyLedgerLine
             {
                 Date = commission.InvoiceDate,
@@ -475,16 +540,6 @@ public class LedgerService : ILedgerService
                 var commissionShare = Math.Round(vendorShare.Cost * sale.AgentCommissionPercentage / 100m, 2);
                 if (commissionShare > 0)
                 {
-                    lines.Add(new PartyLedgerLine
-                    {
-                        Date = sale.InvoiceDate,
-                        Document = sale.InvoiceNumber,
-                        Description = $"Commission deducted from purchase cost (invoice {sale.InvoiceNumber})",
-                        Head = HeadType.DirectProductHead,
-                        Side = DuesSide.Payable,
-                        Debit = commissionShare
-                    });
-
                     lines.Add(new PartyLedgerLine
                     {
                         Date = sale.InvoiceDate,

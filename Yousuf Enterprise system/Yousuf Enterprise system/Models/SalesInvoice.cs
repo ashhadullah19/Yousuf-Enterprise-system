@@ -105,6 +105,9 @@ public class SalesInvoice
     // the invoice (e.g. "vendor already told me verbally, stop nagging me about this one").
     public bool ReminderDismissed { get; set; }
 
+    [Display(Name = "Terms & Conditions"), StringLength(1000)]
+    public string? TermsAndConditions { get; set; }
+
     // Which owned-stock lots this sale was filled from. Empty for consignment sales, and also
     // for owned-stock invoices issued before lot selection existed (those still fall back to
     // FIFO-derived vendor attribution).

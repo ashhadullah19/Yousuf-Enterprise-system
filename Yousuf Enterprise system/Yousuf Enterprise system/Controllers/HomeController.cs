@@ -45,6 +45,7 @@ public class HomeController : Controller
             PaymentReminders = await CustomerRemindersAsync(today, reminderCutoff),
             PurchaseReminders = await SupplierRemindersAsync(today, reminderCutoff),
             ChequeReminders = await ChequeRemindersAsync(today, reminderCutoff),
+            CommissionReminders = await CommissionRemindersAsync(),
             RecentInvoices = await _db.SalesInvoices.AsNoTracking()
                 .Include(i => i.Buyer)
                 .Include(i => i.Product)
@@ -154,11 +155,27 @@ public class HomeController : Controller
             .ToList();
     }
 
+    private async Task<List<CommissionReminder>> CommissionRemindersAsync()
+    {
+        var rows = await _ledger.GetCommissionRemindersAsync();
+        return rows
+            .Select(r => new CommissionReminder
+            {
+                PartyId = r.PartyId,
+                PartyName = r.PartyName,
+                Outstanding = r.Outstanding,
+                OldestAccrualDate = r.OldestAccrualDate,
+                PendingEntryCount = r.PendingEntryCount
+            })
+            .ToList();
+    }
+
     private async Task<List<ChequeReminder>> ChequeRemindersAsync(DateTime today, DateTime cutoff)
     {
         var chequeEntries = await _db.LedgerEntries.AsNoTracking()
             .Include(e => e.Party)
             .Where(e => e.Mode == PaymentMode.Cheque
+                && !e.ChequeCleared
                 && e.ChequeDate != null
                 && e.ChequeDate.Value.Date <= cutoff)
             .ToListAsync();

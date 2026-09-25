@@ -55,7 +55,7 @@ else
         </div>
         <div class="text-end">
             <div class="text-muted small">Current balance</div>
-            <div class="h4 mb-0 @(currentBalance < 0 ? "amount-debit" : "")">@currentBalance.ToString("N2")</div>
+            <div class="h4 mb-0 @(currentBalance < 0 ? "amount-debit" : "")">@currentBalance.ToString("N0")</div>
         </div>
     </div>
 
@@ -82,8 +82,8 @@ else
                 <tr>
                     <td>@item.TransactionDate.ToString("dd-MMM-yyyy")</td>
                     <td>@item.Type.GetDisplayName()</td>
-                    <td><span class="@(item.Type == TransactionType.Deposit ? "amount-credit" : "amount-debit")">@item.Amount.ToString("N2")</span></td>
-                    <td class="text-end">@balances.GetValueOrDefault(item.Id).ToString("N2")</td>
+                    <td><span class="@(item.Type == TransactionType.Deposit ? "amount-credit" : "amount-debit")">@item.Amount.ToString("N0")</span></td>
+                    <td class="text-end">@balances.GetValueOrDefault(item.Id).ToString("N0")</td>
                     <td>@item.ReferenceNumber</td>
                     <td>@item.Remarks</td>
                     <td class="text-end">

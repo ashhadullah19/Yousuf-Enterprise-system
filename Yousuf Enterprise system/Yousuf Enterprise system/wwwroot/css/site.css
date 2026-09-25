@@ -603,6 +603,7 @@ html.sidebar-collapsed .app-sidebar .nav-section {
 .reminder-panel[data-tone="green"] { --rem-accent: #198754; --rem-soft: rgba(25, 135, 84, 0.12); }
 .reminder-panel[data-tone="red"] { --rem-accent: #dc3545; --rem-soft: rgba(220, 53, 69, 0.12); }
 .reminder-panel[data-tone="blue"] { --rem-accent: #0d6efd; --rem-soft: rgba(13, 110, 253, 0.12); }
+.reminder-panel[data-tone="purple"] { --rem-accent: #6f42c1; --rem-soft: rgba(111, 66, 193, 0.12); }
 
 .reminder-header {
   display: flex;
@@ -1270,6 +1271,14 @@ a.report-tool:hover {
   padding-left: 1.1rem;
 }
 
+.form-section {
+  /* Bootstrap's .card is a flex column, so a section is a flex item — without this, a flex
+     item's default min-width:auto stops it (and any wide table inside it) from ever shrinking
+     below its content's natural width, so a wide table forces the whole card wider instead of
+     scrolling within its own .table-responsive. */
+  min-width: 0;
+}
+
 .form-section + .form-section {
   margin-top: 1.5rem;
   padding-top: 1.25rem;
@@ -1323,6 +1332,94 @@ a.report-tool:hover {
 .app-content .app-form.app-form-narrow {
   max-width: 720px;
 }
+
+/* ---------- Read-only detail page (e.g. Sales Invoice Details) ---------- */
+.invoice-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.invoice-detail-eyebrow {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8a978f;
+}
+
+.invoice-detail-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 0.15rem 0 0.3rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1f2d28;
+}
+
+.invoice-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* A labelled figure on a read-only detail page — label left, value right. */
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding: 0.55rem 0;
+}
+
+.detail-row + .detail-row {
+  border-top: 1px solid #f1f4f3;
+}
+
+.detail-row .detail-label {
+  color: #6b7871;
+  font-size: 0.88rem;
+}
+
+.detail-row .detail-value {
+  font-weight: 600;
+  color: #1f2d28;
+  text-align: right;
+}
+
+.detail-row .detail-hint {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #8a978f;
+}
+
+/* Small tone-able status badge, same accent-variable convention as .kpi-card/.reminder-panel. */
+.status-pill {
+  --pill-accent: #6b7871;
+  --pill-soft: rgba(107, 120, 113, 0.14);
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--pill-accent);
+  background: var(--pill-soft);
+  vertical-align: middle;
+}
+
+.status-pill[data-tone="green"] { --pill-accent: #198754; --pill-soft: rgba(25, 135, 84, 0.12); }
+.status-pill[data-tone="amber"] { --pill-accent: #d98a00; --pill-soft: rgba(217, 138, 0, 0.14); }
+.status-pill[data-tone="red"] { --pill-accent: #dc3545; --pill-soft: rgba(220, 53, 69, 0.12); }
 
 /* ---------- Popups ---------- */
 .app-modal {

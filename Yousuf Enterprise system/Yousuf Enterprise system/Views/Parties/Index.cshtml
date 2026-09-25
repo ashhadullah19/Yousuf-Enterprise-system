@@ -53,10 +53,10 @@
             <td>@item.Type.GetDisplayName()</td>
             <td>@item.PrimaryContact</td>
             <td>@item.Ntn</td>
-            <td><span class="@(balance.Receivable != 0 ? "amount-credit" : "text-muted")">@balance.Receivable.ToString("N2")</span></td>
-            <td><span class="@(balance.Payable != 0 ? "amount-debit" : "text-muted")">@balance.Payable.ToString("N2")</span></td>
-            <td>@balance.CommissionReceivable.ToString("N2")</td>
-            <td>@balance.CommissionReceived.ToString("N2")</td>
+            <td><span class="@(balance.Receivable != 0 ? "amount-credit" : "text-muted")">@balance.Receivable.ToString("N0")</span></td>
+            <td><span class="@(balance.Payable != 0 ? "amount-debit" : "text-muted")">@balance.Payable.ToString("N0")</span></td>
+            <td>@balance.CommissionReceivable.ToString("N0")</td>
+            <td>@balance.CommissionReceived.ToString("N0")</td>
             <td class="text-end">
                 <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id" data-modal>Edit</a>
                 @if (User.IsInRole(AppRoles.SuperAdmin))

@@ -28,12 +28,23 @@
         <ul class="reminder-list">
             @foreach (var item in Model.Items)
             {
-                var daysLate = (today - item.DueDate.Date).Days;
-                var (state, label) = daysLate > 0
-                    ? ("is-overdue", $"Overdue · {daysLate} day{(daysLate == 1 ? "" : "s")}")
-                    : daysLate == 0
-                        ? ("is-today", "Due today")
-                        : ("is-soon", "Due tomorrow");
+                var age = (today - item.DueDate.Date).Days;
+                string state, label;
+                if (Model.IsAgeBased)
+                {
+                    // No fixed due date here — DueDate holds when it started accruing, so this
+                    // reads as "how long has this been pending", escalating in tone over time.
+                    label = age <= 0 ? "Pending today" : $"Pending · {age} day{(age == 1 ? "" : "s")}";
+                    state = age > 30 ? "is-overdue" : age > 7 ? "is-today" : "is-soon";
+                }
+                else
+                {
+                    (state, label) = age > 0
+                        ? ("is-overdue", $"Overdue · {age} day{(age == 1 ? "" : "s")}")
+                        : age == 0
+                            ? ("is-today", "Due today")
+                            : ("is-soon", "Due tomorrow");
+                }
 
                 <li class="reminder-item @state">
                     <div class="reminder-main">
@@ -48,11 +59,11 @@
                                 <span>@item.Reference</span>
                             }
                             <span class="reminder-dot" aria-hidden="true"></span>
-                            <span><i class="bi bi-calendar-event"></i> @item.DueDate.ToString("dd MMM yyyy")</span>
+                            <span><i class="bi bi-calendar-event"></i> @(Model.IsAgeBased ? "Since " : "")@item.DueDate.ToString("dd MMM yyyy")</span>
                         </div>
                     </div>
                     <div class="reminder-side">
-                        <div class="reminder-amount">@item.Amount.ToString("N2")</div>
+                        <div class="reminder-amount">@item.Amount.ToString("N0")</div>
                         <span class="reminder-pill">@label</span>
                     </div>
                     @if (!string.IsNullOrEmpty(item.DismissUrl))

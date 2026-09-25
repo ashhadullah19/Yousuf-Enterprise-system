@@ -121,7 +121,27 @@
             </div>
             <div class="col-md-3">
                 <label asp-for="ExtraChargesAmount" class="form-label"></label>
-                <input asp-for="ExtraChargesAmount" class="form-control" />
+                <input asp-for="ExtraChargesAmount" class="form-control" id="extraCharges" />
+            </div>
+            <div class="col-12">
+                <div class="form-summary">
+                    <div class="d-flex justify-content-between"><span class="text-muted">Subtotal</span><strong id="previewSubtotal">0</strong></div>
+                    <div class="d-flex justify-content-between" id="previewGstRow"><span class="text-muted">GST</span><strong id="previewGst">0</strong></div>
+                    <div class="d-flex justify-content-between" id="previewExtraRow"><span class="text-muted">Extra charges</span><strong id="previewExtra">0</strong></div>
+                    <hr class="my-2" />
+                    <div class="d-flex justify-content-between"><span class="fw-semibold">Amount buyer will pay</span><strong id="previewGrandTotal" class="fs-5">0</strong></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-file-earmark-text"></i> Terms &amp; conditions</div>
+        <div class="row g-3">
+            <div class="col-12">
+                <label asp-for="TermsAndConditions" class="form-label"></label>
+                <textarea asp-for="TermsAndConditions" class="form-control" rows="2" placeholder="Printed on the invoice, under Terms &amp; Conditions"></textarea>
+                <span asp-validation-for="TermsAndConditions" class="text-danger"></span>
             </div>
         </div>
     </section>
@@ -239,7 +259,7 @@
                 const rate = parseFloat(row.dataset.rate) || 0;
                 const commission = qty * rate * pct / 100;
 
-                amountCell.textContent = commission.toFixed(2);
+                amountCell.textContent = commission.toFixed(0);
                 qtyTotal += qty;
                 commissionTotal += commission;
                 selectedCount++;
@@ -248,7 +268,7 @@
             const qtyTotalCell = document.getElementById('allocationQtyTotal');
             if (qtyTotalCell) qtyTotalCell.textContent = qtyTotal.toFixed(4);
             const commissionTotalCell = document.getElementById('allocationCommissionTotal');
-            if (commissionTotalCell) commissionTotalCell.textContent = commissionTotal.toFixed(2);
+            if (commissionTotalCell) commissionTotalCell.textContent = commissionTotal.toFixed(0);
 
             if (isOwnedStock()) {
                 // Keep a bindable number in the box — posting an empty string would fail model
@@ -258,6 +278,28 @@
                     ? `Total of ${selectedCount} selected source${selectedCount === 1 ? '' : 's'}.`
                     : 'Select at least one stock source above.';
             }
+
+            updatePreview();
+        }
+
+        // Live preview of what the buyer actually owes, so it's visible before the invoice is
+        // issued (issuing deducts stock and the invoice can't be edited afterwards).
+        function updatePreview() {
+            const qty = parseFloat(document.getElementById('quantitySold').value) || 0;
+            const rate = parseFloat(document.getElementById('RatePerUnit').value) || 0;
+            const subtotal = qty * rate;
+            const applyGst = document.getElementById('ApplyGst').checked;
+            const gstPct = parseFloat(document.getElementById('GstPercentage').value) || 0;
+            const gst = applyGst ? subtotal * gstPct / 100 : 0;
+            const extra = parseFloat(document.getElementById('extraCharges').value) || 0;
+            const grandTotal = subtotal + gst + extra;
+
+            document.getElementById('previewSubtotal').textContent = subtotal.toFixed(0);
+            document.getElementById('previewGst').textContent = gst.toFixed(0);
+            document.getElementById('previewExtra').textContent = extra.toFixed(0);
+            document.getElementById('previewGrandTotal').textContent = grandTotal.toFixed(0);
+            document.getElementById('previewGstRow').style.display = applyGst ? '' : 'none';
+            document.getElementById('previewExtraRow').style.display = extra > 0 ? '' : 'none';
         }
 
         function togglePaymentFields() {
@@ -295,8 +337,11 @@
         document.getElementById('paymentType').addEventListener('change', togglePaymentFields);
         document.getElementById('productSelect').addEventListener('change', loadAllocationRows);
         document.getElementById('receiptSelect').addEventListener('change', refreshStockBadge);
+        ['quantitySold', 'RatePerUnit', 'GstPercentage', 'extraCharges'].forEach(id => document.getElementById(id).addEventListener('input', updatePreview));
+        document.getElementById('ApplyGst').addEventListener('change', updatePreview);
         wireAllocationRows();
         toggleReceipt();
         togglePaymentFields();
+        updatePreview();
     </script>
 }

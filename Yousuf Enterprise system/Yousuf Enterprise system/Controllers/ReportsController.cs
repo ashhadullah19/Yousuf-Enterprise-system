@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
 using Yousuf_Enterprise_system.Data;
 using Yousuf_Enterprise_system.Models;
 using Yousuf_Enterprise_system.Services;
@@ -189,6 +190,92 @@ public class ReportsController : Controller
         var lines = await _ledger.GetPartyLedgerAsync(partyId.Value, from, to);
         ViewBag.Balance = PartyCommissionBalance.FromLedger(lines);
         return View(lines);
+    }
+
+    public async Task<IActionResult> PartyLedgerPdf(int partyId, DateTime? from, DateTime? to)
+    {
+        var party = await _db.Parties.AsNoTracking().FirstOrDefaultAsync(p => p.Id == partyId);
+        if (party is null)
+        {
+            return NotFound();
+        }
+
+        var lines = await _ledger.GetPartyLedgerAsync(partyId, from, to);
+        var balance = PartyCommissionBalance.FromLedger(lines);
+        var settings = await _db.SystemSettings.AsNoTracking().FirstAsync();
+
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
+        decimal runningReceivable = 0;
+        decimal runningPayable = 0;
+
+        var pdfBytes = QuestPDF.Fluent.Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(30);
+                page.DefaultTextStyle(x => x.FontSize(9));
+                page.Header().Column(col =>
+                {
+                    col.Item().Text(settings.CompanyName).FontSize(16).Bold();
+                    col.Item().Text($"Party Ledger — {party.FullName}").FontSize(12).SemiBold();
+                    var rangeText = from.HasValue || to.HasValue
+                        ? $"{(from.HasValue ? from.Value.ToString("dd-MMM-yyyy") : "Start")} to {(to.HasValue ? to.Value.ToString("dd-MMM-yyyy") : "Today")}"
+                        : "All time";
+                    col.Item().Text(rangeText).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                });
+
+                page.Content().PaddingTop(10).Table(table =>
+                {
+                    table.ColumnsDefinition(c =>
+                    {
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(4);
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(2);
+                    });
+
+                    table.Header(h =>
+                    {
+                        h.Cell().Text("Date").Bold();
+                        h.Cell().Text("Document").Bold();
+                        h.Cell().Text("Description").Bold();
+                        h.Cell().Text("Head").Bold();
+                        h.Cell().AlignRight().Text("Debit").Bold();
+                        h.Cell().AlignRight().Text("Credit").Bold();
+                        h.Cell().AlignRight().Text("Receivable").Bold();
+                        h.Cell().AlignRight().Text("Payable").Bold();
+                    });
+
+                    foreach (var line in lines)
+                    {
+                        if (line.Side == DuesSide.Receivable) runningReceivable += line.Debit - line.Credit;
+                        if (line.Side == DuesSide.Payable) runningPayable += line.Credit - line.Debit;
+
+                        table.Cell().Text(line.Date.ToString("dd-MMM-yyyy"));
+                        table.Cell().Text(line.Document);
+                        table.Cell().Text(line.Description);
+                        table.Cell().Text(line.Head.GetDisplayName());
+                        table.Cell().AlignRight().Text(line.Debit != 0 ? line.Debit.ToString("N0") : "");
+                        table.Cell().AlignRight().Text(line.Credit != 0 ? line.Credit.ToString("N0") : "");
+                        table.Cell().AlignRight().Text(line.Side == DuesSide.Receivable ? runningReceivable.ToString("N0") : "");
+                        table.Cell().AlignRight().Text(line.Side == DuesSide.Payable ? runningPayable.ToString("N0") : "");
+                    }
+                });
+
+                page.Footer().PaddingTop(8).Column(col =>
+                {
+                    col.Item().AlignRight().Text($"Receivable: {balance.Receivable:N0}    Payable: {balance.Payable:N0}").Bold();
+                    col.Item().AlignRight().Text($"Commission receivable: {balance.CommissionReceivable:N0}    Commission received: {balance.CommissionReceived:N0}");
+                });
+            });
+        }).GeneratePdf();
+
+        return File(pdfBytes, "application/pdf", $"PartyLedger_{party.FullName}_{DateTime.Now:yyyyMMdd}.pdf");
     }
 
     public async Task<IActionResult> Stock()

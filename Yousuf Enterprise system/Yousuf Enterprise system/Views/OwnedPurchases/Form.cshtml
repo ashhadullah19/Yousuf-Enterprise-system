@@ -5,7 +5,6 @@
     ViewData["Title"] = isNew ? "Add owned purchase" : "Edit owned purchase";
     ViewData["ModalSize"] = "xl";
     var action = isNew ? "Create" : "Edit";
-    var bagWeightKg = ViewBag.BagWeightKg as decimal? ?? 50m;
     // Bag used to be a selectable Unit; it's now a separate informational count instead, so
     // it's dropped from new selections here but kept selectable if an existing record already
     // has it (editing shouldn't silently change historical data).
@@ -90,8 +89,8 @@
             </div>
             <div class="col-12">
                 <div class="form-summary">
-                    <div class="d-flex justify-content-between"><span class="text-muted">Total product cost</span><strong id="totalProductCost">0.00</strong></div>
-                    <div class="d-flex justify-content-between"><span class="text-muted">Grand total (incl. freight/labour)</span><strong id="grandTotal">0.00</strong></div>
+                    <div class="d-flex justify-content-between"><span class="text-muted">Total product cost</span><strong id="totalProductCost">0</strong></div>
+                    <div class="d-flex justify-content-between"><span class="text-muted">Grand total (incl. freight/labour)</span><strong id="grandTotal">0</strong></div>
                     <div class="d-flex justify-content-between"><span class="text-muted">Gross weight (net + package)</span><strong id="grossWeight">0.0000</strong></div>
                 </div>
             </div>
@@ -126,26 +125,28 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        const bagWeightKg = @bagWeightKg.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        const bagsPackingValue = '@((int)PackingType.Bags)';
-
         function updateTotals() {
             const qty = parseFloat(document.getElementById('quantity').value) || 0;
             const rate = parseFloat(document.getElementById('ratePerUnit').value) || 0;
             const freight = parseFloat(document.getElementById('freight').value) || 0;
             const packageWeight = parseFloat(document.getElementById('packageWeight').value) || 0;
             const productCost = qty * rate;
-            document.getElementById('totalProductCost').textContent = productCost.toFixed(2);
-            document.getElementById('grandTotal').textContent = (productCost + freight).toFixed(2);
+            document.getElementById('totalProductCost').textContent = productCost.toFixed(0);
+            document.getElementById('grandTotal').textContent = (productCost + freight).toFixed(0);
             document.getElementById('grossWeight').textContent = (qty + packageWeight).toFixed(4);
         }
 
         function updateBagHint() {
-            const packingType = document.getElementById('packingType').value;
+            // Computed from what was actually entered for this purchase (net weight ÷ package
+            // count) — not the system-wide default bag weight, which is only a fallback estimate
+            // used elsewhere and has nothing to do with this specific purchase's real packaging.
+            const netWeight = parseFloat(document.getElementById('quantity').value) || 0;
             const count = parseFloat(document.getElementById('packingCount').value) || 0;
+            const packingTypeSelect = document.getElementById('packingType');
+            const packingLabel = (packingTypeSelect.options[packingTypeSelect.selectedIndex]?.text || 'package').toLowerCase();
             const bagHint = document.getElementById('bagHint');
-            bagHint.textContent = (packingType === bagsPackingValue && count > 0)
-                ? `≈ ${(count * bagWeightKg).toFixed(2)} KG (@bagWeightKg.ToString("N0") KG/bag)`
+            bagHint.textContent = (count > 0 && netWeight > 0)
+                ? `≈ ${(netWeight / count).toFixed(2)} KG per ${packingLabel}`
                 : '';
         }
 
@@ -157,6 +158,7 @@
         ['quantity', 'ratePerUnit', 'freight', 'packageWeight'].forEach(id => document.getElementById(id).addEventListener('input', updateTotals));
         document.getElementById('packingType').addEventListener('change', updateBagHint);
         document.getElementById('packingCount').addEventListener('input', updateBagHint);
+        document.getElementById('quantity').addEventListener('input', updateBagHint);
         document.getElementById('paymentType').addEventListener('change', toggleDueDate);
         updateTotals();
         updateBagHint();

@@ -48,7 +48,7 @@ else
                                    value="@(picked?.CommissionPercentage.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
                                    class="form-control form-control-sm allocation-input allocation-commission" disabled="@(!isChecked)" />
                         </td>
-                        <td class="text-end allocation-commission-amount text-muted">0.00</td>
+                        <td class="text-end allocation-commission-amount text-muted">0</td>
                     </tr>
                 }
             </tbody>
@@ -57,7 +57,7 @@ else
                     <td colspan="5" class="text-end">Total</td>
                     <td id="allocationQtyTotal">0.0000</td>
                     <td></td>
-                    <td class="text-end" id="allocationCommissionTotal">0.00</td>
+                    <td class="text-end" id="allocationCommissionTotal">0</td>
                 </tr>
             </tfoot>
         </table>

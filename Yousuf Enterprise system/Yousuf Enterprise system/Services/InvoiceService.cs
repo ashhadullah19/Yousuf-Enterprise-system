@@ -118,8 +118,8 @@ public class InvoiceService : IInvoiceService
                 result.AgentCommissionAmount = Math.Round(result.CostOfGoodsSold * invoice.AgentCommissionPercentage / 100m, 2);
             }
 
-            // Owned-stock commission is a vendor-side concession, not a cut of the sale price —
-            // it comes out of what's owed to the vendor(s) who supplied the stock, not profit.
+            // Owned-stock commission is cash collected back from the vendor(s) separately (see
+            // LedgerService), not a cut of the sale price, so it doesn't touch profit here.
             // Extra charges are billed to and recovered from the buyer (see GrandTotal above),
             // so they don't reduce profit either.
             result.ProfitAmount = Math.Round(result.Subtotal - result.CostOfGoodsSold, 2);

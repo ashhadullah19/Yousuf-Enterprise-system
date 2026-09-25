@@ -217,7 +217,7 @@ public class BankTransactionController : Controller
                         .SemiBold().FontSize(14);
                     if (from.HasValue)
                     {
-                        col.Item().Text($"Opening Balance ({from.Value:dd-MMM-yyyy}): {opening:N2}");
+                        col.Item().Text($"Opening Balance ({from.Value:dd-MMM-yyyy}): {opening:N0}");
                     }
                 });
 
@@ -244,13 +244,13 @@ public class BankTransactionController : Controller
                         table.Cell().Text(t.TransactionDate.ToString("dd-MMM-yyyy"));
                         table.Cell().Text(t.Type.ToString());
                         table.Cell().Text(t.ReferenceNumber ?? "");
-                        table.Cell().Text(t.Type == TransactionType.Deposit ? t.Amount.ToString("N2") : "");
-                        table.Cell().Text(t.Type == TransactionType.Withdrawal ? t.Amount.ToString("N2") : "");
-                        table.Cell().Text(balance.ToString("N2"));
+                        table.Cell().Text(t.Type == TransactionType.Deposit ? t.Amount.ToString("N0") : "");
+                        table.Cell().Text(t.Type == TransactionType.Withdrawal ? t.Amount.ToString("N0") : "");
+                        table.Cell().Text(balance.ToString("N0"));
                     }
                 });
 
-                page.Footer().AlignRight().Text($"Closing Balance: {closing:N2}").SemiBold();
+                page.Footer().AlignRight().Text($"Closing Balance: {closing:N0}").SemiBold();
             });
         }).GeneratePdf();
 

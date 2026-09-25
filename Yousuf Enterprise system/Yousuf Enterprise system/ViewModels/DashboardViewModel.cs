@@ -58,6 +58,21 @@ public class ReminderPanelViewModel
     public string Tone { get; set; } = "amber";
     public string EmptyText { get; set; } = string.Empty;
     public List<ReminderItem> Items { get; set; } = new();
+
+    // When true, the panel has no fixed due date to compare against — items are shown as
+    // "Pending N days" (since DueDate, which holds the date it started accruing) instead of
+    // the Overdue/Due today/Due tomorrow wording used for actual due dates.
+    public bool IsAgeBased { get; set; }
+}
+
+// A party with commission accrued but not yet collected back from them.
+public class CommissionReminder
+{
+    public int PartyId { get; set; }
+    public string PartyName { get; set; } = string.Empty;
+    public decimal Outstanding { get; set; }
+    public DateTime OldestAccrualDate { get; set; }
+    public int PendingEntryCount { get; set; }
 }
 
 public class DashboardViewModel
@@ -77,6 +92,7 @@ public class DashboardViewModel
     public List<PaymentReminder> PaymentReminders { get; set; } = new();
     public List<PurchasePaymentReminder> PurchaseReminders { get; set; } = new();
     public List<ChequeReminder> ChequeReminders { get; set; } = new();
+    public List<CommissionReminder> CommissionReminders { get; set; } = new();
 }
 
 public class ProductStockAlert

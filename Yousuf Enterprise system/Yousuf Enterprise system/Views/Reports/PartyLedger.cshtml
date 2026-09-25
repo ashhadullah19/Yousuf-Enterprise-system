@@ -9,6 +9,16 @@
 }
 
 <div class="list-toolbar">
+    @if (ViewBag.PartyId is int)
+    {
+        <div class="list-toolbar-actions">
+            <a class="btn btn-outline-danger"
+               asp-action="PartyLedgerPdf"
+               asp-route-partyId="@ViewBag.PartyId"
+               asp-route-from="@((ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"))"
+               asp-route-to="@((ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"))"><i class="bi bi-file-earmark-pdf"></i> Download PDF</a>
+        </div>
+    }
     <form class="list-toolbar-filters" method="get">
         <select name="partyId" class="form-select" aria-label="Party">
             <option value="">Select party</option>
@@ -37,25 +47,25 @@
         <div class="col-md-3">
             <div class="card stat-card p-3">
                 <div class="text-muted">Receivable (they owe us)</div>
-                <div class="fs-5 amount-credit">@balance.Receivable.ToString("N2")</div>
+                <div class="fs-5 amount-credit">@balance.Receivable.ToString("N0")</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card stat-card p-3">
                 <div class="text-muted">Payable (we owe them)</div>
-                <div class="fs-5 amount-debit">@balance.Payable.ToString("N2")</div>
+                <div class="fs-5 amount-debit">@balance.Payable.ToString("N0")</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card stat-card p-3">
                 <div class="text-muted">Commission receivable</div>
-                <div class="fs-5 fw-semibold">@balance.CommissionReceivable.ToString("N2")</div>
+                <div class="fs-5 fw-semibold">@balance.CommissionReceivable.ToString("N0")</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card stat-card p-3">
                 <div class="text-muted">Commission received</div>
-                <div class="fs-5 fw-semibold">@balance.CommissionReceived.ToString("N2")</div>
+                <div class="fs-5 fw-semibold">@balance.CommissionReceived.ToString("N0")</div>
             </div>
         </div>
     </div>
@@ -73,10 +83,10 @@
             <td>@line.Document</td>
             <td>@line.Description</td>
             <td>@line.Head.GetDisplayName()</td>
-            <td><span class="@(line.Debit != 0 ? "amount-debit" : "text-muted")">@line.Debit.ToString("N2")</span></td>
-            <td><span class="@(line.Credit != 0 ? "amount-credit" : "text-muted")">@line.Credit.ToString("N2")</span></td>
-            <td><span class="@(line.Side == DuesSide.Receivable ? null : "text-muted")">@runningReceivable.ToString("N2")</span></td>
-            <td><span class="@(line.Side == DuesSide.Payable ? null : "text-muted")">@runningPayable.ToString("N2")</span></td>
+            <td><span class="@(line.Debit != 0 ? "amount-debit" : "text-muted")">@line.Debit.ToString("N0")</span></td>
+            <td><span class="@(line.Credit != 0 ? "amount-credit" : "text-muted")">@line.Credit.ToString("N0")</span></td>
+            <td><span class="@(line.Side == DuesSide.Receivable ? null : "text-muted")">@runningReceivable.ToString("N0")</span></td>
+            <td><span class="@(line.Side == DuesSide.Payable ? null : "text-muted")">@runningPayable.ToString("N0")</span></td>
         </tr>
     }
     </tbody>

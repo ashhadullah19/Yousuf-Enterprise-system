@@ -160,7 +160,5 @@ public class OwnedPurchasesController : Controller
         ViewBag.Products = new SelectList(
             await _db.Products.Where(p => p.IsActive).OrderBy(p => p.Name).ToListAsync(),
             "Id", "Name");
-        var settings = await _db.SystemSettings.AsNoTracking().FirstAsync();
-        ViewBag.BagWeightKg = settings.BagWeightKg;
     }
 }

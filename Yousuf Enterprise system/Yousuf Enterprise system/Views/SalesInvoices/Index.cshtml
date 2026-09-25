@@ -44,8 +44,8 @@
                 <td>@item.PaymentType.GetDisplayName()</td>
                 <td>@(item.DueDate?.ToString("dd-MMM-yyyy") ?? "-")</td>
                 <td>@(item.ApplyGst ? "Yes" : "No")</td>
-                <td>@item.ProfitAmount.ToString("N2")</td>
-                <td>@item.GrandTotalAmount.ToString("N2")</td>
+                <td>@item.ProfitAmount.ToString("N0")</td>
+                <td>@item.GrandTotalAmount.ToString("N0")</td>
                 <td><span class="@statusClass">@status</span></td>
                 <td class="text-end">
                     <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@item.Id">View</a>

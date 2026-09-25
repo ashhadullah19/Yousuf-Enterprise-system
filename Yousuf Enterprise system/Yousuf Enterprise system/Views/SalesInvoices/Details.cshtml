@@ -2,121 +2,243 @@
 @{
     ViewData["Title"] = Model.InvoiceNumber;
     var paid = (decimal)ViewBag.AmountPaid;
+    var balance = Model.GrandTotalAmount - paid;
     var settleStatus = paid <= 0 ? "Unpaid" : paid >= Model.GrandTotalAmount ? "Paid" : "Partial";
-    var settleClass = settleStatus switch { "Paid" => "badge bg-success", "Partial" => "badge bg-warning text-dark", _ => "badge bg-secondary" };
+    var settleTone = settleStatus switch { "Paid" => "green", "Partial" => "amber", _ => "red" };
 }
 
-<div class="card stat-card p-4" style="max-width:720px;">
-    <div class="d-flex justify-content-between">
-        <h2 class="h5">@Model.InvoiceNumber</h2>
-        <a class="btn btn-outline-primary" asp-action="Pdf" asp-route-id="@Model.Id">Download PDF</a>
+<div class="invoice-detail-header">
+    <div>
+        <div class="invoice-detail-eyebrow">@(Model.ApplyGst ? "GST Invoice" : "Non-GST Invoice") &middot; @Model.InvoiceDate.ToString("dd MMM yyyy")</div>
+        <h1 class="invoice-detail-title">
+            @Model.InvoiceNumber
+            <span class="status-pill" data-tone="@settleTone">@settleStatus</span>
+        </h1>
+        <div class="text-muted">Bill to <strong>@Model.Buyer?.FullName</strong></div>
     </div>
-    <p>@(Model.ApplyGst ? "GST Invoice" : "Non-GST Invoice") · @Model.InvoiceDate.ToString("dd-MMM-yyyy")</p>
-    <p>Buyer: @Model.Buyer?.FullName</p>
-    <p>
-        Product: @Model.Product?.Name · Net weight @Model.QuantitySold.ToString("N4") @Model.Unit at @Model.RatePerUnit.ToString("N2")
-        @if (Model.DisplayUnit.HasValue)
-        {
-            <text>(= @(((decimal)ViewBag.ConvertedQuantity).ToString("N4")) @Model.DisplayUnit)</text>
-        }
-    </p>
-    <p>Subtotal: @Model.SubtotalAmount.ToString("N2")</p>
-    @if (!string.IsNullOrWhiteSpace(Model.ExtraChargesDescription) || Model.ExtraChargesAmount > 0)
-    {
-        <p>
-            Extra charges@(string.IsNullOrWhiteSpace(Model.ExtraChargesDescription) ? "" : $" ({Model.ExtraChargesDescription})"):
-            @Model.ExtraChargesAmount.ToString("N2")
-            <span class="text-muted small">— paid by the buyer, added to the grand total</span>
-        </p>
-    }
-    <p>GST (@Model.GstPercentage.ToString("N2")%): @Model.GstAmount.ToString("N2")</p>
-    <p class="fw-semibold">Grand total: @Model.GrandTotalAmount.ToString("N2") <span class="@settleClass">@settleStatus</span></p>
-    <p>Paid so far: @paid.ToString("N2") / @Model.GrandTotalAmount.ToString("N2")</p>
+    <div class="invoice-detail-actions">
+        <a class="btn btn-outline-secondary" asp-action="Index"><i class="bi bi-arrow-left"></i> Back to invoices</a>
+        <a class="btn btn-success" asp-action="Pdf" asp-route-id="@Model.Id"><i class="bi bi-file-earmark-pdf"></i> Download PDF</a>
+    </div>
+</div>
 
-    @if (Model.Allocations.Any())
-    {
-        <hr />
-        <h3 class="h6">Stock sources</h3>
-        <div class="table-responsive">
-            <table class="table table-sm align-middle">
-                <thead>
-                    <tr>
-                        <th>Party</th>
-                        <th>GRN</th>
-                        <th class="text-end">Net weight</th>
-                        <th class="text-end">Purchase rate</th>
-                        <th class="text-end">Cost</th>
-                        <th class="text-end">Comm. %</th>
-                        <th class="text-end">Commission</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var allocation in Model.Allocations)
-                    {
-                        <tr>
-                            <td>@allocation.OwnedPurchase?.Vendor?.FullName</td>
-                            <td class="text-muted small">@allocation.OwnedPurchase?.GrnNumber</td>
-                            <td class="text-end">@allocation.Quantity.ToString("N4")</td>
-                            <td class="text-end">@allocation.PurchaseRate.ToString("N2")</td>
-                            <td class="text-end">@allocation.Cost.ToString("N2")</td>
-                            <td class="text-end">@allocation.CommissionPercentage.ToString("N2")</td>
-                            <td class="text-end">@allocation.CommissionAmount.ToString("N2")</td>
-                        </tr>
-                    }
-                </tbody>
-                <tfoot>
-                    <tr class="fw-semibold">
-                        <td colspan="2" class="text-end">Total</td>
-                        <td class="text-end">@Model.Allocations.Sum(a => a.Quantity).ToString("N4")</td>
-                        <td></td>
-                        <td class="text-end">@Model.Allocations.Sum(a => a.Cost).ToString("N2")</td>
-                        <td></td>
-                        <td class="text-end">@Model.AllocationCommissionTotal.ToString("N2")</td>
-                    </tr>
-                </tfoot>
-            </table>
+<div class="row g-3 mb-3">
+    <div class="col-sm-6 col-lg-3">
+        <div class="kpi-card" data-tone="green">
+            <div class="kpi-icon"><i class="bi bi-receipt"></i></div>
+            <div class="kpi-body">
+                <div class="kpi-label">Grand total</div>
+                <div class="kpi-value" title="@Model.GrandTotalAmount.ToString("N0")">@Model.GrandTotalAmount.ToString("N0")</div>
+            </div>
         </div>
-        <p class="small text-muted">Commission is charged against each party's own account, and isn't shown on the printed invoice.</p>
-    }
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="kpi-card" data-tone="blue">
+            <div class="kpi-icon"><i class="bi bi-cash-coin"></i></div>
+            <div class="kpi-body">
+                <div class="kpi-label">Paid so far</div>
+                <div class="kpi-value" title="@paid.ToString("N0")">@paid.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="kpi-card" data-tone="@(balance > 0 ? "red" : "teal")">
+            <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
+            <div class="kpi-body">
+                <div class="kpi-label">Balance due</div>
+                <div class="kpi-value" title="@balance.ToString("N0")">@balance.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="kpi-card" data-tone="purple">
+            <div class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="kpi-body">
+                <div class="kpi-label">Profit</div>
+                <div class="kpi-value" title="@Model.ProfitAmount.ToString("N0")">@Model.ProfitAmount.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <hr />
-    <p>Cost of goods sold: @Model.CostOfGoodsSold.ToString("N2")</p>
+<div class="card stat-card p-4">
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-box-seam"></i> Item</div>
+        <div class="detail-row">
+            <span class="detail-label">Product</span>
+            <span class="detail-value">@Model.Product?.Name</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Net weight</span>
+            <span class="detail-value">
+                @Model.QuantitySold.ToString("N4") @Model.Unit
+                @if (Model.DisplayUnit.HasValue)
+                {
+                    <span class="detail-hint">= @(((decimal)ViewBag.ConvertedQuantity).ToString("N4")) @Model.DisplayUnit</span>
+                }
+            </span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Rate</span>
+            <span class="detail-value">@Model.RatePerUnit.ToString("N2") / @Model.Unit</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Subtotal</span>
+            <span class="detail-value">@Model.SubtotalAmount.ToString("N0")</span>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.ExtraChargesDescription) || Model.ExtraChargesAmount > 0)
+        {
+            <div class="detail-row">
+                <span class="detail-label">Extra charges@(string.IsNullOrWhiteSpace(Model.ExtraChargesDescription) ? "" : $" ({Model.ExtraChargesDescription})")</span>
+                <span class="detail-value">
+                    @Model.ExtraChargesAmount.ToString("N0")
+                    <span class="detail-hint">paid by the buyer, added to the grand total</span>
+                </span>
+            </div>
+        }
+        <div class="detail-row">
+            <span class="detail-label">GST (@Model.GstPercentage.ToString("N2")%)</span>
+            <span class="detail-value">@Model.GstAmount.ToString("N0")</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label fw-semibold">Grand total</span>
+            <span class="detail-value fs-5">@Model.GrandTotalAmount.ToString("N0")</span>
+        </div>
+    </section>
+
     @if (Model.Allocations.Any())
     {
-        <p>Total commission: @Model.AllocationCommissionTotal.ToString("N2")</p>
+        <section class="form-section">
+            <div class="form-section-title"><i class="bi bi-boxes"></i> Stock sources</div>
+            <div class="table-card mb-0">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Party</th>
+                                <th>GRN</th>
+                                <th class="text-end">Net weight</th>
+                                <th class="text-end">Purchase rate</th>
+                                <th class="text-end">Cost</th>
+                                <th class="text-end">Comm. %</th>
+                                <th class="text-end">Commission</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var allocation in Model.Allocations)
+                            {
+                                <tr>
+                                    <td>@allocation.OwnedPurchase?.Vendor?.FullName</td>
+                                    <td class="text-muted small">@allocation.OwnedPurchase?.GrnNumber</td>
+                                    <td class="text-end">@allocation.Quantity.ToString("N4")</td>
+                                    <td class="text-end">@allocation.PurchaseRate.ToString("N2")</td>
+                                    <td class="text-end">@allocation.Cost.ToString("N0")</td>
+                                    <td class="text-end">@allocation.CommissionPercentage.ToString("N2")</td>
+                                    <td class="text-end">@allocation.CommissionAmount.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="fw-semibold">
+                                <td colspan="2" class="text-end">Total</td>
+                                <td class="text-end">@Model.Allocations.Sum(a => a.Quantity).ToString("N4")</td>
+                                <td></td>
+                                <td class="text-end">@Model.Allocations.Sum(a => a.Cost).ToString("N0")</td>
+                                <td></td>
+                                <td class="text-end">@Model.AllocationCommissionTotal.ToString("N0")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <p class="small text-muted mt-2 mb-0">Commission is charged against each party's own account, and isn't shown on the printed invoice.</p>
+        </section>
     }
-    else
-    {
-        <p>Agent commission (@Model.AgentCommissionPercentage.ToString("N2")%): @Model.AgentCommissionAmount.ToString("N2") @(Model.Agent is not null ? $"— {Model.Agent.FullName}" : "")</p>
-    }
-    @if (Model.ExtraChargesAmount > 0)
-    {
-        <p>Extra charges (recovered from buyer): @Model.ExtraChargesAmount.ToString("N2") <span class="text-muted small">— not deducted from profit</span></p>
-    }
-    <p class="fw-semibold">Profit: @Model.ProfitAmount.ToString("N2")
-        @if (Model.StockType == StockType.OwnedStock)
-        {
-            <span class="text-muted small fw-normal">= subtotal @Model.SubtotalAmount.ToString("N2") − cost of goods @Model.CostOfGoodsSold.ToString("N2")</span>
-        }
-    </p>
 
-    <hr />
-    <p>Payment type: @Model.PaymentType.GetDisplayName()</p>
-    @if (Model.PaymentType == PaymentType.Online)
-    {
-        <p>Bank account: @Model.BankAccount?.AccountTitle (@Model.BankAccount?.BankName)</p>
-    }
-    @if (Model.PaymentType == PaymentType.Credit)
-    {
-        <p class="@(Model.IsOverdue ? "text-danger fw-semibold" : "")">
-            Due date: @Model.DueDate?.ToString("dd-MMM-yyyy") @(Model.IsOverdue ? "(OVERDUE)" : "")
-        </p>
-    }
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-graph-up-arrow"></i> Cost &amp; profit <span class="text-muted small text-uppercase fw-normal ms-1" style="letter-spacing:normal;">— internal, not printed</span></div>
+        <div class="detail-row">
+            <span class="detail-label">Cost of goods sold</span>
+            <span class="detail-value">@Model.CostOfGoodsSold.ToString("N0")</span>
+        </div>
+        @if (Model.Allocations.Any())
+        {
+            <div class="detail-row">
+                <span class="detail-label">Total commission</span>
+                <span class="detail-value">@Model.AllocationCommissionTotal.ToString("N0")</span>
+            </div>
+        }
+        else
+        {
+            <div class="detail-row">
+                <span class="detail-label">Agent commission (@Model.AgentCommissionPercentage.ToString("N2")%)</span>
+                <span class="detail-value">
+                    @Model.AgentCommissionAmount.ToString("N0")
+                    @if (Model.Agent is not null)
+                    {
+                        <span class="detail-hint">@Model.Agent.FullName</span>
+                    }
+                </span>
+            </div>
+        }
+        @if (Model.ExtraChargesAmount > 0)
+        {
+            <div class="detail-row">
+                <span class="detail-label">Extra charges</span>
+                <span class="detail-value">
+                    @Model.ExtraChargesAmount.ToString("N0")
+                    <span class="detail-hint">recovered from buyer, not deducted from profit</span>
+                </span>
+            </div>
+        }
+        <div class="detail-row">
+            <span class="detail-label fw-semibold">Profit</span>
+            <span class="detail-value fs-5">
+                @Model.ProfitAmount.ToString("N0")
+                @if (Model.StockType == StockType.OwnedStock)
+                {
+                    <span class="detail-hint">= subtotal @Model.SubtotalAmount.ToString("N0") &minus; cost of goods @Model.CostOfGoodsSold.ToString("N0")</span>
+                }
+            </span>
+        </div>
+    </section>
+
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-wallet2"></i> Payment</div>
+        <div class="detail-row">
+            <span class="detail-label">Payment type</span>
+            <span class="detail-value">@Model.PaymentType.GetDisplayName()</span>
+        </div>
+        @if (Model.PaymentType == PaymentType.Online)
+        {
+            <div class="detail-row">
+                <span class="detail-label">Bank account</span>
+                <span class="detail-value">@Model.BankAccount?.AccountTitle (@Model.BankAccount?.BankName)</span>
+            </div>
+        }
+        @if (Model.PaymentType == PaymentType.Credit)
+        {
+            <div class="detail-row">
+                <span class="detail-label">Due date</span>
+                <span class="detail-value @(Model.IsOverdue ? "text-danger" : "")">
+                    @Model.DueDate?.ToString("dd-MMM-yyyy")
+                    @if (Model.IsOverdue)
+                    {
+                        <span class="status-pill" data-tone="red">Overdue</span>
+                    }
+                </span>
+            </div>
+        }
+    </section>
 
     @if (Model.StockType == StockType.ConsignmentStock)
     {
-        <hr />
-        <p>Owner: @Model.ConsignmentReceipt?.StockOwner?.FullName</p>
+        <section class="form-section">
+            <div class="form-section-title"><i class="bi bi-person-lines-fill"></i> Consignment</div>
+            <div class="detail-row">
+                <span class="detail-label">Owner</span>
+                <span class="detail-value">@Model.ConsignmentReceipt?.StockOwner?.FullName</span>
+            </div>
+        </section>
     }
-    <a asp-action="Index">Back to invoices</a>
 </div>
