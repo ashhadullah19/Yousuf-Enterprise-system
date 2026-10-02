@@ -88,7 +88,6 @@ public class ReportsController : Controller
             Subtotal = await invoices.SumAsync(i => (decimal?)i.SubtotalAmount) ?? 0,
             GrossProfit = await invoices.SumAsync(i => (decimal?)i.ProfitAmount) ?? 0,
             InvoiceCount = await invoices.CountAsync(),
-            OwnedSales = await invoices.Where(i => i.StockType == StockType.OwnedStock).SumAsync(i => (decimal?)i.SubtotalAmount) ?? 0,
             GstSales = await invoices.Where(i => i.ApplyGst).SumAsync(i => (decimal?)i.SubtotalAmount) ?? 0,
             Expenses = await expenses.SumAsync(e => (decimal?)e.Amount) ?? 0
         };
@@ -209,6 +208,10 @@ public class ReportsController : Controller
         decimal runningReceivable = 0;
         decimal runningPayable = 0;
 
+        var rangeText = from.HasValue || to.HasValue
+            ? $"{(from.HasValue ? from.Value.ToString("dd-MMM-yyyy") : "Start")} to {(to.HasValue ? to.Value.ToString("dd-MMM-yyyy") : "Today")}"
+            : "All time";
+
         var pdfBytes = QuestPDF.Fluent.Document.Create(container =>
         {
             container.Page(page =>
@@ -217,60 +220,126 @@ public class ReportsController : Controller
                 page.DefaultTextStyle(x => x.FontSize(9));
                 page.Header().Column(col =>
                 {
-                    col.Item().Text(settings.CompanyName).FontSize(16).Bold();
-                    col.Item().Text($"Party Ledger — {party.FullName}").FontSize(12).SemiBold();
-                    var rangeText = from.HasValue || to.HasValue
-                        ? $"{(from.HasValue ? from.Value.ToString("dd-MMM-yyyy") : "Start")} to {(to.HasValue ? to.Value.ToString("dd-MMM-yyyy") : "Today")}"
-                        : "All time";
-                    col.Item().Text(rangeText).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                    col.Item().AlignCenter().Text(settings.CompanyName.ToUpperInvariant()).FontSize(20).Bold();
+                    if (!string.IsNullOrWhiteSpace(settings.Address))
+                    {
+                        col.Item().AlignCenter().PaddingTop(1).Text(settings.Address).FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                    }
+                    col.Item().AlignCenter().PaddingTop(8).Text("PARTY LEDGER STATEMENT").FontSize(12).Bold().Underline();
+
+                    col.Item().PaddingTop(10).Row(row =>
+                    {
+                        row.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text(party.FullName).FontSize(12).SemiBold();
+                            if (!string.IsNullOrWhiteSpace(party.PrimaryContact))
+                            {
+                                c.Item().Text($"Contact: {party.PrimaryContact}").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                            }
+                            if (!string.IsNullOrWhiteSpace(party.BusinessAddress))
+                            {
+                                c.Item().Text(party.BusinessAddress).FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                            }
+                        });
+                        row.RelativeItem().AlignRight().Column(c =>
+                        {
+                            c.Item().Text($"Period: {rangeText}").FontSize(8);
+                            c.Item().Text($"Generated: {DateTime.Now:dd-MMM-yyyy hh:mm tt}").FontSize(8);
+                        });
+                    });
+
+                    col.Item().PaddingTop(10).Row(row =>
+                    {
+                        void SummaryCard(string label, decimal value, string background, string accent)
+                        {
+                            row.RelativeItem().Padding(3).Border(1).BorderColor(accent)
+                                .Background(background).Padding(6).Column(c =>
+                            {
+                                c.Item().Text(label).FontSize(7).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
+                                c.Item().PaddingTop(2).Text(value.ToString("N0")).FontSize(13).Bold().FontColor(accent);
+                            });
+                        }
+
+                        SummaryCard("Receivable (they owe us)", balance.Receivable, QuestPDF.Helpers.Colors.Green.Lighten5, QuestPDF.Helpers.Colors.Green.Darken2);
+                        SummaryCard("Payable (we owe them)", balance.Payable, QuestPDF.Helpers.Colors.Red.Lighten5, QuestPDF.Helpers.Colors.Red.Darken2);
+                        SummaryCard("Commission receivable", balance.CommissionReceivable, QuestPDF.Helpers.Colors.Amber.Lighten5, QuestPDF.Helpers.Colors.Amber.Darken3);
+                        SummaryCard("Commission received", balance.CommissionReceived, QuestPDF.Helpers.Colors.Blue.Lighten5, QuestPDF.Helpers.Colors.Blue.Darken2);
+                    });
                 });
 
-                page.Content().PaddingTop(10).Table(table =>
+                page.Content().PaddingTop(14).Table(table =>
                 {
                     table.ColumnsDefinition(c =>
                     {
-                        c.RelativeColumn(2);
-                        c.RelativeColumn(2);
-                        c.RelativeColumn(4);
-                        c.RelativeColumn(2);
-                        c.RelativeColumn(2);
-                        c.RelativeColumn(2);
-                        c.RelativeColumn(2);
-                        c.RelativeColumn(2);
+                        c.RelativeColumn(2.2f);
+                        c.RelativeColumn(2.5f);
+                        c.RelativeColumn(4.5f);
+                        c.RelativeColumn(2.2f);
+                        c.RelativeColumn(1.8f);
+                        c.RelativeColumn(1.8f);
+                        c.RelativeColumn(2f);
+                        c.RelativeColumn(2f);
                     });
 
                     table.Header(h =>
                     {
-                        h.Cell().Text("Date").Bold();
-                        h.Cell().Text("Document").Bold();
-                        h.Cell().Text("Description").Bold();
-                        h.Cell().Text("Head").Bold();
-                        h.Cell().AlignRight().Text("Debit").Bold();
-                        h.Cell().AlignRight().Text("Credit").Bold();
-                        h.Cell().AlignRight().Text("Receivable").Bold();
-                        h.Cell().AlignRight().Text("Payable").Bold();
+                        void HeaderCell(string text, bool right = false)
+                        {
+                            // Border/background go on the full-width cell first; alignment only
+                            // affects the text inside it, same pattern as the invoice PDF table.
+                            var cell = h.Cell().Border(1).BorderColor(QuestPDF.Helpers.Colors.Black)
+                                .Background(QuestPDF.Helpers.Colors.Grey.Darken3).Padding(4);
+                            (right ? cell.AlignRight() : cell).Text(text).Bold().FontSize(8).FontColor(QuestPDF.Helpers.Colors.White);
+                        }
+
+                        HeaderCell("Date");
+                        HeaderCell("Document");
+                        HeaderCell("Description");
+                        HeaderCell("Head");
+                        HeaderCell("Debit", right: true);
+                        HeaderCell("Credit", right: true);
+                        HeaderCell("Receivable", right: true);
+                        HeaderCell("Payable", right: true);
                     });
+
+                    var rowIndex = 0;
+                    void Cell(string text, bool right = false, bool shaded = false)
+                    {
+                        var cell = table.Cell().Border(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Padding(4);
+                        if (shaded)
+                        {
+                            cell = cell.Background(QuestPDF.Helpers.Colors.Grey.Lighten4);
+                        }
+                        (right ? cell.AlignRight() : cell).Text(text).FontSize(8);
+                    }
 
                     foreach (var line in lines)
                     {
                         if (line.Side == DuesSide.Receivable) runningReceivable += line.Debit - line.Credit;
                         if (line.Side == DuesSide.Payable) runningPayable += line.Credit - line.Debit;
+                        var shaded = rowIndex++ % 2 == 1;
 
-                        table.Cell().Text(line.Date.ToString("dd-MMM-yyyy"));
-                        table.Cell().Text(line.Document);
-                        table.Cell().Text(line.Description);
-                        table.Cell().Text(line.Head.GetDisplayName());
-                        table.Cell().AlignRight().Text(line.Debit != 0 ? line.Debit.ToString("N0") : "");
-                        table.Cell().AlignRight().Text(line.Credit != 0 ? line.Credit.ToString("N0") : "");
-                        table.Cell().AlignRight().Text(line.Side == DuesSide.Receivable ? runningReceivable.ToString("N0") : "");
-                        table.Cell().AlignRight().Text(line.Side == DuesSide.Payable ? runningPayable.ToString("N0") : "");
+                        Cell(line.Date.ToString("dd-MMM-yyyy"), shaded: shaded);
+                        Cell(line.Document, shaded: shaded);
+                        Cell(line.Description, shaded: shaded);
+                        Cell(line.Head.GetDisplayName(), shaded: shaded);
+                        Cell(line.Debit != 0 ? line.Debit.ToString("N0") : "-", right: true, shaded: shaded);
+                        Cell(line.Credit != 0 ? line.Credit.ToString("N0") : "-", right: true, shaded: shaded);
+                        Cell(line.Side == DuesSide.Receivable ? runningReceivable.ToString("N0") : "-", right: true, shaded: shaded);
+                        Cell(line.Side == DuesSide.Payable ? runningPayable.ToString("N0") : "-", right: true, shaded: shaded);
                     }
                 });
 
-                page.Footer().PaddingTop(8).Column(col =>
+                page.Footer().PaddingTop(10).Row(row =>
                 {
-                    col.Item().AlignRight().Text($"Receivable: {balance.Receivable:N0}    Payable: {balance.Payable:N0}").Bold();
-                    col.Item().AlignRight().Text($"Commission receivable: {balance.CommissionReceivable:N0}    Commission received: {balance.CommissionReceived:N0}");
+                    row.RelativeItem().Text(text =>
+                    {
+                        text.Span("Page ").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                        text.CurrentPageNumber().FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                        text.Span(" of ").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                        text.TotalPages().FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                    });
+                    row.RelativeItem().AlignRight().Text($"{lines.Count} entries").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
                 });
             });
         }).GeneratePdf();

@@ -31,8 +31,6 @@ public class ReportsViewModel
     public decimal? MarginPercent => Subtotal == 0 ? null : GrossProfit / Subtotal * 100;
 
     // Sales mix is measured on subtotal (before GST) so GST doesn't inflate either side.
-    public decimal OwnedSales { get; set; }
-    public decimal ConsignmentSales => Subtotal - OwnedSales;
     public decimal GstSales { get; set; }
     public decimal NonGstSales => Subtotal - GstSales;
 

@@ -344,7 +344,7 @@ public class InvoiceService : IInvoiceService
 
             if (allocation.Quantity > lot.AvailableQuantity)
             {
-                throw new InvalidOperationException($"{lot.VendorName} ({lot.GrnNumber}): only {lot.AvailableQuantity:N4} available, {allocation.Quantity:N4} requested.");
+                throw new InvalidOperationException($"{lot.VendorName} ({lot.GrnNumber}): only {lot.AvailableQuantity:#,0.####} available, {allocation.Quantity:#,0.####} requested.");
             }
 
             if (allocation.CommissionPercentage is < 0 or > 100)
@@ -396,7 +396,7 @@ public class InvoiceService : IInvoiceService
             var remaining = await ConsignmentRemainingAsync(invoice.ConsignmentReceiptId.Value, invoice.Id == 0 ? null : invoice.Id);
             if (invoice.QuantitySold > remaining)
             {
-                throw new InvalidOperationException($"Insufficient consignment stock. Remaining: {remaining:N4}.");
+                throw new InvalidOperationException($"Insufficient consignment stock. Remaining: {remaining:#,0.####}.");
             }
 
             var receipt = await _db.ConsignmentReceipts.AsNoTracking()
@@ -409,7 +409,7 @@ public class InvoiceService : IInvoiceService
             var onHand = await OwnedStockOnHandAsync(invoice.ProductId, invoice.Id == 0 ? null : invoice.Id);
             if (invoice.QuantitySold > onHand)
             {
-                throw new InvalidOperationException($"Insufficient owned stock. On hand: {onHand:N4}.");
+                throw new InvalidOperationException($"Insufficient owned stock. On hand: {onHand:#,0.####}.");
             }
         }
 
@@ -421,5 +421,6 @@ public class InvoiceService : IInvoiceService
         invoice.AgentCommissionAmount = calc.AgentCommissionAmount;
         invoice.CostOfGoodsSold = calc.CostOfGoodsSold;
         invoice.ProfitAmount = calc.ProfitAmount;
+        invoice.GrossWeight = invoice.QuantitySold + (invoice.TotalPackageWeight ?? 0);
     }
 }

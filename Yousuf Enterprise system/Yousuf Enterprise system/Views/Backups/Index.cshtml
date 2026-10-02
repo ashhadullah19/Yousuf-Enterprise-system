@@ -1,17 +1,35 @@
+@using Yousuf_Enterprise_system.Data
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Db
 @model Yousuf_Enterprise_system.ViewModels.PagedResult<BackupLog>
 @{
-    ViewData["Title"] = "Cloud / local backups";
+    ViewData["Title"] = "Backups";
+    var driveLink = (await Db.SystemSettings.AsNoTracking().FirstAsync()).GoogleDriveFolderLink;
 }
 
 <form asp-action="Run" method="post" class="mb-3"
-      data-confirm-title="Run a backup now?" data-confirm="This creates a new local backup archive." data-confirm-ok="Run backup">
+      data-confirm-title="Run a backup now?" data-confirm="This creates a new backup archive of your data." data-confirm-ok="Run backup">
     <button class="btn btn-success">Run backup now</button>
 </form>
-<p class="text-muted">Daily local archives are created automatically. Google Drive upload can be added when credentials are available.</p>
+
+@if (string.IsNullOrWhiteSpace(driveLink))
+{
+    <p class="text-muted">
+        Each backup packages your business data (parties, products, purchases, invoices, ledger, etc.) and uploaded files into a zip you can download below.
+        No Google Drive folder is set — add one in <a asp-controller="Settings" asp-action="Index">Settings</a> as a reminder of where to upload backups.
+    </p>
+}
+else
+{
+    <p class="text-muted">
+        Each backup packages your business data and uploaded files into a zip you can download below, then upload to your Drive folder:
+        <a href="@driveLink" target="_blank" rel="noopener">@driveLink</a>. Automatic upload isn't wired up yet.
+    </p>
+}
 
 <div class="table-card">
 <table class="table table-striped">
-    <thead><tr><th>Time (UTC)</th><th>Size (bytes)</th><th>Status</th><th>Drive ID</th><th>Notes</th></tr></thead>
+    <thead><tr><th>Time (UTC)</th><th>Size</th><th>Status</th><th>Notes</th><th></th></tr></thead>
     <tbody>
     @if (!Model.Items.Any())
     {
@@ -21,10 +39,15 @@
     {
         <tr>
             <td>@item.Timestamp.ToString("u")</td>
-            <td>@item.FileSizeBytes</td>
-            <td>@item.UploadStatus</td>
-            <td>@item.DriveFileId</td>
+            <td>@((long.Parse(item.FileSizeBytes) / 1024).ToString("N0")) KB</td>
+            <td><span class="status-pill" data-tone="@(item.UploadStatus == "Failed" ? "red" : "green")">@item.UploadStatus</span></td>
             <td>@item.Notes</td>
+            <td class="text-end">
+                @if (item.FileName is not null)
+                {
+                    <a class="btn btn-sm btn-outline-primary" asp-action="Download" asp-route-id="@item.Id"><i class="bi bi-download"></i> Download</a>
+                }
+            </td>
         </tr>
     }
     </tbody>

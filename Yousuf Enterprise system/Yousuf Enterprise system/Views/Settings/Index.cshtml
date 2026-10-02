@@ -55,6 +55,21 @@
         }
     </section>
 
+    <section class="form-section">
+        <div class="form-section-title"><i class="bi bi-cloud-arrow-up"></i> Backup</div>
+        <div class="row g-3">
+            <div class="col-12">
+                <label asp-for="GoogleDriveFolderLink" class="form-label"></label>
+                <input asp-for="GoogleDriveFolderLink" class="form-control" placeholder="https://drive.google.com/drive/folders/..." />
+                <span asp-validation-for="GoogleDriveFolderLink" class="text-danger"></span>
+                <div class="form-text">
+                    Shown on the <a asp-controller="Backups" asp-action="Index">Backups</a> page as a reminder of where to upload backup files.
+                    Automatic upload to Drive isn't wired up yet — backups are downloaded from that page and uploaded here manually.
+                </div>
+            </div>
+        </div>
+    </section>
+
     <div class="form-actions">
         <button class="btn btn-success" type="submit"><i class="bi bi-check2"></i> Save settings</button>
     </div>

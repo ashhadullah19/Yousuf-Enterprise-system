@@ -11,6 +11,9 @@ public class BackupLog
     [StringLength(50)]
     public string FileSizeBytes { get; set; } = "0";
 
+    [StringLength(260)]
+    public string? FileName { get; set; }
+
     [StringLength(50)]
     public string UploadStatus { get; set; } = "Pending";
 

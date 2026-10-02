@@ -25,10 +25,16 @@ public class InvoicePdfService : IInvoicePdfService
         // "Quantity" is the figure recorded in whatever unit the sale was negotiated in (e.g. bag
         // count); "Net Wt" is that same quantity converted to a weight unit, when one was set up
         // for this sale — the same distinction the paper invoice draws between its two columns.
-        var quantityText = $"{invoice.QuantitySold:N4} {invoice.Unit}";
+        var quantityText = $"{invoice.QuantitySold:#,0.####} {invoice.Unit}";
         var netWeightText = invoice.DisplayUnit.HasValue
-            ? $"{UnitConversion.Convert(invoice.QuantitySold, invoice.Unit, invoice.DisplayUnit.Value, settings.BagWeightKg):N4} {invoice.DisplayUnit}"
+            ? $"{UnitConversion.Convert(invoice.QuantitySold, invoice.Unit, invoice.DisplayUnit.Value, settings.BagWeightKg):#,0.####} {invoice.DisplayUnit}"
             : quantityText;
+        var grossWeightText = invoice.TotalPackageWeight is > 0
+            ? $"{invoice.GrossWeight:#,0.####} {invoice.Unit}"
+            : "-";
+        var packingText = invoice.PackingCount is > 0 && invoice.PackingType.HasValue
+            ? $"{invoice.PackingCount:N0} {invoice.PackingType}"
+            : "-";
 
         return Document.Create(container =>
         {
@@ -72,11 +78,13 @@ public class InvoicePdfService : IInvoicePdfService
                         table.ColumnsDefinition(c =>
                         {
                             c.ConstantColumn(28);
-                            c.RelativeColumn(3);
-                            c.RelativeColumn(2);
-                            c.RelativeColumn(2);
-                            c.RelativeColumn(2);
-                            c.RelativeColumn(2);
+                            c.RelativeColumn(2.6f);
+                            c.RelativeColumn(1.8f);
+                            c.RelativeColumn(1.8f);
+                            c.RelativeColumn(1.8f);
+                            c.RelativeColumn(1.8f);
+                            c.RelativeColumn(1.8f);
+                            c.RelativeColumn(1.8f);
                         });
 
                         table.Header(h =>
@@ -95,6 +103,8 @@ public class InvoicePdfService : IInvoicePdfService
                             HeaderCell("Item Name");
                             HeaderCell("Quantity");
                             HeaderCell("Net Wt");
+                            HeaderCell("Packing");
+                            HeaderCell("Gross Wt");
                             HeaderCell("Rate", right: true);
                             HeaderCell("Total", right: true);
                         });
@@ -109,13 +119,15 @@ public class InvoicePdfService : IInvoicePdfService
                         Cell(invoice.Product?.Name ?? "");
                         Cell(quantityText);
                         Cell(netWeightText);
+                        Cell(packingText);
+                        Cell(grossWeightText);
                         Cell($"Rs {invoice.RatePerUnit:N2}", right: true);
                         Cell($"Rs {invoice.SubtotalAmount:N0}", right: true);
 
                         // A couple of blank rows, same as the paper form leaving room for a second line item.
                         for (var i = 0; i < 2; i++)
                         {
-                            table.Cell().ColumnSpan(6).Border(1).BorderColor(Colors.Grey.Lighten1).Height(22);
+                            table.Cell().ColumnSpan(8).Border(1).BorderColor(Colors.Grey.Lighten1).Height(22);
                         }
                     });
 

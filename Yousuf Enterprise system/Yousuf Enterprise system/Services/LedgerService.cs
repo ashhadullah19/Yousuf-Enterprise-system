@@ -84,6 +84,12 @@ public class LedgerService : ILedgerService
 {
     private readonly ApplicationDbContext _db;
 
+    // LedgerService is request-scoped, so caching the full ledger load on the instance is safe —
+    // it never outlives or crosses a request. Several callers (dashboard balances, commission
+    // reminders, etc.) each used to trigger their own full Invoices/Purchases/LedgerEntries scan
+    // even when called back-to-back in the same request; this makes the second call free.
+    private LedgerData? _cachedData;
+
     public LedgerService(ApplicationDbContext db)
     {
         _db = db;
@@ -275,6 +281,7 @@ public class LedgerService : ILedgerService
         public int BuyerId { get; init; }
         public int? AgentId { get; init; }
         public int ProductId { get; init; }
+        public string ProductName { get; set; } = string.Empty;
         public StockType StockType { get; init; }
         public decimal QuantitySold { get; init; }
         public decimal SubtotalAmount { get; init; }
@@ -291,6 +298,7 @@ public class LedgerService : ILedgerService
         public int Id { get; init; }
         public int VendorId { get; init; }
         public int ProductId { get; init; }
+        public string ProductName { get; set; } = string.Empty;
         public DateTime PurchaseDate { get; init; }
         public string GrnNumber { get; init; } = string.Empty;
         public decimal GrandTotalAmount { get; init; }
@@ -303,6 +311,8 @@ public class LedgerService : ILedgerService
         public int VendorId { get; init; }
         public DateTime InvoiceDate { get; init; }
         public string InvoiceNumber { get; init; } = string.Empty;
+        public int ProductId { get; init; }
+        public string ProductName { get; set; } = string.Empty;
         public decimal CommissionAmount { get; init; }
     }
 
@@ -320,6 +330,11 @@ public class LedgerService : ILedgerService
 
     private async Task<LedgerData> LoadLedgerDataAsync()
     {
+        if (_cachedData is not null)
+        {
+            return _cachedData;
+        }
+
         var invoices = await _db.SalesInvoices.AsNoTracking()
             .OrderBy(i => i.Id)
             .Select(i => new InvoiceRow
@@ -365,6 +380,7 @@ public class LedgerService : ILedgerService
                 VendorId = a.OwnedPurchase!.VendorId,
                 InvoiceDate = a.SalesInvoice!.InvoiceDate,
                 InvoiceNumber = a.SalesInvoice!.InvoiceNumber,
+                ProductId = a.SalesInvoice!.ProductId,
                 CommissionAmount = a.CommissionAmount
             })
             .ToListAsync();
@@ -380,11 +396,31 @@ public class LedgerService : ILedgerService
             .Select(p => p.Id)
             .ToListAsync()).ToHashSet();
 
+        // Resolved separately (ignoring the soft-delete filter) rather than joined in the queries
+        // above — Product is the required end of those relationships, so joining through the
+        // filtered navigation would silently drop any invoice/purchase whose product was later
+        // deleted from this entire ledger, not just rename it.
+        var productNames = await _db.Products.IgnoreQueryFilters().AsNoTracking()
+            .Select(p => new { p.Id, p.Name })
+            .ToDictionaryAsync(p => p.Id, p => p.Name);
+        foreach (var invoice in invoices)
+        {
+            invoice.ProductName = productNames.GetValueOrDefault(invoice.ProductId, "Deleted product");
+        }
+        foreach (var purchase in purchases)
+        {
+            purchase.ProductName = productNames.GetValueOrDefault(purchase.ProductId, "Deleted product");
+        }
+        foreach (var commission in allocationCommissions)
+        {
+            commission.ProductName = productNames.GetValueOrDefault(commission.ProductId, "Deleted product");
+        }
+
         var splits = invoices
             .Where(IsLegacyCommissionedSale)
             .ToDictionary(sale => sale.Id, sale => FifoVendorSplit(sale, invoices, purchases, deletedPartyIds));
 
-        return new LedgerData
+        _cachedData = new LedgerData
         {
             Invoices = invoices,
             Purchases = purchases,
@@ -392,6 +428,7 @@ public class LedgerService : ILedgerService
             Entries = entries,
             LegacyCommissionSplits = splits
         };
+        return _cachedData;
     }
 
     // Invoices issued before lot selection existed carry one invoice-level commission with no
@@ -454,7 +491,7 @@ public class LedgerService : ILedgerService
             {
                 Date = invoice.InvoiceDate,
                 Document = invoice.InvoiceNumber,
-                Description = "Sales invoice (receivable)",
+                Description = $"Sales invoice - {invoice.ProductName} (receivable)",
                 Head = HeadType.DirectProductHead,
                 Side = DuesSide.Receivable,
                 Debit = invoice.GrandTotalAmount
@@ -472,7 +509,7 @@ public class LedgerService : ILedgerService
             {
                 Date = invoice.InvoiceDate,
                 Document = invoice.InvoiceNumber,
-                Description = "Consignment net payable to stock owner",
+                Description = $"Consignment net payable to stock owner - {invoice.ProductName}",
                 Head = HeadType.DirectProductHead,
                 Side = DuesSide.Payable,
                 Credit = invoice.SubtotalAmount - commissionRevenue
@@ -487,7 +524,7 @@ public class LedgerService : ILedgerService
             {
                 Date = invoice.InvoiceDate,
                 Document = invoice.InvoiceNumber,
-                Description = $"Commission accrued on invoice {invoice.InvoiceNumber}",
+                Description = $"Commission accrued on invoice {invoice.InvoiceNumber} - {invoice.ProductName}",
                 Head = HeadType.CommissionHead,
                 Credit = invoice.AgentCommissionAmount
             });
@@ -500,7 +537,7 @@ public class LedgerService : ILedgerService
             {
                 Date = purchase.PurchaseDate,
                 Document = purchase.GrnNumber,
-                Description = "Owned stock purchase (payable)",
+                Description = $"Owned stock purchase - {purchase.ProductName} (payable)",
                 Head = HeadType.DirectProductHead,
                 Side = DuesSide.Payable,
                 Credit = purchase.GrandTotalAmount
@@ -520,7 +557,7 @@ public class LedgerService : ILedgerService
             {
                 Date = commission.InvoiceDate,
                 Document = commission.InvoiceNumber,
-                Description = $"Commission accrued on invoice {commission.InvoiceNumber}",
+                Description = $"Commission accrued on invoice {commission.InvoiceNumber} - {commission.ProductName}",
                 Head = HeadType.CommissionHead,
                 Credit = commission.CommissionAmount
             });
@@ -544,7 +581,7 @@ public class LedgerService : ILedgerService
                     {
                         Date = sale.InvoiceDate,
                         Document = sale.InvoiceNumber,
-                        Description = $"Commission accrued on invoice {sale.InvoiceNumber}",
+                        Description = $"Commission accrued on invoice {sale.InvoiceNumber} - {sale.ProductName}",
                         Head = HeadType.CommissionHead,
                         Credit = commissionShare
                     });

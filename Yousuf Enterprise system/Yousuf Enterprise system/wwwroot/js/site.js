@@ -333,3 +333,9 @@
         }
     });
 })();
+
+// Formats a quantity like the server's "#,0.####" — up to 4 decimals, trailing zeros dropped
+// (100.0000 -> "100", 100.5000 -> "100.5"). Used by live previews so they match printed figures.
+function formatQty(value) {
+    return (Math.round((Number(value) || 0) * 10000) / 10000).toString();
+}

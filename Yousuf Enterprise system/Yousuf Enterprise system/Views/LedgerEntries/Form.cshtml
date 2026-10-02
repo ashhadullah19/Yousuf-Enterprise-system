@@ -1,6 +1,12 @@
 @model LedgerEntry
+@using Microsoft.AspNetCore.Mvc.Rendering
 @{
     ViewData["Title"] = "Add ledger entry";
+    // Contra adjustment isn't offered for new entries anymore — kept selectable only if an
+    // existing entry already has it (editing shouldn't silently change historical data).
+    var typeOptions = Enum.GetValues<LedgerEntryType>()
+        .Where(t => t != LedgerEntryType.ContraAdjustment || Model.Type == LedgerEntryType.ContraAdjustment)
+        .Select(t => new SelectListItem { Value = ((int)t).ToString(), Text = t.GetDisplayName(), Selected = t == Model.Type });
 }
 
 <form asp-action="Create" method="post" class="app-form"
@@ -29,7 +35,7 @@
             </div>
             <div class="col-md-4">
                 <label asp-for="Type" class="form-label"></label>
-                <select asp-for="Type" asp-items="Html.GetEnumSelectList<LedgerEntryType>()" class="form-select" id="entryType"></select>
+                <select asp-for="Type" asp-items="typeOptions" class="form-select" id="entryType"></select>
             </div>
             <div class="col-md-4" id="invoiceRow">
                 <label asp-for="SalesInvoiceId" class="form-label"></label>

@@ -133,7 +133,7 @@
             const productCost = qty * rate;
             document.getElementById('totalProductCost').textContent = productCost.toFixed(0);
             document.getElementById('grandTotal').textContent = (productCost + freight).toFixed(0);
-            document.getElementById('grossWeight').textContent = (qty + packageWeight).toFixed(4);
+            document.getElementById('grossWeight').textContent = formatQty(qty + packageWeight);
         }
 
         function updateBagHint() {

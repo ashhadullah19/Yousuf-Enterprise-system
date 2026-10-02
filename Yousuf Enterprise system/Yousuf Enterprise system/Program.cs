@@ -91,7 +91,16 @@ try
     }
 
     app.UseHttpsRedirection();
-    app.UseStaticFiles();
+    // Every static file reference in the app is cache-busted with ?v=<hash> (asp-append-version),
+    // so it's safe to tell browsers to cache them for a year instead of re-fetching on every page
+    // load — a change to the file produces a new URL, not a stale cache hit.
+    app.UseStaticFiles(new Microsoft.AspNetCore.Builder.StaticFileOptions
+    {
+        OnPrepareResponse = ctx =>
+        {
+            ctx.Context.Response.Headers.CacheControl = "public,max-age=31536000,immutable";
+        }
+    });
     app.UseRouting();
     app.UseAuthentication();
     app.UseAuthorization();

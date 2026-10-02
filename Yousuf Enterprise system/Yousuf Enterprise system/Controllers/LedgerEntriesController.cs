@@ -264,46 +264,70 @@ public class LedgerEntriesController : Controller
 
         var settings = await _db.SystemSettings.AsNoTracking().FirstAsync();
 
+        var isPending = entry.Type == LedgerEntryType.ContraAdjustment && !entry.ApprovedByAdmin;
+        var against = entry.SalesInvoice?.InvoiceNumber ?? entry.OwnedPurchase?.GrnNumber;
+
         QuestPDF.Settings.License = LicenseType.Community;
         var bytes = Document.Create(container =>
         {
             container.Page(page =>
             {
-                page.Margin(40);
+                page.Margin(35);
+                page.DefaultTextStyle(x => x.FontSize(10));
                 page.Header().Column(col =>
                 {
-                    col.Item().Text(settings.CompanyName).FontSize(20).Bold();
-                    col.Item().Text($"Ledger Entry {entry.LedgerNumber}").SemiBold();
+                    col.Item().AlignCenter().Text(settings.CompanyName.ToUpperInvariant()).FontSize(20).Bold();
+                    if (!string.IsNullOrWhiteSpace(settings.Address))
+                    {
+                        col.Item().AlignCenter().PaddingTop(1).Text(settings.Address).FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                    }
+                    col.Item().AlignCenter().PaddingTop(8).Text("LEDGER ENTRY VOUCHER").FontSize(13).Bold().Underline();
+
+                    col.Item().PaddingTop(12).Row(row =>
+                    {
+                        row.RelativeItem().Text(entry.LedgerNumber).FontSize(13).Bold();
+                        row.RelativeItem().AlignRight().Column(c =>
+                        {
+                            c.Item().Text($"Date: {entry.LedgerDate:dd-MMM-yyyy}");
+                            var statusColor = isPending ? QuestPDF.Helpers.Colors.Amber.Darken2 : QuestPDF.Helpers.Colors.Green.Darken2;
+                            c.Item().Text($"Status: {(isPending ? "Pending approval" : "Posted")}").FontColor(statusColor).SemiBold();
+                        });
+                    });
                 });
 
-                page.Content().PaddingVertical(16).Column(col =>
+                page.Content().PaddingTop(16).Column(col =>
                 {
-                    col.Item().Text($"Date: {entry.LedgerDate:dd-MMM-yyyy}");
-                    col.Item().Text($"Party: {entry.Party?.FullName}");
-                    col.Item().Text($"Type: {entry.Type.GetDisplayName()}");
-                    col.Item().Text($"Head: {entry.Head.GetDisplayName()}");
-                    col.Item().Text($"Mode: {entry.Mode.GetDisplayName()}");
-                    if (entry.SalesInvoice is not null)
+                    void DetailRow(string label, string? value)
                     {
-                        col.Item().Text($"Against Invoice: {entry.SalesInvoice.InvoiceNumber}");
+                        if (string.IsNullOrWhiteSpace(value)) return;
+                        col.Item().PaddingVertical(5).BorderBottom(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Row(row =>
+                        {
+                            row.ConstantItem(140).Text(label).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
+                            row.RelativeItem().Text(value).SemiBold();
+                        });
                     }
-                    if (entry.OwnedPurchase is not null)
+
+                    DetailRow("Party", entry.Party?.FullName);
+                    DetailRow("Type", entry.Type.GetDisplayName());
+                    DetailRow("Head", entry.Head.GetDisplayName());
+                    DetailRow("Mode", entry.Mode.GetDisplayName());
+                    DetailRow(entry.SalesInvoice is not null ? "Against Invoice" : "Against Purchase", against);
+                    DetailRow("Reference", entry.ReferenceNumber);
+                    DetailRow("Bank", entry.BankName);
+                    if (entry.ChequeDate.HasValue)
                     {
-                        col.Item().Text($"Against Purchase: {entry.OwnedPurchase.GrnNumber}");
+                        DetailRow("Cheque Date", entry.ChequeDate.Value.ToString("dd-MMM-yyyy") + (entry.ChequeCleared ? " (Cleared)" : " (Pending)"));
                     }
-                    if (!string.IsNullOrWhiteSpace(entry.ReferenceNumber))
+                    DetailRow("Remarks", entry.Remarks);
+
+                    col.Item().PaddingTop(16).AlignRight().Width(240).Border(1).BorderColor(QuestPDF.Helpers.Colors.Black)
+                        .Background(QuestPDF.Helpers.Colors.Grey.Lighten4).Padding(10).Row(row =>
                     {
-                        col.Item().Text($"Reference: {entry.ReferenceNumber}");
-                    }
-                    if (!string.IsNullOrWhiteSpace(entry.BankName))
-                    {
-                        col.Item().Text($"Bank: {entry.BankName}");
-                    }
-                    if (!string.IsNullOrWhiteSpace(entry.Remarks))
-                    {
-                        col.Item().Text($"Remarks: {entry.Remarks}");
-                    }
-                    col.Item().PaddingTop(12).Text($"Amount: {entry.Amount:N0}").FontSize(16).Bold();
+                        row.RelativeItem().Text("Amount:").Bold();
+                        row.ConstantItem(110).AlignRight().Text($"Rs {entry.Amount:N0}").Bold().FontSize(14);
+                    });
+
+                    col.Item().PaddingTop(40).Text("Signature:");
                 });
             });
         }).GeneratePdf();

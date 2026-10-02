@@ -58,6 +58,7 @@ public class SettingsController : Controller
         settings.ContactNumbers = model.ContactNumbers;
         settings.DefaultGstPercentage = model.DefaultGstPercentage;
         settings.BagWeightKg = model.BagWeightKg;
+        settings.GoogleDriveFolderLink = model.GoogleDriveFolderLink;
 
         if (logo is { Length: > 0 })
         {

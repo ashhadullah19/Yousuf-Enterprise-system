@@ -11,9 +11,9 @@
         <tr>
             <td>@row.Product.Name</td>
             <td>@row.Product.Uom</td>
-            <td>@row.Owned.ToString("N4")</td>
-            <td>@row.Consignment.ToString("N4")</td>
-            <td><strong>@((row.Owned + row.Consignment).ToString("N4"))</strong></td>
+            <td>@row.Owned.ToString("#,0.####")</td>
+            <td>@row.Consignment.ToString("#,0.####")</td>
+            <td><strong>@((row.Owned + row.Consignment).ToString("#,0.####"))</strong></td>
         </tr>
     }
     </tbody>

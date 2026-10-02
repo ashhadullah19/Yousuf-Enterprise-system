@@ -37,8 +37,8 @@
         <tr>
             <td>@item.Name</td>
             <td>@item.Uom</td>
-            <td>@(onHand.TryGetValue(item.Id, out var qty) ? qty.ToString("N4") : "-")</td>
-            <td>@item.MinimumStockAlertQty.ToString("N4")</td>
+            <td>@(onHand.TryGetValue(item.Id, out var qty) ? qty.ToString("#,0.####") : "-")</td>
+            <td>@item.MinimumStockAlertQty.ToString("#,0.####")</td>
             <td>@(item.IsActive ? "Active" : "Inactive")</td>
             <td class="text-end">
                 <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id" data-modal>Edit</a>

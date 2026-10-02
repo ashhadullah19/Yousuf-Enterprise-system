@@ -84,6 +84,30 @@
                 <label asp-for="RatePerUnit" class="form-label required"></label>
                 <input asp-for="RatePerUnit" class="form-control" />
                 <span asp-validation-for="RatePerUnit" class="text-danger"></span>
+                <small class="text-danger fw-semibold" id="priceWarning" style="display:none;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Sale price is below purchase cost
+                </small>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="TotalPackageWeight" class="form-label"></label>
+                <input asp-for="TotalPackageWeight" class="form-control" id="packageWeight" />
+                <span asp-validation-for="TotalPackageWeight" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="PackingType" class="form-label"></label>
+                <select asp-for="PackingType" asp-items="Html.GetEnumSelectList<PackingType>()" class="form-select" id="packingType">
+                    <option value="">-- none --</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="PackingCount" class="form-label"></label>
+                <input asp-for="PackingCount" class="form-control" id="packingCount" />
+                <span asp-validation-for="PackingCount" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <div class="form-summary">
+                    <div class="d-flex justify-content-between"><span class="text-muted">Gross weight (net + package)</span><strong id="grossWeight">0.0000</strong></div>
+                </div>
             </div>
             @* Owned-stock sales record commission per source party in the grid above, so the single
                invoice-level agent cut only applies to consignment sales now. *@
@@ -266,14 +290,14 @@
             });
 
             const qtyTotalCell = document.getElementById('allocationQtyTotal');
-            if (qtyTotalCell) qtyTotalCell.textContent = qtyTotal.toFixed(4);
+            if (qtyTotalCell) qtyTotalCell.textContent = formatQty(qtyTotal);
             const commissionTotalCell = document.getElementById('allocationCommissionTotal');
             if (commissionTotalCell) commissionTotalCell.textContent = commissionTotal.toFixed(0);
 
             if (isOwnedStock()) {
                 // Keep a bindable number in the box — posting an empty string would fail model
                 // binding with a generic error before the clearer "pick a source" one is shown.
-                document.getElementById('quantitySold').value = qtyTotal > 0 ? qtyTotal.toFixed(4) : '0';
+                document.getElementById('quantitySold').value = qtyTotal > 0 ? formatQty(qtyTotal) : '0';
                 document.getElementById('quantityHint').textContent = selectedCount > 0
                     ? `Total of ${selectedCount} selected source${selectedCount === 1 ? '' : 's'}.`
                     : 'Select at least one stock source above.';
@@ -300,6 +324,32 @@
             document.getElementById('previewGrandTotal').textContent = grandTotal.toFixed(0);
             document.getElementById('previewGstRow').style.display = applyGst ? '' : 'none';
             document.getElementById('previewExtraRow').style.display = extra > 0 ? '' : 'none';
+
+            const packageWeight = parseFloat(document.getElementById('packageWeight').value) || 0;
+            document.getElementById('grossWeight').textContent = formatQty(qty + packageWeight);
+
+            checkPriceWarning();
+        }
+
+        // Warns when the sale price undercuts what was actually paid for the selected stock —
+        // only meaningful for owned-stock sales, where each row's purchase rate is known.
+        function checkPriceWarning() {
+            const warning = document.getElementById('priceWarning');
+            if (!isOwnedStock()) { warning.style.display = 'none'; return; }
+
+            let qtyTotal = 0;
+            let costTotal = 0;
+            document.querySelectorAll('.allocation-row').forEach(row => {
+                if (!row.querySelector('.allocation-toggle').checked) return;
+                const qty = parseFloat(row.querySelector('.allocation-qty').value) || 0;
+                const rate = parseFloat(row.dataset.rate) || 0;
+                qtyTotal += qty;
+                costTotal += qty * rate;
+            });
+
+            const avgCost = qtyTotal > 0 ? costTotal / qtyTotal : 0;
+            const salePrice = parseFloat(document.getElementById('RatePerUnit').value) || 0;
+            warning.style.display = (avgCost > 0 && salePrice > 0 && salePrice < avgCost) ? '' : 'none';
         }
 
         function togglePaymentFields() {
@@ -327,7 +377,7 @@
                 const res = await fetch(`/SalesInvoices/StockInfo?stockType=ConsignmentStock&consignmentReceiptId=${receiptId}&productId=0`);
                 const data = await res.json();
                 qtyInput.setAttribute('max', data.onHand);
-                badge.textContent = `Available: ${Number(data.onHand).toFixed(4)} ${data.uom}`;
+                badge.textContent = `Available: ${formatQty(data.onHand)} ${data.uom}`;
             } catch {
                 badge.textContent = '';
             }
@@ -337,7 +387,7 @@
         document.getElementById('paymentType').addEventListener('change', togglePaymentFields);
         document.getElementById('productSelect').addEventListener('change', loadAllocationRows);
         document.getElementById('receiptSelect').addEventListener('change', refreshStockBadge);
-        ['quantitySold', 'RatePerUnit', 'GstPercentage', 'extraCharges'].forEach(id => document.getElementById(id).addEventListener('input', updatePreview));
+        ['quantitySold', 'RatePerUnit', 'GstPercentage', 'extraCharges', 'packageWeight'].forEach(id => document.getElementById(id).addEventListener('input', updatePreview));
         document.getElementById('ApplyGst').addEventListener('change', updatePreview);
         wireAllocationRows();
         toggleReceipt();

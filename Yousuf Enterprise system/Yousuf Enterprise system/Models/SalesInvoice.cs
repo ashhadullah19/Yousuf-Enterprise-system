@@ -46,6 +46,25 @@ public class SalesInvoice
     [Display(Name = "Rate Per Unit"), Range(0.0001, double.MaxValue, ErrorMessage = "Rate must be greater than 0."), Column(TypeName = "decimal(18,4)")]
     public decimal RatePerUnit { get; set; }
 
+    // How it was packed (bags/drums) and how many — same concept as OwnedPurchase.PackingType/
+    // PackingCount. Purely informational, has no effect on QuantitySold, cost, or any calculation.
+    // Both optional (e.g. loose bulk goods have neither).
+    [Display(Name = "Packing Type")]
+    public PackingType? PackingType { get; set; }
+
+    [Display(Name = "Total Bags"), Range(0, int.MaxValue, ErrorMessage = "Bag count can't be negative.")]
+    public int? PackingCount { get; set; }
+
+    // Combined weight of the packaging material (bags/drums) for this sale, same concept as
+    // OwnedPurchase.TotalPackageWeight. Purely informational — doesn't affect QuantitySold, cost,
+    // or any calculation.
+    [Display(Name = "Total Package Weight"), Range(0, int.MaxValue, ErrorMessage = "Package weight can't be negative.")]
+    public int? TotalPackageWeight { get; set; }
+
+    // Net weight (QuantitySold) + package weight — stored so reports/PDF don't need to recompute it.
+    [Display(Name = "Gross Weight")]
+    public decimal GrossWeight { get; set; }
+
     [Display(Name = "Subtotal"), Column(TypeName = "decimal(18,2)")]
     public decimal SubtotalAmount { get; set; }
 

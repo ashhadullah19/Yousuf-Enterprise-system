@@ -28,7 +28,7 @@
             <td>@item.PurchaseDate.ToString("dd-MMM-yyyy")</td>
             <td>@item.Vendor?.FullName</td>
             <td>@item.Product?.Name</td>
-            <td>@item.Quantity.ToString("N4") @item.Unit</td>
+            <td>@item.Quantity.ToString("#,0.####") @item.Unit</td>
             <td>@item.RatePerUnit.ToString("N2")/@item.Unit</td>
             <td>@(item.PackingCount.HasValue && item.PackingType.HasValue ? $"{item.PackingCount:N0} {item.PackingType}" : "-")</td>
             <td>@item.GrandTotalAmount.ToString("N0")</td>

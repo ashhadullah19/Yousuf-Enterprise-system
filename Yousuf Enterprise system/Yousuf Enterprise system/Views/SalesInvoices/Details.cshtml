@@ -71,13 +71,31 @@
         <div class="detail-row">
             <span class="detail-label">Net weight</span>
             <span class="detail-value">
-                @Model.QuantitySold.ToString("N4") @Model.Unit
+                @Model.QuantitySold.ToString("#,0.####") @Model.Unit
                 @if (Model.DisplayUnit.HasValue)
                 {
-                    <span class="detail-hint">= @(((decimal)ViewBag.ConvertedQuantity).ToString("N4")) @Model.DisplayUnit</span>
+                    <span class="detail-hint">= @(((decimal)ViewBag.ConvertedQuantity).ToString("#,0.####")) @Model.DisplayUnit</span>
                 }
             </span>
         </div>
+        @if (Model.PackingCount.HasValue && Model.PackingType.HasValue)
+        {
+            <div class="detail-row">
+                <span class="detail-label">Packing</span>
+                <span class="detail-value">@Model.PackingCount.Value.ToString("N0") @Model.PackingType</span>
+            </div>
+        }
+        @if (Model.TotalPackageWeight.HasValue && Model.TotalPackageWeight > 0)
+        {
+            <div class="detail-row">
+                <span class="detail-label">Package weight</span>
+                <span class="detail-value">@Model.TotalPackageWeight @Model.Unit</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Gross weight</span>
+                <span class="detail-value">@Model.GrossWeight.ToString("#,0.####") @Model.Unit</span>
+            </div>
+        }
         <div class="detail-row">
             <span class="detail-label">Rate</span>
             <span class="detail-value">@Model.RatePerUnit.ToString("N2") / @Model.Unit</span>
@@ -130,7 +148,7 @@
                                 <tr>
                                     <td>@allocation.OwnedPurchase?.Vendor?.FullName</td>
                                     <td class="text-muted small">@allocation.OwnedPurchase?.GrnNumber</td>
-                                    <td class="text-end">@allocation.Quantity.ToString("N4")</td>
+                                    <td class="text-end">@allocation.Quantity.ToString("#,0.####")</td>
                                     <td class="text-end">@allocation.PurchaseRate.ToString("N2")</td>
                                     <td class="text-end">@allocation.Cost.ToString("N0")</td>
                                     <td class="text-end">@allocation.CommissionPercentage.ToString("N2")</td>
@@ -141,7 +159,7 @@
                         <tfoot>
                             <tr class="fw-semibold">
                                 <td colspan="2" class="text-end">Total</td>
-                                <td class="text-end">@Model.Allocations.Sum(a => a.Quantity).ToString("N4")</td>
+                                <td class="text-end">@Model.Allocations.Sum(a => a.Quantity).ToString("#,0.####")</td>
                                 <td></td>
                                 <td class="text-end">@Model.Allocations.Sum(a => a.Cost).ToString("N0")</td>
                                 <td></td>

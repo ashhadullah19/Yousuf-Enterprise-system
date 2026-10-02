@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Yousuf_Enterprise_system.Data;
 
@@ -11,9 +12,11 @@ using Yousuf_Enterprise_system.Data;
 namespace Yousuf_Enterprise_system.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261002180549_AddSalesInvoicePackageAndGrossWeight")]
+    partial class AddSalesInvoicePackageAndGrossWeight
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -241,10 +244,6 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.Property<string>("DriveFileId")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("FileName")
-                        .HasMaxLength(260)
-                        .HasColumnType("nvarchar(260)");
 
                     b.Property<string>("FileSizeBytes")
                         .IsRequired()
@@ -807,12 +806,6 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int?>("PackingCount")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PackingType")
-                        .HasColumnType("int");
-
                     b.Property<int>("PaymentType")
                         .HasColumnType("int");
 
@@ -927,10 +920,6 @@ namespace Yousuf_Enterprise_system.Data.Migrations
                     b.Property<decimal>("DefaultGstPercentage")
                         .HasPrecision(5, 2)
                         .HasColumnType("decimal(5,2)");
-
-                    b.Property<string>("GoogleDriveFolderLink")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("LogoPath")
                         .HasMaxLength(500)
