@@ -1,0 +1,92 @@
+@model Yousuf_Enterprise_system.ViewModels.ExpenseReportViewModel
+@{
+    ViewData["Title"] = "Expense report";
+    static int Percent(decimal part, decimal whole) => whole <= 0 ? 0 : (int)Math.Round(part / whole * 100);
+}
+
+<div class="list-toolbar">
+    <div class="list-toolbar-actions">
+        <a class="btn btn-outline-secondary" asp-action="Index"><i class="bi bi-arrow-left"></i> Reports</a>
+        <a class="btn btn-outline-danger"
+           asp-action="ExpensesPdf"
+           asp-route-expenseTypeId="@Model.ExpenseTypeId"
+           asp-route-from="@Model.From?.ToString("yyyy-MM-dd")"
+           asp-route-to="@Model.To?.ToString("yyyy-MM-dd")"><i class="bi bi-file-earmark-pdf"></i> Download PDF</a>
+    </div>
+    <form class="list-toolbar-filters" method="get">
+        <select name="expenseTypeId" class="form-select" aria-label="Expense type">
+            <option value="">All types</option>
+            @foreach (var type in Model.Types)
+            {
+                <option value="@type.Id" selected="@(Model.ExpenseTypeId == type.Id)">@type.Name@(type.IsActive ? "" : " (inactive)")</option>
+            }
+        </select>
+        <input type="date" name="from" class="form-control" value="@Model.From?.ToString("yyyy-MM-dd")" aria-label="From date" title="From" />
+        <span class="filter-label">to</span>
+        <input type="date" name="to" class="form-control" value="@Model.To?.ToString("yyyy-MM-dd")" aria-label="To date" title="To" />
+        <button class="btn btn-outline-secondary">Apply</button>
+        <a class="btn btn-light" asp-action="Expenses">Reset</a>
+    </form>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-4">
+        <div class="kpi-card" data-tone="orange">
+            <div class="kpi-icon"><i class="bi bi-cash-stack"></i></div>
+            <div class="kpi-body">
+                <div class="kpi-label">Total expenses</div>
+                <div class="kpi-value">@Model.Total.ToString("N0")</div>
+                <div class="kpi-hint">@Model.Rows.Count expense@(Model.Rows.Count == 1 ? "" : "s")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <section class="report-panel h-100">
+            <header class="report-panel-header"><h2>By expense type</h2><span class="text-muted small">Share of total</span></header>
+            @if (!Model.ByType.Any())
+            {
+                <div class="report-empty">No expenses match these filters.</div>
+            }
+            else
+            {
+                <ol class="rank-list">
+                    @foreach (var row in Model.ByType)
+                    {
+                        <li>
+                            <div class="rank-row"><span class="rank-name" title="@row.Name">@row.Name</span><span class="rank-value">@row.Amount.ToString("N0") <span class="text-muted small">(@Percent(row.Amount, Model.Total)%)</span></span></div>
+                            <div class="share-track"><div class="share-fill" style="width:@Percent(row.Amount, Model.Total)%"></div></div>
+                            <div class="small text-muted">@row.Count expense@(row.Count == 1 ? "" : "s")</div>
+                        </li>
+                    }
+                </ol>
+            }
+        </section>
+    </div>
+</div>
+
+<div class="table-card">
+<table class="table table-striped">
+    <thead><tr><th>Expense #</th><th>Date</th><th>Type</th><th>Description</th><th>Mode</th><th class="text-end">Amount</th></tr></thead>
+    <tbody>
+    @if (!Model.Rows.Any())
+    {
+        <tr class="empty-row"><td colspan="6">No expenses match these filters.</td></tr>
+    }
+    @foreach (var item in Model.Rows)
+    {
+        <tr>
+            <td>@item.ExpenseNumber</td>
+            <td>@item.ExpenseDate.ToString("dd-MMM-yyyy")</td>
+            <td>@item.ExpenseType?.Name</td>
+            <td>@item.Description</td>
+            <td>@item.Mode.GetDisplayName()@(item.BankAccount is not null ? $" ({item.BankAccount.AccountTitle})" : "")</td>
+            <td class="text-end">@item.Amount.ToString("N0")</td>
+        </tr>
+    }
+    </tbody>
+    @if (Model.Rows.Any())
+    {
+        <tfoot><tr><th colspan="5" class="text-end">Total</th><th class="text-end">@Model.Total.ToString("N0")</th></tr></tfoot>
+    }
+</table>
+</div>

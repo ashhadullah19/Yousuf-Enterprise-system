@@ -13,8 +13,9 @@ public class Expense
     [Display(Name = "Expense Date"), DataType(DataType.Date)]
     public DateTime ExpenseDate { get; set; } = DateTime.Today;
 
-    [Required, StringLength(100), Display(Name = "Category")]
-    public string Category { get; set; } = string.Empty;
+    [Range(1, int.MaxValue, ErrorMessage = "Expense type is required."), Display(Name = "Expense Type")]
+    public int ExpenseTypeId { get; set; }
+    public ExpenseType? ExpenseType { get; set; }
 
     [StringLength(500)]
     public string? Description { get; set; }

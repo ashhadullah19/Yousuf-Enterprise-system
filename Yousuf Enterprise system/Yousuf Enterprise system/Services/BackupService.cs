@@ -53,6 +53,7 @@ public class BackupService : IBackupService
             await WriteTableAsync("LedgerEntries", _db.LedgerEntries.AsNoTracking());
             await WriteTableAsync("BankAccounts", _db.BankAccounts.AsNoTracking());
             await WriteTableAsync("BankTransactions", _db.BankTransactions.AsNoTracking());
+            await WriteTableAsync("ExpenseTypes", _db.ExpenseTypes.AsNoTracking());
             await WriteTableAsync("Expenses", _db.Expenses.AsNoTracking());
             await WriteTableAsync("DastiEntries", _db.DastiEntries.AsNoTracking());
             await WriteTableAsync("RolePermissions", _db.RolePermissions.AsNoTracking());

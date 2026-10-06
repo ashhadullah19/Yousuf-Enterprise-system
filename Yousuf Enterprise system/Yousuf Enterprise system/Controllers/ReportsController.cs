@@ -347,6 +347,160 @@ public class ReportsController : Controller
         return File(pdfBytes, "application/pdf", $"PartyLedger_{party.FullName}_{DateTime.Now:yyyyMMdd}.pdf");
     }
 
+    public async Task<IActionResult> Expenses(int? expenseTypeId, DateTime? from, DateTime? to)
+        => View(await LoadExpenseReportAsync(expenseTypeId, from, to));
+
+    public async Task<IActionResult> ExpensesPdf(int? expenseTypeId, DateTime? from, DateTime? to)
+    {
+        var model = await LoadExpenseReportAsync(expenseTypeId, from, to);
+        var settings = await _db.SystemSettings.AsNoTracking().FirstAsync();
+        var typeName = model.ExpenseTypeId.HasValue
+            ? model.Types.FirstOrDefault(t => t.Id == model.ExpenseTypeId)?.Name ?? "Unknown"
+            : "All types";
+        var rangeText = model.From.HasValue || model.To.HasValue
+            ? $"{(model.From.HasValue ? model.From.Value.ToString("dd-MMM-yyyy") : "Start")} to {(model.To.HasValue ? model.To.Value.ToString("dd-MMM-yyyy") : "Today")}"
+            : "All time";
+
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
+        var pdfBytes = QuestPDF.Fluent.Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(30);
+                page.DefaultTextStyle(x => x.FontSize(9));
+                page.Header().Column(col =>
+                {
+                    col.Item().AlignCenter().Text(settings.CompanyName.ToUpperInvariant()).FontSize(20).Bold();
+                    if (!string.IsNullOrWhiteSpace(settings.Address))
+                    {
+                        col.Item().AlignCenter().PaddingTop(1).Text(settings.Address).FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                    }
+                    col.Item().AlignCenter().PaddingTop(8).Text("EXPENSE REPORT").FontSize(12).Bold().Underline();
+                    col.Item().AlignCenter().PaddingTop(4).Text($"Period: {rangeText}").FontSize(10).SemiBold();
+                    col.Item().AlignCenter().PaddingTop(1).Text($"Expense type: {typeName}").FontSize(9).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                });
+
+                page.Content().PaddingTop(14).Table(table =>
+                {
+                    table.ColumnsDefinition(c =>
+                    {
+                        c.RelativeColumn(2f);
+                        c.RelativeColumn(2.2f);
+                        c.RelativeColumn(2.6f);
+                        c.RelativeColumn(4.5f);
+                        c.RelativeColumn(2.6f);
+                        c.RelativeColumn(2.2f);
+                    });
+
+                    table.Header(h =>
+                    {
+                        void HeaderCell(string text, bool right = false)
+                        {
+                            var cell = h.Cell().Border(1).BorderColor(QuestPDF.Helpers.Colors.Black)
+                                .Background(QuestPDF.Helpers.Colors.Grey.Darken3).Padding(4);
+                            (right ? cell.AlignRight() : cell).Text(text).Bold().FontSize(8).FontColor(QuestPDF.Helpers.Colors.White);
+                        }
+
+                        HeaderCell("Expense #");
+                        HeaderCell("Date");
+                        HeaderCell("Type");
+                        HeaderCell("Description");
+                        HeaderCell("Mode");
+                        HeaderCell("Amount", right: true);
+                    });
+
+                    var rowIndex = 0;
+                    void Cell(string text, bool right = false, bool shaded = false, bool bold = false)
+                    {
+                        var cell = table.Cell().Border(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Padding(4);
+                        if (shaded)
+                        {
+                            cell = cell.Background(QuestPDF.Helpers.Colors.Grey.Lighten4);
+                        }
+                        var descriptor = (right ? cell.AlignRight() : cell).Text(text).FontSize(8);
+                        if (bold) descriptor.Bold();
+                    }
+
+                    foreach (var item in model.Rows)
+                    {
+                        var shaded = rowIndex++ % 2 == 1;
+                        Cell(item.ExpenseNumber, shaded: shaded);
+                        Cell(item.ExpenseDate.ToString("dd-MMM-yyyy"), shaded: shaded);
+                        Cell(item.ExpenseType?.Name ?? "-", shaded: shaded);
+                        Cell(item.Description ?? "", shaded: shaded);
+                        Cell(item.Mode.GetDisplayName(), shaded: shaded);
+                        Cell(item.Amount.ToString("N0"), right: true, shaded: shaded);
+                    }
+
+                    if (!model.Rows.Any())
+                    {
+                        table.Cell().ColumnSpan(6).Border(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2)
+                            .Padding(8).AlignCenter().Text("No expenses match these filters.").FontSize(8);
+                    }
+                    else
+                    {
+                        table.Cell().ColumnSpan(5).Border(1).BorderColor(QuestPDF.Helpers.Colors.Black)
+                            .Background(QuestPDF.Helpers.Colors.Grey.Lighten3).Padding(4).AlignRight().Text("Total").Bold().FontSize(9);
+                        table.Cell().Border(1).BorderColor(QuestPDF.Helpers.Colors.Black)
+                            .Background(QuestPDF.Helpers.Colors.Grey.Lighten3).Padding(4).AlignRight().Text(model.Total.ToString("N0")).Bold().FontSize(9);
+                    }
+                });
+
+                page.Footer().PaddingTop(10).Row(row =>
+                {
+                    row.RelativeItem().Text(text =>
+                    {
+                        text.Span("Page ").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                        text.CurrentPageNumber().FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                        text.Span(" of ").FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                        text.TotalPages().FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                    });
+                    row.RelativeItem().AlignRight().Text($"{model.Rows.Count} expense{(model.Rows.Count == 1 ? "" : "s")} · Generated {DateTime.Now:dd-MMM-yyyy hh:mm tt}")
+                        .FontSize(8).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                });
+            });
+        }).GeneratePdf();
+
+        return File(pdfBytes, "application/pdf", $"ExpenseReport_{DateTime.Now:yyyyMMdd}.pdf");
+    }
+
+    private async Task<ExpenseReportViewModel> LoadExpenseReportAsync(int? expenseTypeId, DateTime? from, DateTime? to)
+    {
+        if (from.HasValue && to.HasValue && from > to)
+        {
+            (from, to) = (to, from);
+        }
+
+        var query = _db.Expenses.AsNoTracking().AsQueryable();
+        if (expenseTypeId.HasValue) query = query.Where(e => e.ExpenseTypeId == expenseTypeId.Value);
+        if (from.HasValue) query = query.Where(e => e.ExpenseDate >= from.Value.Date);
+        if (to.HasValue) query = query.Where(e => e.ExpenseDate <= to.Value.Date);
+
+        var rows = await query
+            .Include(e => e.ExpenseType)
+            .Include(e => e.BankAccount)
+            .OrderByDescending(e => e.ExpenseDate).ThenByDescending(e => e.Id)
+            .ToListAsync();
+
+        var model = new ExpenseReportViewModel
+        {
+            ExpenseTypeId = expenseTypeId,
+            From = from,
+            To = to,
+            Types = await _db.ExpenseTypes.AsNoTracking().OrderBy(t => t.Name).ToListAsync(),
+            Rows = rows,
+            Total = rows.Sum(e => e.Amount),
+            ByType = rows
+                .GroupBy(e => e.ExpenseType?.Name ?? "Unknown")
+                .Select(g => new ExpenseTypeTotal { Name = g.Key, Amount = g.Sum(e => e.Amount), Count = g.Count() })
+                .OrderByDescending(t => t.Amount)
+                .ToList()
+        };
+
+        return model;
+    }
+
     public async Task<IActionResult> Stock()
     {
         var products = await _db.Products.AsNoTracking().OrderBy(p => p.Name).ToListAsync();

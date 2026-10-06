@@ -86,4 +86,111 @@ public class SettingsController : Controller
         TempData["Message"] = "Settings saved.";
         return RedirectToAction(nameof(Index));
     }
+
+    public async Task<IActionResult> ExpenseTypes()
+    {
+        var types = await _db.ExpenseTypes.AsNoTracking().OrderBy(t => t.Name).ToListAsync();
+        var usage = await _db.Expenses.AsNoTracking()
+            .GroupBy(e => e.ExpenseTypeId)
+            .Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Count);
+        ViewBag.Usage = usage;
+        return View(types);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddExpenseType(string? name)
+    {
+        name = name?.Trim();
+        if (string.IsNullOrEmpty(name))
+        {
+            TempData["Error"] = "Enter a name for the expense type.";
+        }
+        else if (name.Length > 100)
+        {
+            TempData["Error"] = "Expense type name can't be longer than 100 characters.";
+        }
+        else if (await _db.ExpenseTypes.AnyAsync(t => t.Name == name))
+        {
+            TempData["Error"] = $"Expense type \"{name}\" already exists.";
+        }
+        else
+        {
+            _db.ExpenseTypes.Add(new ExpenseType { Name = name });
+            await _db.SaveChangesAsync();
+            TempData["Message"] = $"Expense type \"{name}\" added.";
+        }
+
+        return RedirectToAction(nameof(ExpenseTypes));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RenameExpenseType(int id, string? name)
+    {
+        name = name?.Trim();
+        var type = await _db.ExpenseTypes.FindAsync(id);
+        if (type is null)
+        {
+            return NotFound();
+        }
+
+        if (string.IsNullOrEmpty(name) || name.Length > 100)
+        {
+            TempData["Error"] = "Enter a name (up to 100 characters).";
+        }
+        else if (await _db.ExpenseTypes.AnyAsync(t => t.Id != id && t.Name == name))
+        {
+            TempData["Error"] = $"Expense type \"{name}\" already exists.";
+        }
+        else
+        {
+            type.Name = name;
+            await _db.SaveChangesAsync();
+            TempData["Message"] = "Expense type renamed.";
+        }
+
+        return RedirectToAction(nameof(ExpenseTypes));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleExpenseType(int id)
+    {
+        var type = await _db.ExpenseTypes.FindAsync(id);
+        if (type is null)
+        {
+            return NotFound();
+        }
+
+        type.IsActive = !type.IsActive;
+        await _db.SaveChangesAsync();
+        TempData["Message"] = $"\"{type.Name}\" is now {(type.IsActive ? "active" : "inactive")}.";
+        return RedirectToAction(nameof(ExpenseTypes));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteExpenseType(int id)
+    {
+        var type = await _db.ExpenseTypes.FindAsync(id);
+        if (type is null)
+        {
+            return NotFound();
+        }
+
+        if (await _db.Expenses.AnyAsync(e => e.ExpenseTypeId == id))
+        {
+            TempData["Error"] = $"\"{type.Name}\" is used by existing expenses, so it can't be deleted. Mark it inactive instead.";
+        }
+        else
+        {
+            _db.ExpenseTypes.Remove(type);
+            await _db.SaveChangesAsync();
+            TempData["Message"] = $"Expense type \"{type.Name}\" deleted.";
+        }
+
+        return RedirectToAction(nameof(ExpenseTypes));
+    }
 }

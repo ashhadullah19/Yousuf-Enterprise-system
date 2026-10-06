@@ -2,13 +2,23 @@
 @{
     ViewData["Title"] = "Expenses";
     var total = ViewBag.Total as decimal? ?? 0m;
+    var expenseTypes = ViewBag.ExpenseTypes as List<ExpenseType> ?? new List<ExpenseType>();
+    var selectedType = ViewBag.ExpenseTypeId as int?;
 }
 
 <div class="list-toolbar">
     <div class="list-toolbar-actions">
         <a class="btn btn-success" asp-action="Create" data-modal><i class="bi bi-plus-lg"></i> Add expense</a>
+        <a class="btn btn-outline-secondary" asp-controller="Reports" asp-action="Expenses"><i class="bi bi-bar-chart"></i> Expense report</a>
     </div>
     <form class="list-toolbar-filters" method="get">
+        <select name="expenseTypeId" class="form-select" aria-label="Expense type">
+            <option value="">All types</option>
+            @foreach (var type in expenseTypes)
+            {
+                <option value="@type.Id" selected="@(selectedType == type.Id)">@type.Name</option>
+            }
+        </select>
         <input type="date" name="from" class="form-control" value="@ViewBag.From" aria-label="From date" title="From" />
         <span class="filter-label">to</span>
         <input type="date" name="to" class="form-control" value="@ViewBag.To" aria-label="To date" title="To" />
@@ -24,7 +34,7 @@
 
 <div class="table-card">
 <table class="table table-striped">
-    <thead><tr><th>Expense #</th><th>Date</th><th>Category</th><th>Description</th><th>Mode</th><th>Amount</th><th></th></tr></thead>
+    <thead><tr><th>Expense #</th><th>Date</th><th>Type</th><th>Description</th><th>Mode</th><th>Amount</th><th></th></tr></thead>
     <tbody>
     @if (!Model.Items.Any())
     {
@@ -35,7 +45,7 @@
         <tr>
             <td>@item.ExpenseNumber</td>
             <td>@item.ExpenseDate.ToString("dd-MMM-yyyy")</td>
-            <td>@item.Category</td>
+            <td>@item.ExpenseType?.Name</td>
             <td>@item.Description</td>
             <td>@item.Mode.GetDisplayName()@(item.BankAccount is not null ? $" ({item.BankAccount.AccountTitle})" : "")</td>
             <td>@item.Amount.ToString("N0")</td>

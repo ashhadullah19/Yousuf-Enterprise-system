@@ -1,0 +1,69 @@
+@model List<ExpenseType>
+@{
+    ViewData["Title"] = "Expense types";
+    var usage = ViewBag.Usage as Dictionary<int, int> ?? new Dictionary<int, int>();
+}
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-triangle me-1"></i>@error</div>
+}
+
+<div class="list-toolbar">
+    <div class="list-toolbar-actions">
+        <a class="btn btn-outline-secondary" asp-action="Index"><i class="bi bi-arrow-left"></i> Back to settings</a>
+    </div>
+    <form class="list-toolbar-filters" asp-action="AddExpenseType" method="post">
+        <input class="form-control filter-search" name="name" maxlength="100" placeholder="New expense type (e.g. Rent, Labour)" aria-label="New expense type" required />
+        <button class="btn btn-success"><i class="bi bi-plus-lg"></i> Add type</button>
+    </form>
+</div>
+
+<p class="text-muted small">These types appear in the Expense form and in the Expenses report filter. Inactive types are hidden from new expenses but stay on the ones already recorded.</p>
+
+<div class="table-card">
+<table class="table table-striped">
+    <thead><tr><th>Name</th><th>Status</th><th>Expenses</th><th></th></tr></thead>
+    <tbody>
+    @if (!Model.Any())
+    {
+        <tr class="empty-row"><td colspan="4">No expense types yet. Add one above.</td></tr>
+    }
+    @foreach (var type in Model)
+    {
+        var count = usage.GetValueOrDefault(type.Id);
+        <tr>
+            <td>
+                <form asp-action="RenameExpenseType" asp-route-id="@type.Id" method="post" class="d-flex gap-2">
+                    <input class="form-control form-control-sm" name="name" value="@type.Name" maxlength="100" aria-label="Name of @type.Name" required />
+                    <button class="btn btn-sm btn-outline-primary">Rename</button>
+                </form>
+            </td>
+            <td>
+                @if (type.IsActive)
+                {
+                    <span class="badge text-bg-success">Active</span>
+                }
+                else
+                {
+                    <span class="badge text-bg-secondary">Inactive</span>
+                }
+            </td>
+            <td>@count.ToString("N0")</td>
+            <td class="text-end">
+                <form asp-action="ToggleExpenseType" asp-route-id="@type.Id" method="post" class="d-inline">
+                    <button class="btn btn-sm btn-outline-secondary">@(type.IsActive ? "Deactivate" : "Activate")</button>
+                </form>
+                @if (count == 0)
+                {
+                    <form asp-action="DeleteExpenseType" asp-route-id="@type.Id" method="post" class="d-inline"
+                          data-confirm-title="Delete expense type '@type.Name'?" data-confirm="No expenses use it, so it will be removed permanently." data-confirm-ok="Delete type" data-confirm-variant="danger">
+                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+</div>

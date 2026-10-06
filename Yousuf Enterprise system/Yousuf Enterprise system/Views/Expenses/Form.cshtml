@@ -24,17 +24,15 @@
                 <input asp-for="ExpenseDate" type="date" class="form-control" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
             </div>
             <div class="col-md-4">
-                <label asp-for="Category" class="form-label required"></label>
-                <input asp-for="Category" class="form-control" placeholder="e.g. Conveyance, Rent, Utilities" list="categorySuggestions" />
-                <datalist id="categorySuggestions">
-                    <option value="Conveyance"></option>
-                    <option value="Labour"></option>
-                    <option value="Rent"></option>
-                    <option value="Utilities"></option>
-                    <option value="Office Supplies"></option>
-                    <option value="Miscellaneous"></option>
-                </datalist>
-                <span asp-validation-for="Category" class="text-danger"></span>
+                <label asp-for="ExpenseTypeId" class="form-label required"></label>
+                <select asp-for="ExpenseTypeId" asp-items="ViewBag.ExpenseTypes" class="form-select">
+                    <option value="0">-- select type --</option>
+                </select>
+                <span asp-validation-for="ExpenseTypeId" class="text-danger"></span>
+                @if (User.IsInRole(AppRoles.SuperAdmin))
+                {
+                    <small class="text-muted">Manage types in <a asp-controller="Settings" asp-action="ExpenseTypes" target="_blank">Settings</a>.</small>
+                }
             </div>
             <div class="col-12">
                 <label asp-for="Description" class="form-label"></label>
